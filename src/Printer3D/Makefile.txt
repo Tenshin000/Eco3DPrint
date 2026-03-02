@@ -1,0 +1,22 @@
+CONTIKI_PROJECT = device
+all: $(CONTIKI_PROJECT)
+upload: $(CONTIKI_PROJECT).dfu-upload # alias for quickly uploading the firmware
+CONTIKI = /home/user/contiki-ng
+
+MODULES += os/net/app-layer/coap
+
+# Add external source files
+PROJECT_SOURCEFILES += sensors.c coap-network.c
+
+include $(CONTIKI)/Makefile.dir-variables
+MODULES += $(CONTIKI_NG_APP_LAYER_DIR)/mqtt
+MODULES += $(CONTIKI_NG_APP_LAYER_DIR)/coap
+MODULES += /os/lib/json/
+
+include $(CONTIKI)/Makefile.identify-target
+
+MODULES_REL += arch/platform/$(TARGET)
+
+# PLATFORMS_ONLY = cc26x0-cc13x0 cc2538dk openmote zoul native simplelink cooja
+TARGET_LIBFILES = -lm
+include $(CONTIKI)/Makefile.include

@@ -1,0 +1,39 @@
+\documentclass[10pt, oneside]{book}
+\usepackage[english]{babel}
+\usepackage[margin=1in]{geometry}
+\usepackage{multicol, graphicx, float, multirow}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{listings}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    citecolor=cyan
+}
+
+\hyphenation{analy-sis}
+
+\author{Francesco Panattoni}
+\title{Eco3DPrint: An IoT 3D Printer Management System}
+
+\begin{document}
+\input{chapters/titlepage}
+\tableofcontents
+\input{chapters/chapter1}
+
+\appendix
+
+\input{chapters/appendix}
+
+%\bibliographystyle{ieeetr}
+%\bibliography{bibliography.bib}
+
+\end{document}

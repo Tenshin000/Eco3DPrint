@@ -1,0 +1,3 @@
+pip install pandas openpyxl seaborn folium matplotlib imbalanced-learn scikit-learn plotly mlxtend tensorflow emlearn coapthon3
+
+pip install coapthon3
