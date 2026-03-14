@@ -7,6 +7,8 @@
 #include "coap-engine.h"
 #include "coap-transactions.h"
 
+#include "mqtt.h"
+
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uiplib.h"
 
@@ -30,8 +32,13 @@
 #define REG_URI_PATH "/registration"
 #define END_PRINT_URI_PATH "/printFinished"
 
-/* ==================================================== */
-/* =                  CONFIGURATION                   = */
+// MQTT Configuration
+#define MQTT_BROKER_IP "fd00::1"
+#define MQTT_BROKER_PORT 1883
+#define MQTT_PUB_TOPIC "printer/measurements"
+
+/* ==================================================== */ 
+/* =                  CONFIGURATION                   = */ 
 /* ==================================================== */ 
 // Device state machine 
 typedef enum {
@@ -61,18 +68,26 @@ static char payload[128];
 static coap_endpoint_t server_ep;
 static coap_message_t request[1];
 
+// MQTT 
+static struct mqtt_connection conn;
+static bool mqtt_connected = false;
+static char mqtt_payload[256]; // Buffer for the JSON message
+
 // Timers
 static struct etimer retry_timer; // Timer to retry to connect with CoAP Server
 static struct etimer print_timer; // Timer to simulate printing duration 
 static struct etimer sample_timer; // Timer for takin the samples for prediction
 
-// Device parameters
-static const char *device_name = "printer_01";
-static const char *device_type = "Filament";
-static const char *device_utilization = "Printing";
+// Device Parameters
+static char device_name[] = "printer_01";
+static const char* device_type = "Filament";
+static const char* device_utilization = "Printing";
 static char registration_msg[128];
 
+// Printing Parameters
 static size_t stl_length = 0;
+static bool waiting_for_confirmation = false;
+static char print_result[16];
 
 // Sensing Variables
 static float sensor_buffer[8][5]; // Indices: 0-2 (Plate X,Y,Z), 3-5 (Extruder X,Y,Z), 6 (Tension), 7 (Power)
@@ -85,6 +100,7 @@ static uint8_t error_count = 0;
 /* ==================================================== */ 
 static void set_state(device_state_t new_state);
 static float calculate_instantaneous_ac_power(float tension, float current, float phase_shift);
+static uint32_t calculate_print_duration(size_t stl_size);
 static void prepare_coap_request(const char* message, coap_message_type_t type, uint8_t method, const char* uri_path);
 static void registration_handler(coap_message_t* response);
 static void res_health_get_handler(coap_message_t* request, coap_message_t* response, uint8_t* buffer, uint16_t preferred_size, int32_t* offset);
@@ -115,7 +131,6 @@ RESOURCE(res_print,
   NULL,
   NULL);
 
-
 /* ==================================================== */
 /* =                     HELPERS                      = */
 /* ==================================================== */ 
@@ -136,9 +151,43 @@ static float calculate_instantaneous_ac_power(float tension, float current, floa
   return power;
 }
 
-/* ==================================================== */
-/* =                    HANDLERS                      = */
+// Calculate print time based on STL file size
+static uint32_t calculate_print_duration(size_t stl_size){
+  uint32_t duration_seconds = (stl_size * 5) / 32;
+  
+  // Make sure it lasts at least 1 second if the file is very small but > 0
+  if(duration_seconds == 0 && stl_size > 0){
+    duration_seconds = 1;
+  }
+  
+  return duration_seconds;
+}
+
 /* ==================================================== */ 
+/* =                    HANDLERS                      = */ 
+/* ==================================================== */ 
+// MQTT Event Callback to handle connection status changes
+static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data) {
+  switch(event) {
+    case MQTT_EVENT_CONNECTED:
+      LOG_INFO("MQTT Connected to broker\n");
+      mqtt_connected = true;
+      break;
+    case MQTT_EVENT_DISCONNECTED:
+      LOG_WARN("MQTT Disconnected\n");
+      mqtt_connected = false;
+      break;
+    case MQTT_EVENT_PUBLISH:
+      // Fired when an incoming message is received, not used in this publisher-only node
+      break;
+    case MQTT_EVENT_SUBACK:
+    case MQTT_EVENT_UNSUBACK:
+    case MQTT_EVENT_PUBACK:
+    default:
+      break;
+  }
+}
+
 // Prepare CoAP request payload from provided message (generic helper)
 static void prepare_coap_request(const char* message, coap_message_type_t type, uint8_t method, const char* uri_path){
   memset(payload, 0, sizeof(payload));
@@ -173,14 +222,26 @@ static void registration_handler(coap_message_t* response){
   } 
 
   if(response->code == 65){ 
-      // CoAP Code 2.01
+      // CoAP Code 2.01 (Created)
       LOG_INFO("Registration Successful\n");
       set_state(STATE_ONLINE);
+
+      // Connect to MQTT Broker once we are officially ONLINE
+      if(!mqtt_connected) {
+        LOG_INFO("Attempting MQTT connection to %s:%d\n", MQTT_BROKER_IP, MQTT_BROKER_PORT);
+        mqtt_connect(&conn, MQTT_BROKER_IP, MQTT_BROKER_PORT, 60 * 3, MQTT_CLEAN_SESSION_ON);
+      }
   }
   else if(response->code == 67){
-      // CoAP Code 2.03
+    // CoAP Code 2.03 (Valid)
       LOG_INFO("Login Successful\n");
       set_state(STATE_ONLINE);
+
+      // Connect to MQTT Broker once we are officially ONLINE
+      if(!mqtt_connected) {
+        LOG_INFO("Attempting MQTT connection to %s:%d\n", MQTT_BROKER_IP, MQTT_BROKER_PORT);
+        mqtt_connect(&conn, MQTT_BROKER_IP, MQTT_BROKER_PORT, 60 * 3, MQTT_CLEAN_SESSION_ON);
+      }
   }
   else{
       // Any other code (e.g. 4.00, 5.00) is a failure
@@ -201,10 +262,8 @@ static void registration_handler(coap_message_t* response){
 // GET handler for the /health resource
 static void res_health_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
   const char* msg = state_to_string(current_state);
-  if(current_state == STATE_OFF){
-    coap_set_status_code(response, SERVICE_UNAVAILABLE_5_03);
+  if(current_state == STATE_OFF)
     return;
-  }
 
   // If the device is not online or printing, reject the ping with a 5.03 Service Unavailable.
   // The Python NodeMonitor will read this as a failed response and mark the node OFFLINE.
@@ -283,6 +342,7 @@ static void print_finished_handler(coap_message_t* response){
   if(response == NULL){
     LOG_ERR("No response from server\n");
     set_state(STATE_ONLINE);
+    waiting_for_confirmation = false; 
     return; 
   } 
 
@@ -301,6 +361,7 @@ static void print_finished_handler(coap_message_t* response){
       }
   }
 
+  waiting_for_confirmation = false; 
   set_state(STATE_ONLINE);
   memset(payload, 0, sizeof(payload));
 }
@@ -411,6 +472,9 @@ PROCESS_THREAD(smart_printer_process, ev, data){
 
   LOG_INFO("Smart Printer process started\n");
   
+  // Register the MQTT client context 
+  mqtt_register(&conn, &smart_printer_process, device_name, mqtt_event, 256);
+  
   // Activate resources 
   coap_activate_resource(&res_health, "health");
   coap_activate_resource(&res_print, "print"); 
@@ -430,11 +494,29 @@ PROCESS_THREAD(smart_printer_process, ev, data){
     PROCESS_WAIT_EVENT();
 
     /* BUTTON HANDLING */
-    if(ev == button_hal_periodic_event && btn0 && data){
+    // Handle Short Press (for confirmation)
+    if(ev == button_hal_press_event && btn0 && data){
+      button_hal_button_t *btn = (button_hal_button_t *)data;
+      if(btn == btn0){
+        // If we finished printing and are waiting for the user...
+        if(current_state == STATE_PRINTING && waiting_for_confirmation){
+          LOG_INFO("User confirmation received. Sending %s notification to server...\n", print_result);
+          waiting_for_confirmation = false; // Reset the flag
+            
+          prepare_coap_request(print_result, COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
+          COAP_BLOCKING_REQUEST(&server_ep, request, print_finished_handler);
+          
+          // Note: State transition to ONLINE is handled inside print_finished_handler
+        }
+      }
+    }
+    // Handle Long Press (for Hard Reset)
+    else if(ev == button_hal_periodic_event && btn0 && data){
       button_hal_button_t *btn = (button_hal_button_t *)data;
 
       if(btn == btn0){
         LOG_DBG("Smart Printer: Button hold duration: %u s\n", btn->press_duration_seconds);
+        
         if(btn->press_duration_seconds >= 3 && current_state != STATE_OFF){
           LOG_INFO("Button held >=3s -> Hard reset\n");
 
@@ -448,10 +530,16 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             }
           }
 
+          // Disconnect MQTT if active
+          if(mqtt_connected){
+            mqtt_disconnect(&conn);
+          }
+
           set_state(STATE_OFF);
           sample_count = 0;
           error_count = 0;
           stl_length = 0;
+          waiting_for_confirmation = false;
 
           etimer_stop(&retry_timer);
           etimer_stop(&print_timer);
@@ -507,7 +595,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
 
     // ONLINE 
     else if(current_state == STATE_ONLINE){
-      /* ready to accept print jobs via /print resource */
+      /* Ready to accept print jobs via /print resource */
       /* No active polling needed here; CoAP handles incoming requests */
     }
 
@@ -519,15 +607,22 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         
         // Reset the sample counter for the sliding window
         sample_count = 0;
+
+        // Calculate time dynamically
+        uint32_t dynamic_print_time = calculate_print_duration(stl_length);
+        LOG_INFO("Calculated print duration: %lu seconds for an STL of %zu bytes\n", (unsigned long)dynamic_print_time, stl_length);
         
-        // Start the printing process timer (30 seconds)
-        etimer_set(&print_timer, 30 * CLOCK_SECOND);
+        // Start the printing process timer with the calculated time
+        etimer_set(&print_timer, dynamic_print_time * CLOCK_SECOND);
         // Start the 1-second sampling timer
         etimer_set(&sample_timer, 1 * CLOCK_SECOND);
       } 
       
       // 1-Second Sampling Timer Event
       else if(ev == PROCESS_EVENT_TIMER && data == &sample_timer){
+        if(waiting_for_confirmation)
+          continue;
+        
         // Activate Sensors
         sensor_activate();
         // Read data from sensors
@@ -541,6 +636,55 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         // Print the current readings
         LOG_INFO("Measurements: Plate(%.3f, %.3f, %.3f), Extruder(%.3f, %.3f, %.3f), Tension(%.3fV), Power(%.3fW)\n", 
                  plate.x, plate.y, plate.z, extruder.x, extruder.y, extruder.z, tension, power);
+
+        // Fetch IPv6 Address to include in the MQTT JSON payload
+        char ipaddr_str[UIPLIB_IPV6_MAX_STR_LEN];
+        uip_ds6_addr_t *addr = uip_ds6_get_global(ADDR_PREFERRED);
+        if(addr != NULL){
+          uiplib_ipaddr_snprint(ipaddr_str, sizeof(ipaddr_str), &addr->ipaddr);
+        } 
+        else{
+          strcpy(ipaddr_str, "unknown");
+        }
+
+        // Format the JSON payload and publish via MQTT if connected
+        if(mqtt_connected){
+          // Convert variables into Integer + Fractional (3 decimals) for JSON compliance
+          int px_i = (int)plate.x; int px_d = (int)(fabs(plate.x - px_i) * 1000);
+          int py_i = (int)plate.y; int py_d = (int)(fabs(plate.y - py_i) * 1000);
+          int pz_i = (int)plate.z; int pz_d = (int)(fabs(plate.z - pz_i) * 1000);
+          
+          int ex_i = (int)extruder.x; int ex_d = (int)(fabs(extruder.x - ex_i) * 1000);
+          int ey_i = (int)extruder.y; int ey_d = (int)(fabs(extruder.y - ey_i) * 1000);
+          int ez_i = (int)extruder.z; int ez_d = (int)(fabs(extruder.z - ez_i) * 1000);
+          
+          int ten_i = (int)tension; int ten_d = (int)(fabs(tension - ten_i) * 1000);
+          int pow_i = (int)power;   int pow_d = (int)(fabs(power - pow_i) * 1000);
+
+          // Handle negative numbers correctly when integer part is 0 (e.g. -0.385)
+          const char* px_sign = (plate.x < 0 && px_i == 0) ? "-" : "";
+          const char* py_sign = (plate.y < 0 && py_i == 0) ? "-" : "";
+          const char* pz_sign = (plate.z < 0 && pz_i == 0) ? "-" : "";
+          const char* ex_sign = (extruder.x < 0 && ex_i == 0) ? "-" : "";
+          const char* ey_sign = (extruder.y < 0 && ey_i == 0) ? "-" : "";
+          const char* ez_sign = (extruder.z < 0 && ez_i == 0) ? "-" : "";
+          const char* ten_sign = (tension < 0 && ten_i == 0) ? "-" : "";
+          const char* pow_sign = (power < 0 && pow_i == 0) ? "-" : "";
+
+          snprintf(mqtt_payload, sizeof(mqtt_payload),
+            "{\"ip\":\"%s\",\"X_Axis_Plate\":%s%d.%03d,\"Y_Axis_Plate\":%s%d.%03d,\"Z_Axis_Plate\":%s%d.%03d,\"X_Axis_Extrusion\":%s%d.%03d,\"Y_Axis_Extrusion\":%s%d.%03d,\"Z_Axis_Extrusion\":%s%d.%03d,\"Tension\":%s%d.%03d,\"Power\":%s%d.%03d}",
+            ipaddr_str, 
+            px_sign, px_i, px_d, 
+            py_sign, py_i, py_d, 
+            pz_sign, pz_i, pz_d, 
+            ex_sign, ex_i, ex_d, 
+            ey_sign, ey_i, ey_d, 
+            ez_sign, ez_i, ez_d, 
+            ten_sign, ten_i, ten_d, 
+            pow_sign, pow_i, pow_d);
+
+          mqtt_publish(&conn, NULL, MQTT_PUB_TOPIC, (uint8_t *)mqtt_payload, strlen(mqtt_payload), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+        }
                  
         // Store readings into the sliding window buffer
         sensor_buffer[0][sample_count] = plate.x;
@@ -625,10 +769,10 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             
             sensor_deactivate();
             
-            // Send FAILED message to CoAP Server
-            prepare_coap_request("FAILED", COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
-            LOG_INFO("Sending end of print notification: FAILED\n");
-            COAP_BLOCKING_REQUEST(&server_ep, request, print_finished_handler);
+            // Set flags to wait for user confirmation instead of sending CoAP immediately
+            waiting_for_confirmation = true;
+            strncpy(print_result, "FAILED", sizeof(print_result));
+            LOG_INFO("Print aborted. Press the button to confirm and notify the server.\n");            
           } 
           else{
             // If printing continues, we shift the window: we keep the last measurement (index 4) at index 0
@@ -643,7 +787,8 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         // Put Sensors to sleep
         sensor_sleep();
         // Restart the sampling timer for the next second
-        etimer_reset(&sample_timer);
+        if(!waiting_for_confirmation)
+          etimer_reset(&sample_timer);
       }
       
       // This event triggers when the fake printing timer ends
@@ -658,10 +803,10 @@ PROCESS_THREAD(smart_printer_process, ev, data){
 
         sensor_deactivate();
 
-        // Send FINISHED message to CoAP Server
-        prepare_coap_request("FINISHED", COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
-        LOG_INFO("Sending end of print notification: FINISHED\n");
-        COAP_BLOCKING_REQUEST(&server_ep, request, print_finished_handler);
+        // Set flags to wait for user confirmation instead of sending CoAP immediately
+        waiting_for_confirmation = true;
+        strncpy(print_result, "FINISHED", sizeof(print_result));
+        LOG_INFO("Print finished successfully. Press the button to confirm and notify the server.\n");
       }
     }
   }

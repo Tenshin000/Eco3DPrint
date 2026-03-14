@@ -1,12 +1,13 @@
 import os
-import math
 import threading
 
 from coapthon import defines
 from coapthon.client.helperclient import HelperClient
 from coapthon.messages.request import Request
 from coapthon.messages.option import Option
+from configparser import ConfigParser
 
+from backend.Database import Database
 from backend.NodeMonitor import NodeMonitor
 from utility.Log import Log
 
@@ -36,11 +37,17 @@ class PrintManager:
                 exit(1)
         else:
             self._db = database
+            
         if node_monitor is None:
             self._monitor = NodeMonitor()
         else: 
             self._monitor = node_monitor
+            
         self._logger = Log("print_manager", "PRINT_MANAGER").get_logger()
+        
+        # Thread lock and tracking set to make transfers concurrent robust.
+        self._lock = threading.Lock()
+        self._active_transfers = set()
         
         # Register this manager to receive status change events from NodeMonitor
         self._monitor.print_manager_callback = self.on_node_status_change
@@ -50,7 +57,7 @@ class PrintManager:
         Add a new print job to the database queue. If the node is ONLINE,
         it immediately attempts to start the print.
         """
-        query = "INSERT INTO Print (ip, stl_name, status) VALUES (%s, %s, %s)"
+        query = "INSERT INTO `Print` (ip, stl_name, status) VALUES (%s, %s, %s)"
         self._db.execute(query, (ip, original_stl_name, "QUEUE"))
         self._logger.info(f"Added print job for {ip} (File: {original_stl_name}) to QUEUE.")
 
@@ -67,7 +74,7 @@ class PrintManager:
             
         elif old_status == 'PRINTING' and new_status == 'OFFLINE':
             # Node disconnected during a print. Mark the active print as ERROR.
-            query = "UPDATE Print SET status = 'ERROR' WHERE ip = %s AND status = 'PRINTING'"
+            query = "UPDATE `Print` SET status = 'ERROR' WHERE ip = %s AND status = 'PRINTING'"
             self._db.execute(query, (ip,))
             self._logger.warning(f"Node {ip} went OFFLINE during PRINTING. Job marked as ERROR.")
 
@@ -75,27 +82,38 @@ class PrintManager:
         """
         Checks the database for the oldest 'QUEUE' job for a specific IP.
         If found, starts a background thread to send the file.
+        Safeguarded by an in-memory lock to prevent race conditions.
         """
-        # Let's check that there are no active or transferring jobs for this IP already.
-        check_query = "SELECT id FROM Print WHERE ip = %s AND status = 'PRINTING'"
-        if self._db.execute(check_query, (ip,)):
-            self._logger.warning(f"Node {ip} is already processing a job. Keeping the rest in QUEUE.")
-            return
+        with self._lock:
+            # Ensure we are not already transferring to this IP in another thread
+            if ip in self._active_transfers:
+                return
 
-        query = "SELECT id, stl_name FROM Print WHERE ip = %s AND status = 'QUEUE' ORDER BY id ASC LIMIT 1"
-        records = self._db.execute(query, (ip,))
-        
-        if records:
-            # Handle both dictionary and tuple return types from DB
-            job_id = records[0].get('id') if isinstance(records[0], dict) else records[0][0]
-            self._logger.info(f"Found pending job #{job_id} for {ip}. Starting transfer thread.")
-            # Start transfer in a daemon thread so it doesn't block the caller
-            threading.Thread(target=self._send_stl_to_node, args=(ip, job_id), daemon=True).start()
+            # Let's check that there are no active jobs for this IP already.
+            check_query = "SELECT id FROM `Print` WHERE ip = %s AND status = 'PRINTING'"
+            if self._db.execute(check_query, (ip,)):
+                self._logger.warning(f"Node {ip} is already processing a job. Keeping the rest in QUEUE.")
+                return
+
+            query = "SELECT id, stl_name FROM `Print` WHERE ip = %s AND status = 'QUEUE' ORDER BY id ASC LIMIT 1"
+            records = self._db.execute(query, (ip,))
+            
+            if records:
+                # Handle both dictionary and tuple return types from DB
+                job_id = records[0].get('id') if isinstance(records[0], dict) else records[0][0]
+                self._logger.info(f"Found pending job #{job_id} for {ip}. Starting transfer thread.")
+                
+                # Mark IP as actively transferring to prevent duplicate threads
+                self._active_transfers.add(ip)
+                
+                # Start transfer in a daemon thread so it doesn't block the caller
+                threading.Thread(target=self._send_stl_to_node, args=(ip, job_id), daemon=True).start()
 
     def _send_stl_to_node(self, ip, job_id):
         """
         Reads the dummy STL file and sends it to the node using CoAP Block1.
         Relies on CoAPthon's native BlockLayer to automatically chunk the file.
+        Updates activation_time upon successful print start.
         """
         # Path to the dummy file used for simulation
         file_path = os.path.join(os.path.dirname(__file__), 'stl', 'false_stl.bin')
@@ -105,7 +123,8 @@ class PrintManager:
                 payload = f.read()
         except Exception as e:
             self._logger.error(f"Failed to read dummy STL file: {e}")
-            self._db.execute("UPDATE Print SET status = 'ERROR' WHERE id = %s", (job_id,))
+            self._db.execute("UPDATE `Print` SET status = 'ERROR' WHERE id = %s", (job_id,))
+            self._release_transfer_lock(ip) # Always release the lock!
             return
 
         # Instantiate HelperClient. Ensure IP is parsed as a string for safety.
@@ -140,28 +159,36 @@ class PrintManager:
             if response is None:
                 raise Exception("Timeout waiting for final ACK")
             
-            # 68 corrisponde al codice CoAP 2.04 (Changed), indicando che tutto il file è stato ricevuto
+            # 68 corresponds to CoAP code 2.04 (Changed), indicating the whole file was received
             if response.code != 68:
                 raise Exception(f"Transfer failed with final code {response.code}")
 
             self._logger.info(f"Final ACK received from {ip}. Print started successfully.")
 
-            # Update DB to PRINTING
-            self._db.execute("UPDATE Print SET status = 'PRINTING' WHERE id = %s", (job_id,))
+            # Update DB to PRINTING and set the activation_time to the current timestamp.
+            self._db.execute("UPDATE `Print` SET status = 'PRINTING', activation_time = CURRENT_TIMESTAMP WHERE id = %s", (job_id,))
             self._monitor.set_node_printing(ip)
 
         except Exception as e:
             self._logger.error(f"Transfer failed for {ip}: {e}")
-            self._db.execute("UPDATE Print SET status = 'ERROR' WHERE id = %s", (job_id,))
+            self._db.execute("UPDATE `Print` SET status = 'ERROR' WHERE id = %s", (job_id,))
         finally:
             client.stop()
+            # Ensure the lock is released regardless of success or failure
+            self._release_transfer_lock(ip)
+            
+    def _release_transfer_lock(self, ip):
+        """Helper to safely remove an IP from the active transfer set."""
+        with self._lock:
+            if ip in self._active_transfers:
+                self._active_transfers.remove(ip)
     
     def handle_print_finished(self, ip, result):
         """
         Manages the reception of the FINISHED or FAILED payload from the node,
         updates the Print table row, and releases the queue.
         """        
-        query = "SELECT id FROM Print WHERE ip = %s AND status = 'PRINTING'"
+        query = "SELECT id FROM `Print` WHERE ip = %s AND status = 'PRINTING'"
         records = self._db.execute(query, (ip,))
         
         if not records:
@@ -180,13 +207,13 @@ class PrintManager:
             # We put them back on the QUEUE instead of letting them fail
             for extra_record in records[1:]:
                 extra_id = extra_record.get('id') if isinstance(extra_record, dict) else extra_record[0]
-                self._db.execute("UPDATE Print SET status = 'QUEUE' WHERE id = %s", (extra_id,))
+                self._db.execute("UPDATE `Print` SET status = 'QUEUE' WHERE id = %s", (extra_id,))
                 self._logger.info(f"Print #{extra_id} for node {ip} reverted to QUEUE status.")
 
         # Let's take the first valid ID
         job_id = records[0].get('id') if isinstance(records[0], dict) else records[0][0]
         
-        update_query = "UPDATE Print SET status = %s WHERE id = %s"
+        update_query = "UPDATE `Print` SET status = %s WHERE id = %s"
         self._db.execute(update_query, (result, job_id))
         self._logger.info(f"Print #{job_id} for node {ip} updated to status: {result}")
         
@@ -207,9 +234,9 @@ class PrintManager:
                         self._monitor._nodes[ip]["status"] = "OFFLINE"
                         status_changed = True
         
-        
         if status_changed and self._monitor.on_change_callback:
              self._monitor.on_change_callback(self._monitor.get_all_nodes())
-             
-        self._check_and_start_print(ip)
+        
+        # Check if there are more jobs waiting in the queue
+        threading.Timer(1.0, self._check_and_start_print, args=[ip]).start()
         return True

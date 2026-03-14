@@ -1,0 +1,149 @@
+import json
+import paho.mqtt.client as mqtt
+
+from backend.Database import Database
+from utility.Log import Log
+
+class MQTTHandler:
+    """
+    Component for handling MQTT subscriptions and processing incoming telemetry data.
+    
+    This class connects to an MQTT broker, subscribes to the measurements topic,
+    parses incoming JSON payloads from the nodes, retrieves the active print_id,
+    and stores the measurements into the database.
+    """
+    def __init__(self, broker_host="127.0.0.1", broker_port=1883, database=None, topic="printer/measurements"):
+        """
+        Initialize the MQTT Handler.
+
+        :param broker_host: The hostname or IP of the MQTT broker.
+        :param broker_port: The port of the MQTT broker (usually 1883).
+        :param database: Database instance used to persist the measurements. 
+        :param topic: The MQTT topic to subscribe to.
+        """
+        self._broker_host = broker_host
+        self._broker_port = broker_port
+        self._topic = topic
+        
+        # Initialize a dedicated logger
+        self._logger = Log(logger_name="mqtt_logger", module_name="MQTT_SERVER").get_logger()
+        
+        # If no database instance is provided, create one using configuration
+        if database is None:
+            config = ConfigParser()
+            config.read('./backend/config.ini')
+            self._db = Database(
+                host=config.get('mysql', 'host'),
+                user=config.get('mysql', 'user'),
+                password=config.get('mysql', 'password'),
+                database=config.get('mysql', 'database')
+            )
+            if not self._db.connect():
+                exit(1)
+        else:
+            self._db = database
+            self._db.connect()
+
+        # Initialize the Paho MQTT Client using the modern v2 API
+        self._client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        
+        # Attach callbacks
+        self._client.on_connect = self._on_connect
+        self._client.on_message = self._on_message
+        self._client.on_disconnect = self._on_disconnect
+        self._logger.info(f"MQTT Server Initialized on [{broker_host}]:{broker_port}...")
+
+    def start(self):
+        """Connect to the broker and start the network loop in a background thread."""
+        try:
+            self._logger.info(f"Connecting to MQTT Broker at {self._broker_host}:{self._broker_port}...")
+            self._client.connect(self._broker_host, self._broker_port, keepalive=60)
+            # loop_start() creates a daemon thread automatically to handle network traffic
+            self._client.loop_start()
+        except Exception as e:
+            self._logger.error(f"Failed to start MQTT Handler: {e}")
+
+    def stop(self):
+        """Stop the network loop, disconnect from the broker, and close the DB connection gracefully."""
+        self._logger.info("Stopping MQTT Server...")
+        self._client.loop_stop()
+        self._client.disconnect()
+        self._db.close()
+
+    def _on_connect(self, client, userdata, flags, reason_code, properties):
+        """Callback triggered when the client connects to the broker."""
+        if reason_code == 0:
+            self._logger.info(f"Successfully connected to MQTT Broker. Subscribing to topic: {self._topic}")
+            client.subscribe(self._topic)
+        else:
+            self._logger.error(f"Failed to connect to MQTT Broker. Reason code: {reason_code}")
+
+    def _on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties):
+        """Callback triggered when the client disconnects from the broker."""
+        self._logger.warning(f"Disconnected from MQTT Broker. Reason code: {reason_code}")
+
+    def _on_message(self, client, userdata, msg):
+        """
+        Callback triggered when a message is received on a subscribed topic.
+        
+        It parses the JSON payload, queries the DB for the active print_id for the given IP,
+        and inserts the measurement.
+        """
+        try:
+            # Decode the payload
+            payload_str = msg.payload.decode('utf-8')
+            # self._logger.debug(f"RAW PAYLOAD RECEIVED: '{payload_str}'")
+            data = json.loads(payload_str)
+            
+            node_ip = data.get("ip")
+            if not node_ip:
+                self._logger.warning("Received MQTT message without 'ip' field. Ignoring.")
+                return
+
+            # Ensure the database connection is active
+            self._db.connect()
+
+            # Retrieve the active print_id for this specific node IP.
+            get_print_query = """
+                SELECT id FROM Print 
+                WHERE ip = %s AND status = 'PRINTING'
+                ORDER BY id DESC LIMIT 1
+            """
+            result = self._db.execute(get_print_query, (node_ip,))
+            
+            if not result:
+                self._logger.warning(f"No active print found for IP: {node_ip}. Measurement dropped.")
+                return
+                
+            print_id = result[0][0]
+
+            # Insert the measurement into the database
+            insert_query = """
+                INSERT IGNORE INTO Measurement (
+                    print_id, ip, X_Axis_Plate, Y_Axis_Plate, Z_Axis_Plate, 
+                    X_Axis_Extrusion, Y_Axis_Extrusion, Z_Axis_Extrusion, Tension, Power
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            
+            params = (
+                print_id,
+                node_ip,
+                data.get("X_Axis_Plate"),
+                data.get("Y_Axis_Plate"),
+                data.get("Z_Axis_Plate"),
+                data.get("X_Axis_Extrusion"),
+                data.get("Y_Axis_Extrusion"),
+                data.get("Z_Axis_Extrusion"),
+                data.get("Tension"),
+                data.get("Power")
+            )
+            
+            if self._db.execute(insert_query, params):
+                self._logger.debug(f"Measurement saved for Print ID {print_id} (Node: {node_ip})")
+            else:
+                self._logger.error("Failed to insert measurement into database.")
+
+        except json.JSONDecodeError:
+            self._logger.error("Failed to parse MQTT message payload as JSON.")
+        except Exception as e:
+            self._logger.error(f"Error processing MQTT message: {e}")

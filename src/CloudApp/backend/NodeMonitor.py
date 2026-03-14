@@ -1,3 +1,4 @@
+import concurrent.futures 
 import threading
 import time
 
@@ -102,7 +103,12 @@ class NodeMonitor:
                 "utilization": node_utilization,
                 "status": "ONLINE"
             }
+        
         self._logger.info(f"Node {ip} ({name}) registered and marked ONLINE.")
+        self._update_db_status(ip, "ONLINE")
+
+        # If it had any job stuck in PRINTING, that physical print is definitively lost.
+        self._fail_active_prints(ip)
         
         if old_status != "ONLINE" and self.print_manager_callback:
             self.print_manager_callback(ip, old_status, "ONLINE")
@@ -112,14 +118,18 @@ class NodeMonitor:
 
     def set_node_printing(self, ip):
         """Called by PrintManager when a print job is successfully acknowledged."""
+        needs_update = False
         with self._lock:
             if ip in self._nodes:
                 self._nodes[ip]["status"] = "PRINTING"
-                self._update_db_status(ip, "PRINTING")
-        self._logger.info(f"Node {ip} is now in PRINTING state.")
-        
-        if self.on_change_callback:
-            self.on_change_callback(self.get_all_nodes())
+                needs_update = True
+                
+        if needs_update:
+            self._update_db_status(ip, "PRINTING")
+            self._logger.info(f"Node {ip} is now in PRINTING state.")
+            
+            if self.on_change_callback:
+                self.on_change_callback(self.get_all_nodes())
 
     def get_all_nodes(self):
         """
@@ -142,16 +152,21 @@ class NodeMonitor:
         """
         self._logger.info("Watchdog thread started. Monitoring node health...")
         while self._running:
-            # Wait 1 minute before starting the next monitoring cycle
-            time.sleep(60)
+            # Responsive sleep loop. Checks self._running every second instead of blocking entirely for 60 seconds, allowing faster graceful shutdown.
+            for _ in range(60):
+                if not self._running:
+                    return
+                time.sleep(1)
             
             # Extract list of ONLINE and PRINTING node IPs while holding the lock briefly
             with self._lock:
                 ips_to_check = [ip for ip, data in self._nodes.items() if data["status"] in ["ONLINE", "PRINTING"]]
             
-            # Ping each node individually
-            for ip in ips_to_check:
-                self._ping_node(ip)
+            # Ping nodes concurrently using a ThreadPool. This prevents one unresponsive node from delaying the health checks of all other nodes.
+            if ips_to_check:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=min(10, len(ips_to_check))) as executor:
+                    for ip in ips_to_check:
+                        executor.submit(self._ping_node, ip)
 
     def _ping_node(self, ip):
         """
@@ -201,6 +216,7 @@ class NodeMonitor:
         # Update node status in memory and database if necessary
         status_changed = False
         old_status_val = None
+        new_status_val = None
         
         with self._lock:
             # Make sure the node still exists in our dict (hasn't been deleted elsewhere)
@@ -210,25 +226,32 @@ class NodeMonitor:
                 if is_alive:
                     # If the node is alive but its state has changed (e.g. it has finished printing)
                     if old_status != reported_state:
-                        self._logger.info(f"Node {ip} state changed from {old_status} to {reported_state}.")
                         self._nodes[ip]["status"] = reported_state
-                        self._update_db_status(ip, reported_state)
                         status_changed = True
                         old_status_val = old_status
+                        new_status_val = reported_state
                 else:
                     # If it doesn't respond, it goes OFFLINE
                     if old_status in ["ONLINE", "PRINTING"]:
-                        self._logger.warning(f"Node {ip} failed all {max_attempts} ping attempts. Marked OFFLINE.")
                         self._nodes[ip]["status"] = "OFFLINE"
-                        self._update_db_status(ip, "OFFLINE")
                         status_changed = True
                         old_status_val = old_status
+                        new_status_val = "OFFLINE"
         
         if status_changed:
+            if is_alive:
+                self._logger.info(f"Node {ip} state changed from {old_status_val} to {new_status_val}.")
+            else:
+                self._logger.warning(f"Node {ip} failed all {max_attempts} ping attempts. Marked OFFLINE.")
+                
+            self._update_db_status(ip, new_status_val)
+            
+            # Ensure any active print jobs are marked as ERROR if the node drops offline
+            if new_status_val == "OFFLINE":
+                self._fail_active_prints(ip)
+            
             if self.print_manager_callback:
-                # Let's move to the new state
-                new_status = reported_state if is_alive else "OFFLINE"
-                self.print_manager_callback(ip, old_status_val, new_status)
+                self.print_manager_callback(ip, old_status_val, new_status_val)
             if self.on_change_callback:
                 self.on_change_callback(self.get_all_nodes())
     
@@ -242,6 +265,19 @@ class NodeMonitor:
         if self._db:
             query = "UPDATE Node SET status=%s WHERE ip=%s"
             self._db.execute(query, (status, ip))
+
+    def _fail_active_prints(self, ip):
+        """
+        Check if the node has any prints in PRINTING state and set them to ERROR.
+        This is triggered when a node unexpectedly goes OFFLINE.
+
+        :param ip: Node IP address
+        """
+        if self._db:
+            query = "UPDATE Print SET status='ERROR' WHERE ip=%s AND status='PRINTING'"
+            # We execute the query. If there are no active prints, it safely does nothing.
+            if self._db.execute(query, (ip,)):
+                self._logger.info(f"Checked and enforced ERROR state for any active prints on node {ip}.")
 
     def _load_initial_state(self):
         """Load existing nodes from the database on startup."""

@@ -71,6 +71,7 @@ create_tables(){
         ip VARCHAR(255) NOT NULL,
         stl_name VARCHAR(255) NOT NULL,
         status VARCHAR(255) NOT NULL,
+        activation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
         CONSTRAINT fk_node_ip FOREIGN KEY (ip) REFERENCES Node(ip) ON DELETE CASCADE ON UPDATE CASCADE
     );"
@@ -149,6 +150,10 @@ function start_app(){
     gnome-terminal -- bash -c 'cd ./'$SRC_DIR'CloudApp; python app.py; exec bash'
 }
 
+function start_mosquito(){
+    sudo pkill mosquitto 2>/dev/null
+    gnome-terminal -- bash -c "cd ./${SRC_DIR}CloudApp; mosquitto -c local_broker.conf -v; exec bash"
+}
 #---------------------------------------------#
 #                    CLI                      #
 #---------------------------------------------#
@@ -174,15 +179,21 @@ case $1 in
      -table)
         show_table "$2"
         ;;
-    -border-router)
+    -br)
         build_border_router $2
         ;;
+    -sm)
+    	start_mosquito
+    	;;
     -sim)
         echo "Starting Cooja..."
         launch_cooja
         echo "Press any key to start the border-router..."
         read -n 1 -s
         build_border_router "cooja"
+        echo "Press any key to start the mosquito server..."
+        read -n 1 -s
+        start_mosquito
         echo "Press any key to start the Server and the App..."
         read -n 1 -s
         start_server
@@ -190,14 +201,14 @@ case $1 in
         ;;
         *)
         echo "===================================================================="
-        echo "                        Eco3DPrint CLI"
+        echo "=                          Eco3DPrint CLI                          ="
         echo "===================================================================="
         echo
         echo "USAGE:"
         echo "  $0 <command> [options]"
         echo
         echo "--------------------------------------------------------------------"
-        echo "SIMULATION COMMANDS"
+        echo "                        SIMULATION COMMANDS"
         echo "--------------------------------------------------------------------"
         echo "  -cooja"
         echo "      Launch the Cooja network simulator."
@@ -208,14 +219,14 @@ case $1 in
         echo "        2) Start the border router (Cooja mode)"
         echo "        3) Start Cloud server and application"
         echo
-        echo "  -border-router <target>"
+        echo "  -br <target>"
         echo "      Start the RPL border router."
         echo "      target:"
         echo "        cooja    -> connect router to Cooja simulation"
         echo "        hardware -> connect router to nRF52840 dongle"
         echo
         echo "--------------------------------------------------------------------"
-        echo "DATABASE MANAGEMENT"
+        echo "                          DATABASE MANAGEMENT"
         echo "--------------------------------------------------------------------"
         echo "  -create-db"
         echo "      Install MySQL if missing and initialize the database."
@@ -227,7 +238,7 @@ case $1 in
         echo "      $0 -sql \"SELECT * FROM Node;\""
         echo
         echo "--------------------------------------------------------------------"
-        echo "TABLE VISUALIZATION"
+        echo "                          TABLE VISUALIZATION"
         echo "--------------------------------------------------------------------"
         echo "  -nodes"
         echo "      Display the Node table."

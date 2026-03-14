@@ -7,6 +7,7 @@ from configparser import ConfigParser
 
 from backend.Database import Database
 from backend.CoAPServer import CoAPServer
+from backend.MQTTHandler import MQTTHandler
 from backend.NodeMonitor import NodeMonitor
 from backend.Socket import WebSocketManager
 from backend.PrintManager import PrintManager 
@@ -47,9 +48,17 @@ def main():
     # Reset all nodes to OFFLINE at startup to ensure consistent state
     db.execute("UPDATE Node SET status = 'OFFLINE'")
 
-    # CoAP server configuration (host and port)
-    coap_host = "fd00::1"  # IPv6 address
-    coap_port = 5683       # Standard CoAP port
+    # If the server crashed during a print, set any stuck PRINTING jobs to ERROR. This prevents phantom jobs from blocking the queue upon server restart.
+    db.execute("UPDATE `Print` SET status = 'ERROR' WHERE status = 'PRINTING'")
+
+    # CoAP server configuration (Fallback to fd00::1/5683 if not in config.ini)   
+    coap_host = config.get('coap', 'host', fallback='fd00::1') # IPv6 address
+    coap_port = config.getint('coap', 'port', fallback=5683) # Standard CoAP port
+
+    # MQTT server configuration (Fallback to localhost/1883 if not in config.ini)
+    mqtt_host = 'fd00::1'
+    # mqtt_host = config.get('mqtt', 'host', fallback='127.0.0.1') # Localhost
+    mqtt_port = config.getint('mqtt', 'port', fallback=1883) # Standard MQTT port
 
     # Initialize NodeMonitor to track node health and status
     node_monitor = NodeMonitor(db)
@@ -67,6 +76,15 @@ def main():
     ws_thread = threading.Thread(target=ws_manager.run, daemon=True)
     ws_thread.start()
     logger.info("WebSocket Server started on port 8765")
+
+    # Start MQTT Subscriber
+    mqtt_handler = MQTTHandler(
+        broker_host=mqtt_host, 
+        broker_port=mqtt_port, 
+        database=db,
+        topic="printer/measurements"
+    )
+    mqtt_handler.start()
 
     # Initialize CoAP server to listen for node messages (e.g., registrations, print notifications)
     server = CoAPServer(coap_host, coap_port, False, db, node_monitor, print_manager)
@@ -104,6 +122,9 @@ def main():
         # Stop the WebSocket event loop
         if ws_manager.loop:
             ws_manager.loop.call_soon_threadsafe(ws_manager.loop.stop)
+
+        # Stop MQTT Subscriber
+        mqtt_handler.stop()
         
         # Set all nodes to OFFLINE in the database before shutdown
         try:

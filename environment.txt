@@ -1,3 +1,3 @@
-pip install pandas openpyxl seaborn folium matplotlib imbalanced-learn scikit-learn plotly mlxtend tensorflow emlearn coapthon3 tkinter Pillow python3-pil.imagetk websockets
+pip install pandas openpyxl seaborn folium matplotlib imbalanced-learn scikit-learn plotly mlxtend tensorflow emlearn coapthon3 paho-mqtt tkinter Pillow python3-pil.imagetk websockets 
 
-pip install coapthon3
+pip install coapthon3 paho-mqtt
