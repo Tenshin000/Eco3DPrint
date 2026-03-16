@@ -19,7 +19,24 @@ build/cooja/obj/device.o: device.c \
  ../../../../os/net/ipv6/uipbuf.h ../../../../os/net/ipv6/tcpip.h \
  ../../../../os/dev/button-hal.h ../../../../os/dev/gpio-hal.h \
  ../../../../arch/platform/cooja/./dev/gpio-hal-arch.h \
- ../../../../os/sys/ctimer.h ../../../../os/net/app-layer/coap/coap.h \
+ ../../../../os/sys/ctimer.h ../../../../os/dev/leds.h \
+ ../../../../os/dev/serial-line.h ../../../../os/net/ipv6/uip-ds6.h \
+ ../../../../os/net/ipv6/multicast/uip-mcast6.h \
+ ../../../../os/net/ipv6/multicast/uip-mcast6-engines.h \
+ ../../../../os/net/ipv6/multicast/uip-mcast6-route.h \
+ ../../../../os/net/ipv6/multicast/smrf.h \
+ ../../../../os/net/ipv6/multicast/esmrf.h \
+ ../../../../os/net/ipv6/multicast/roll-tm.h \
+ ../../../../os/net/ipv6/multicast/uip-mcast6-stats.h \
+ ../../../../os/net/ipv6/multicast/mpl.h ../../../../os/sys/stimer.h \
+ ../../../../os/net/ipv6/uip-nd6.h ../../../../os/net/ipv6/uip-ds6-nbr.h \
+ ../../../../os/net/nbr-table.h ../../../../os/net/netstack.h \
+ ../../../../os/net/mac/mac.h ../../../../os/dev/radio.h \
+ ../../../../os/net/mac/framer/framer.h \
+ ../../../../os/net/ipv6/uip-packetqueue.h \
+ ../../../../os/net/ipv6/uip-ds6-route.h ../../../../os/lib/list.h \
+ ../../../../os/net/ipv6/uiplib.h \
+ ../../../../os/net/app-layer/coap/coap.h \
  ../../../../os/net/app-layer/coap/coap-constants.h \
  ../../../../os/net/app-layer/coap/coap-conf.h \
  ../../../../os/net/app-layer/coap/coap-transport.h \
@@ -41,33 +58,16 @@ build/cooja/obj/device.o: device.c \
  ../../../../os/net/ipv6/uip-udp-packet.h \
  ../../../../os/net/ipv6/simple-udp.h \
  ../../../../os/net/ipv6/uip-nameserver.h \
- ../../../../os/net/routing/routing.h \
- ../../../../os/net/ipv6/uip-ds6-nbr.h ../../../../os/net/ipv6/uip-nd6.h \
- ../../../../os/sys/stimer.h ../../../../os/net/nbr-table.h \
- ../../../../os/net/netstack.h ../../../../os/net/mac/mac.h \
- ../../../../os/dev/radio.h ../../../../os/net/mac/framer/framer.h \
- ../../../../os/net/ipv6/uip-packetqueue.h \
- ../../../../os/net/ipv6/uip-ds6-route.h ../../../../os/lib/list.h \
- ../../../../os/net/ipv6/uip-sr.h ../../../../os/net/ipv6/uip-icmp6.h \
- ../../../../os/net/ipv6/uip-ds6.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6-engines.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6-route.h \
- ../../../../os/net/ipv6/multicast/smrf.h \
- ../../../../os/net/ipv6/multicast/esmrf.h \
- ../../../../os/net/ipv6/multicast/roll-tm.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6-stats.h \
- ../../../../os/net/ipv6/multicast/mpl.h ../../../../os/net/ipv6/psock.h \
- ../../../../os/contiki-lib.h ../../../../os/lib/list.h \
- ../../../../os/lib/memb.h ../../../../os/lib/random.h \
- ../../../../os/net/ipv6/udp-socket.h \
+ ../../../../os/net/routing/routing.h ../../../../os/net/ipv6/uip-sr.h \
+ ../../../../os/net/ipv6/uip-icmp6.h ../../../../os/net/ipv6/uip-ds6.h \
+ ../../../../os/net/ipv6/psock.h ../../../../os/contiki-lib.h \
+ ../../../../os/lib/list.h ../../../../os/lib/memb.h \
+ ../../../../os/lib/random.h ../../../../os/net/ipv6/udp-socket.h \
  ../../../../os/net/ipv6/tcp-socket.h ../../../../os/net/ipv6/uip.h \
  ../../../../os/net/netstack.h ../../../../os/lib/random.h \
- ../../../../os/net/ipv6/uip-ds6.h ../../../../os/dev/leds.h \
- ../../../../os/net/ipv6/tcp-socket.h \
- ../../../../os/net/ipv6/udp-socket.h ../../../../os/net/ipv6/uiplib.h \
- resources/sensors.h resources/scaler_params.h \
- resources/print_prediction.h \
+ ../../../../os/dev/leds.h ../../../../os/net/ipv6/tcp-socket.h \
+ ../../../../os/net/ipv6/udp-socket.h resources/sensors.h \
+ resources/scaler_params.h resources/print_prediction.h \
  /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_net.h \
  /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_common.h \
  /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_log.h \
@@ -107,6 +107,29 @@ project-conf.h:
 ../../../../os/dev/gpio-hal.h:
 ../../../../arch/platform/cooja/./dev/gpio-hal-arch.h:
 ../../../../os/sys/ctimer.h:
+../../../../os/dev/leds.h:
+../../../../os/dev/serial-line.h:
+../../../../os/net/ipv6/uip-ds6.h:
+../../../../os/net/ipv6/multicast/uip-mcast6.h:
+../../../../os/net/ipv6/multicast/uip-mcast6-engines.h:
+../../../../os/net/ipv6/multicast/uip-mcast6-route.h:
+../../../../os/net/ipv6/multicast/smrf.h:
+../../../../os/net/ipv6/multicast/esmrf.h:
+../../../../os/net/ipv6/multicast/roll-tm.h:
+../../../../os/net/ipv6/multicast/uip-mcast6-stats.h:
+../../../../os/net/ipv6/multicast/mpl.h:
+../../../../os/sys/stimer.h:
+../../../../os/net/ipv6/uip-nd6.h:
+../../../../os/net/ipv6/uip-ds6-nbr.h:
+../../../../os/net/nbr-table.h:
+../../../../os/net/netstack.h:
+../../../../os/net/mac/mac.h:
+../../../../os/dev/radio.h:
+../../../../os/net/mac/framer/framer.h:
+../../../../os/net/ipv6/uip-packetqueue.h:
+../../../../os/net/ipv6/uip-ds6-route.h:
+../../../../os/lib/list.h:
+../../../../os/net/ipv6/uiplib.h:
 ../../../../os/net/app-layer/coap/coap.h:
 ../../../../os/net/app-layer/coap/coap-constants.h:
 ../../../../os/net/app-layer/coap/coap-conf.h:
@@ -133,28 +156,9 @@ project-conf.h:
 ../../../../os/net/ipv6/simple-udp.h:
 ../../../../os/net/ipv6/uip-nameserver.h:
 ../../../../os/net/routing/routing.h:
-../../../../os/net/ipv6/uip-ds6-nbr.h:
-../../../../os/net/ipv6/uip-nd6.h:
-../../../../os/sys/stimer.h:
-../../../../os/net/nbr-table.h:
-../../../../os/net/netstack.h:
-../../../../os/net/mac/mac.h:
-../../../../os/dev/radio.h:
-../../../../os/net/mac/framer/framer.h:
-../../../../os/net/ipv6/uip-packetqueue.h:
-../../../../os/net/ipv6/uip-ds6-route.h:
-../../../../os/lib/list.h:
 ../../../../os/net/ipv6/uip-sr.h:
 ../../../../os/net/ipv6/uip-icmp6.h:
 ../../../../os/net/ipv6/uip-ds6.h:
-../../../../os/net/ipv6/multicast/uip-mcast6.h:
-../../../../os/net/ipv6/multicast/uip-mcast6-engines.h:
-../../../../os/net/ipv6/multicast/uip-mcast6-route.h:
-../../../../os/net/ipv6/multicast/smrf.h:
-../../../../os/net/ipv6/multicast/esmrf.h:
-../../../../os/net/ipv6/multicast/roll-tm.h:
-../../../../os/net/ipv6/multicast/uip-mcast6-stats.h:
-../../../../os/net/ipv6/multicast/mpl.h:
 ../../../../os/net/ipv6/psock.h:
 ../../../../os/contiki-lib.h:
 ../../../../os/lib/list.h:
@@ -165,11 +169,9 @@ project-conf.h:
 ../../../../os/net/ipv6/uip.h:
 ../../../../os/net/netstack.h:
 ../../../../os/lib/random.h:
-../../../../os/net/ipv6/uip-ds6.h:
 ../../../../os/dev/leds.h:
 ../../../../os/net/ipv6/tcp-socket.h:
 ../../../../os/net/ipv6/udp-socket.h:
-../../../../os/net/ipv6/uiplib.h:
 resources/sensors.h:
 resources/scaler_params.h:
 resources/print_prediction.h:

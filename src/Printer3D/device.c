@@ -1,22 +1,30 @@
+/* Contiki core */
 #include "contiki.h"
 #include "sys/log.h"
-#include "dev/button-hal.h"
 
+/* Hardware */
+#include "os/dev/button-hal.h"
+#include "os/dev/leds.h"
+#include "os/dev/serial-line.h"
+
+/* Networking (IPv6 / uIP) */
+#include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uiplib.h"
+
+/* Application protocols */
 #include "coap.h"
 #include "coap-blocking-api.h"
 #include "coap-engine.h"
 #include "coap-transactions.h"
-
 #include "mqtt.h"
 
-#include "net/ipv6/uip-ds6.h"
-#include "net/ipv6/uiplib.h"
-
-#include <string.h>
+/* Standard C libraries */
+#include <math.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 
-#include <math.h>
+/* Project resources */
 #include "resources/sensors.h"
 #include "resources/scaler_params.h"
 
@@ -25,9 +33,11 @@
 #include "resources/print_prediction.h"
 #pragma GCC diagnostic pop
 
+// Smart Printer Log
 #define LOG_MODULE "Smart Printer"
 #define LOG_LEVEL LOG_LEVEL_APP
 
+// CoAP Configuration
 #define CLOUD_SERVER_EP "coap://[fd00::1]:5683"
 #define REG_URI_PATH "/registration"
 #define END_PRINT_URI_PATH "/printFinished"
@@ -134,16 +144,27 @@ RESOURCE(res_print,
 /* ==================================================== */
 /* =                     HELPERS                      = */
 /* ==================================================== */ 
-// Set device state helper (updates last_state and logs)
+// Set device state helper (updates last_state, logs and handles LEDs)
 static void set_state(device_state_t new_state){
   if(current_state == new_state)
     return;
   last_state = current_state;
   current_state = new_state;
 
+  // Turn off all LEDs first to ensure a clean state
+  leds_off(LEDS_ALL);
+
+  // Handle LED logic based on the new state
+  if(current_state == STATE_INITIALIZATION){
+    // Turn ON Yellow, others are OFF
+    leds_on(LEDS_NUM_TO_MASK(LEDS_YELLOW));
+  }
+  else if(current_state == STATE_ONLINE){
+    // Turn ON Green, others are OFF
+    leds_on(LEDS_NUM_TO_MASK(LEDS_GREEN));
+  }
   LOG_INFO("STATE: %s\n", state_to_string(current_state));
 }
-
 // Alternate Current Power Formula
 static float calculate_instantaneous_ac_power(float tension, float current, float phase_shift){
   // P = V * I * cos(phi)
@@ -535,6 +556,9 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             mqtt_disconnect(&conn);
           }
 
+          // Ensure all LEDs are OFF when the system is resetting
+          leds_off(LEDS_ALL);
+
           set_state(STATE_OFF);
           sample_count = 0;
           error_count = 0;
@@ -622,6 +646,9 @@ PROCESS_THREAD(smart_printer_process, ev, data){
       else if(ev == PROCESS_EVENT_TIMER && data == &sample_timer){
         if(waiting_for_confirmation)
           continue;
+
+        // Turn ON Yellow LED to indicate measurement in progress
+        leds_on(LEDS_NUM_TO_MASK(LEDS_YELLOW));
         
         // Activate Sensors
         sensor_activate();
@@ -640,12 +667,10 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         // Fetch IPv6 Address to include in the MQTT JSON payload
         char ipaddr_str[UIPLIB_IPV6_MAX_STR_LEN];
         uip_ds6_addr_t *addr = uip_ds6_get_global(ADDR_PREFERRED);
-        if(addr != NULL){
+        if(addr != NULL)
           uiplib_ipaddr_snprint(ipaddr_str, sizeof(ipaddr_str), &addr->ipaddr);
-        } 
-        else{
+        else
           strcpy(ipaddr_str, "unknown");
-        }
 
         // Format the JSON payload and publish via MQTT if connected
         if(mqtt_connected){
@@ -700,6 +725,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         
         // If we reached 5 samples, process the window
         if(sample_count == 5){
+          leds_off(LEDS_NUM_TO_MASK(LEDS_YELLOW)); // Turn OFF Yellow LED to create the blinking effect
           LOG_INFO("Window full. Extracting features and running prediction...\n");
           
           uint8_t feature_idx = 0;
@@ -757,6 +783,9 @@ PROCESS_THREAD(smart_printer_process, ev, data){
           // EARLY STOPPING LOGIC
           if(error_count >= 2) {
             LOG_ERR("EARLY STOPPING: Two consecutive anomalies detected. Printing aborted preemptively!\n");
+            // Turn ON Red LED and ensure others are OFF due to Machine Learning anomaly
+            leds_off(LEDS_ALL);
+            leds_on(LEDS_NUM_TO_MASK(LEDS_RED));
             
             // Let's stop the running timers
             etimer_stop(&sample_timer);
@@ -786,15 +815,21 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         
         // Put Sensors to sleep
         sensor_sleep();
-        // Restart the sampling timer for the next second
-        if(!waiting_for_confirmation)
+
+        // Restart the sampling timer and turn OFF Yellow LED if no errors occurred
+        if(!waiting_for_confirmation){
           etimer_reset(&sample_timer);
+        }
       }
       
       // This event triggers when the fake printing timer ends
       else if(ev == PROCESS_EVENT_TIMER && data == &print_timer){
         LOG_INFO("Printing complete (simulated)\n");
         stl_length = 0; // Reset for the next print
+        
+        // Ensure Yellow LED is OFF when printing is successfully done
+        leds_off(LEDS_ALL);
+        leds_on(LEDS_NUM_TO_MASK(LEDS_GREEN) | LEDS_NUM_TO_MASK(LEDS_YELLOW));
         
         // Stop the sampling timer and reset the window count to cancel any pending prediction
         etimer_stop(&sample_timer);
