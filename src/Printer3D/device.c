@@ -98,6 +98,7 @@ static char registration_msg[128];
 static size_t stl_length = 0;
 static bool waiting_for_confirmation = false;
 static char print_result[16];
+static clock_time_t remaining_print_time = 0;
 
 // Sensing Variables
 static float sensor_buffer[8][5]; // Indices: 0-2 (Plate X,Y,Z), 3-5 (Extruder X,Y,Z), 6 (Tension), 7 (Power)
@@ -433,7 +434,7 @@ PROCESS_THREAD(setup_process, ev, data){
         process_poll(&smart_printer_process);
       } 
       else{
-        LOG_WARN("Smart Printer already active. Hold button 3 seconds to perform hard reset.\n");
+        LOG_WARN("Smart Printer already active. Hold button 5 seconds to perform hard reset.\n");
         LOG_INFO("STATE: %s\n", state_to_string(current_state));
       }
     }
@@ -515,31 +516,68 @@ PROCESS_THREAD(smart_printer_process, ev, data){
     PROCESS_WAIT_EVENT();
 
     /* BUTTON HANDLING */
-    // Handle Short Press (for confirmation)
-    if(ev == button_hal_press_event && btn0 && data){
+    // Handle Button Release (for short press confirmation or 2-4s override)
+    if(ev == button_hal_release_event && btn0 && data){
       button_hal_button_t *btn = (button_hal_button_t *)data;
       if(btn == btn0){
-        // If we finished printing and are waiting for the user...
+        // If we finished printing (or ML stopped it) and are waiting for the user...
         if(current_state == STATE_PRINTING && waiting_for_confirmation){
-          LOG_INFO("User confirmation received. Sending %s notification to server...\n", print_result);
-          waiting_for_confirmation = false; // Reset the flag
+          // Short press (< 2 seconds): Confirm the current print_result
+          if(btn->press_duration_seconds < 2){
+            // Let's stop the running timers
+            etimer_stop(&sample_timer);
+            etimer_stop(&print_timer);
             
-          prepare_coap_request(print_result, COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
-          COAP_BLOCKING_REQUEST(&server_ep, request, print_finished_handler);
-          
-          // Note: State transition to ONLINE is handled inside print_finished_handler
+            // Let's clean up the state to prepare the node for new prints
+            stl_length = 0;
+            error_count = 0;
+
+            LOG_INFO("Button released (< 2s). Sending %s notification to server...\n", print_result);
+            waiting_for_confirmation = false; // Reset the flag
+              
+            prepare_coap_request(print_result, COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
+            COAP_BLOCKING_REQUEST(&server_ep, request, print_finished_handler);
+          }
+          // Long press (between 2 and 4 seconds): Override or Manual Fail
+          else if(btn->press_duration_seconds >= 2 && btn->press_duration_seconds < 5){
+            // Case A: Override ML Early Stopping
+            if(strcmp(print_result, "FAILED") == 0){
+              LOG_INFO("Button released (2-4s). Overriding ML Anomaly. Resuming print...\n");
+              
+              // Turn OFF Red LED, ensure others are OFF
+              leds_off(LEDS_ALL);
+              
+              waiting_for_confirmation = false;
+              error_count = 0; // Reset error count to avoid immediate re-trigger
+              
+              // Restart the timers
+              etimer_restart(&sample_timer);
+              etimer_set(&print_timer, remaining_print_time); // He starts from where he left off 
+            }
+            // Case B: Manual Failure after successful timer completion
+            else if(strcmp(print_result, "FINISHED") == 0){
+              LOG_INFO("Button released (2-4s). Manual override: Declaring print as FAILED.\n");
+              
+              waiting_for_confirmation = false;
+              
+              // Send FAILED instead of FINISHED
+              prepare_coap_request("FAILED", COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
+              COAP_BLOCKING_REQUEST(&server_ep, request, print_finished_handler);
+            }
+          }
         }
       }
     }
-    // Handle Long Press (for Hard Reset)
+    // Handle Long Press (for Hard Reset immediately at >= 5 seconds)
     else if(ev == button_hal_periodic_event && btn0 && data){
       button_hal_button_t *btn = (button_hal_button_t *)data;
 
       if(btn == btn0){
         LOG_DBG("Smart Printer: Button hold duration: %u s\n", btn->press_duration_seconds);
         
-        if(btn->press_duration_seconds >= 3 && current_state != STATE_OFF){
-          LOG_INFO("Button held >=3s -> Hard reset\n");
+        // Hard Reset (>= 5 seconds)
+        if(btn->press_duration_seconds >= 5 && current_state != STATE_OFF){
+          LOG_INFO("Button held >= 5s -> Hard reset\n");
 
           if(current_state == STATE_PRINTING){
             prepare_coap_request("ERROR", COAP_TYPE_NON, COAP_PUT, END_PRINT_URI_PATH);
@@ -786,15 +824,14 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             // Turn ON Red LED and ensure others are OFF due to Machine Learning anomaly
             leds_off(LEDS_ALL);
             leds_on(LEDS_NUM_TO_MASK(LEDS_RED));
-            
+
+            // Save the remaining print time before stopping the timer
+            remaining_print_time = etimer_expiration_time(&print_timer) - clock_time();
+
             // Let's stop the running timers
             etimer_stop(&sample_timer);
             etimer_stop(&print_timer);
-            
-            // Let's clean up the state to prepare the node for new prints
-            stl_length = 0;
             sample_count = 0;
-            error_count = 0;
             
             sensor_deactivate();
             
@@ -802,7 +839,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             waiting_for_confirmation = true;
             strncpy(print_result, "FAILED", sizeof(print_result));
             LOG_INFO("Print aborted. Press the button to confirm and notify the server.\n");            
-          } 
+          }
           else{
             // If printing continues, we shift the window: we keep the last measurement (index 4) at index 0
             for(uint8_t var = 0; var < 8; var++)
