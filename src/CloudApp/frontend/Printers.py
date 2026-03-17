@@ -1,43 +1,108 @@
 import os
 import json
 import tkinter as tk
-
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from PIL import Image, ImageTk
+
 from utility.Log import Log
 
 class PrinterScreen:
     """Module handling the 3D Printer dashboard interface and logic."""
-    
     def __init__(self, parent_frame, root_window, send_ws_callback, logger, colors):
-        """
-        Initializes the Printer screen inside the given parent frame.
-        
-        :param parent_frame: The frame (tab) where this screen will be drawn.
-        :param root_window: The main Tkinter root (needed for full-screen modals).
-        :param send_ws_callback: Function reference to send WebSocket messages.
-        :param logger: Shared application logger (Overridden by specific PRINTERS logger).
-        :param colors: Shared color palette dictionary.
-        """
         self.parent = parent_frame
         self.root = root_window
         self.send_ws_message = send_ws_callback
         self.COLORS = colors
 
-        # Initialize the specific logger for this module with the name "PRINTERS"
         self.logger = Log(logger_name="printer_logger", module_name="PRINTERS").get_logger()
         self.logger.info("Printer Screen initialized.")
 
-        # Stores currently displayed printers indexed by their IP address
         self.displayed_printers = {}
-        # Stores Tkinter image references to prevent garbage collection
         self.card_images = {}
-        # Keeps track of the IP address when initiating an STL file upload
         self.target_printer_ip = None
 
-        # Main container where dynamically generated printer cards will be placed
-        self.main_container = tk.Frame(self.parent, bg=self.COLORS["bg"])
-        self.main_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        # SCROLLABLE CONTAINER SETUP
+        # Create a Canvas
+        self.canvas = tk.Canvas(self.parent, bg=self.COLORS["bg"], highlightthickness=0)
+        # Create a Scrollbar linked to the Canvas
+        self.scrollbar = ttk.Scrollbar(self.parent, orient=tk.VERTICAL, command=self.canvas.yview)
+        # Create the Main Frame INSIDE the Canvas
+        self.main_container = tk.Frame(self.canvas, bg=self.COLORS["bg"])
+
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Add the Frame to a Canvas window anchored to Top-Left ("nw")
+        self.canvas_window = self.canvas.create_window((0, 0), window=self.main_container, anchor="nw")
+
+        # Bind events to update scroll region and recalculate grid on resize
+        self.main_container.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.canvas.bind("<Configure>", self._repack_cards)
+        
+        # Bind mousewheel scrolling only when the mouse is over the canvas
+        self.canvas.bind("<Enter>", self._bind_mousewheel)
+        self.canvas.bind("<Leave>", self._unbind_mousewheel)
+
+    # MOUSEWHEEL SCROLLING LOGIC
+    def _bind_mousewheel(self, event):
+        """Binds the mouse wheel to the canvas for scrolling."""
+        # Windows & Mac
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+        # Linux
+        self.canvas.bind_all("<Button-4>", self._on_mousewheel)
+        self.canvas.bind_all("<Button-5>", self._on_mousewheel)
+
+    def _unbind_mousewheel(self, event):
+        """Unbinds the mouse wheel when leaving the canvas area."""
+        self.canvas.unbind_all("<MouseWheel>")
+        self.canvas.unbind_all("<Button-4>")
+        self.canvas.unbind_all("<Button-5>")
+
+    def _on_mousewheel(self, event):
+        """Handles the actual scroll execution only if content exceeds the screen."""
+        # Retrieve the current height of the Canvas and the frame containing the printers
+        canvas_height = self.canvas.winfo_height()
+        content_height = self.main_container.winfo_height()
+
+        # If the printers fit comfortably on the screen, block scrolling
+        if content_height <= canvas_height:
+            return
+
+        # If you need more lines, scroll instead
+        if event.num == 5 or event.delta < 0:
+            self.canvas.yview_scroll(1, "units")
+        elif event.num == 4 or event.delta > 0:
+            self.canvas.yview_scroll(-1, "units")
+
+    def _repack_cards(self, event=None):
+        """Calculates flow layout: arranges cards in a grid that wraps based on window width."""
+        if not self.displayed_printers:
+            return
+
+        # Card width (200) + Total horizontal padding (15 left + 15 right = 30)
+        card_width = 230
+        canvas_width = self.canvas.winfo_width()
+        
+        # Prevent division by zero, ensure at least 1 column
+        columns = max(1, canvas_width // card_width)
+        
+        # Sort printers alphabetically
+        sorted_ips = sorted(self.displayed_printers.keys(), key=lambda k: self.displayed_printers[k]["data"]["name"].lower())
+        
+        # Place cards in the grid
+        for index, ip in enumerate(sorted_ips):
+            card = self.displayed_printers[ip]["card"]
+            row = index // columns
+            col = index % columns
+            # Using grid instead of pack for wrap-around behavior
+            card.grid(row=row, column=col, padx=15, pady=15, sticky="nw")
+
+        # Force internal layout update before calculating scroll area
+        self.parent.update_idletasks()
+        # Strictly fix the scrollable area to the actual edges of the cards
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def process_incoming_data(self, json_payload):
         """Parses the incoming JSON payload and translates it into UI updates."""
@@ -82,6 +147,9 @@ class PrinterScreen:
                 if ip in self.card_images:
                     del self.card_images[ip]
 
+        # Call the dynamic grid packing
+        self._repack_cards()
+
     def _apply_color_filter(self, image_path, tint_color):
         """Loads an image, resizes it, and applies a semi-transparent color overlay."""
         try:
@@ -115,8 +183,8 @@ class PrinterScreen:
 
     def _create_printer_card(self, ip, name, node_type, utilization, status):
         """Instantiates and renders a new graphical card representing a specific 3D printer node."""
+        # Frame size is set, grid layout will handle the placement
         card = tk.Frame(self.main_container, bg=self.COLORS["card_bg"], width=200, height=250, cursor="hand2", bd=2)
-        card.pack(side=tk.LEFT, padx=15, pady=15)
         card.pack_propagate(False)
 
         img_filename = "MonkeyFabSpire.png" if str(node_type).strip().lower() == "filament" else "PhotonS.png"
@@ -219,7 +287,7 @@ class PrinterScreen:
             btn_frame,
             text="Queue STL" if data.get('status') in ["PRINTING", "OFFLINE"] else "Upload STL",
             font=("Helvetica", 12, "bold"),
-            bg="#005CBF",
+            bg=self.COLORS["button_bg"],
             fg=self.COLORS["text_light"],
             relief=tk.FLAT,
             command=lambda: self._request_stl_list(data.get('ip'))
@@ -246,10 +314,10 @@ class PrinterScreen:
         self._modal_bg.place(relx=0, rely=0, relwidth=1, relheight=1)
         self._modal_bg.bind("<Button-1>", lambda e: "break")
 
-        popup = tk.Frame(self._modal_bg, bg=self.COLORS["bg"], highlightbackground="#005CBF", highlightthickness=2)
+        popup = tk.Frame(self._modal_bg, bg=self.COLORS["bg"], highlightbackground=self.COLORS["button_bg"], highlightthickness=2)
         popup.place(relx=0.5, rely=0.5, anchor="center", width=400, height=450)
 
-        tk.Label(popup, text=f"Select STL for {self.target_printer_ip}", font=("Helvetica", 16, "bold"), bg=self.COLORS["bg"], fg="#005CBF").pack(pady=20)
+        tk.Label(popup, text=f"Select STL for {self.target_printer_ip}", font=("Helvetica", 16, "bold"), bg=self.COLORS["bg"], fg=self.COLORS["button_bg"]).pack(pady=20)
 
         list_frame = tk.Frame(popup, bg=self.COLORS["bg"])
         list_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
@@ -259,7 +327,7 @@ class PrinterScreen:
         else:
             listbox = tk.Listbox(
                 list_frame, bg=self.COLORS["card_bg"], fg=self.COLORS["text_light"],
-                font=("Helvetica", 12), selectbackground="#005CBF", relief=tk.FLAT, bd=0,
+                font=("Helvetica", 12), selectbackground=self.COLORS["button_bg"], relief=tk.FLAT, bd=0,
                 highlightthickness=1, highlightbackground=self.COLORS["text_muted"]
             )
             listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -279,7 +347,7 @@ class PrinterScreen:
 
         send_btn = tk.Button(
             btn_frame, text="Send to Printer", font=("Helvetica", 12, "bold"),
-            bg="#005CBF", fg=self.COLORS["text_light"], relief=tk.FLAT,
+            bg=self.COLORS["button_bg"], fg=self.COLORS["text_light"], relief=tk.FLAT,
             command=self._execute_stl_send
         )
         send_btn.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(0, 10), ipady=5)
@@ -318,4 +386,4 @@ class PrinterScreen:
         
         messagebox.showinfo("Upload Initiated", f"Command sent to server to transfer '{selected_file}'.")
         self._modal_bg.destroy()
-        
+    

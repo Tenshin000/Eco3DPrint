@@ -1,2 +1,5 @@
 from .UserApp import UserApp
-from .Printer import PrinterScreen
+from .DailyReport import DailyReportScreen
+from .MonthlyReport import MonthlyReportScreen
+from .Printers import PrinterScreen
+from .WeeklyReport import WeeklyReportScreen

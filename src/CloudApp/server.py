@@ -38,18 +38,18 @@ def main():
 
     # Initialize and connect to the Database Layer
     logger.info("Starting Database...")
-    db = Database(host=db_host, user=db_user, password=db_password, database=db_name)
-    if not db.connect():
+    database = Database(host=db_host, user=db_user, password=db_password, database=db_name)
+    if not database.connect():
         logger.error("Unable to connect to the database")
         sys.exit(1)  # Fatal error if DB connection fails
 
     logger.info("Database Ready")
 
     # Reset all nodes to OFFLINE at startup to ensure consistent state
-    db.execute("UPDATE Node SET status = 'OFFLINE'")
+    database.execute("UPDATE Node SET status = 'OFFLINE'")
 
     # If the server crashed during a print, set any stuck PRINTING jobs to ERROR. This prevents phantom jobs from blocking the queue upon server restart.
-    db.execute("UPDATE `Print` SET status = 'ERROR', energy = 0 WHERE status = 'PRINTING'")
+    database.execute("UPDATE `Print` SET status = 'ERROR', energy = 0 WHERE status = 'PRINTING'")
 
     # CoAP server configuration (Fallback to fd00::1/5683 if not in config.ini)   
     coap_host = config.get('coap', 'host', fallback='fd00::1') # IPv6 address
@@ -61,14 +61,14 @@ def main():
     mqtt_port = config.getint('mqtt', 'port', fallback=1883) # Standard MQTT port
 
     # Initialize NodeMonitor to track node health and status
-    node_monitor = NodeMonitor(db)
+    node_monitor = NodeMonitor(database)
     
     # Initialize PrintManager to handle print jobs, linked with NodeMonitor
-    print_manager = PrintManager(db, node_monitor)
+    print_manager = PrintManager(database, node_monitor)
 
     # Initialize WebSocketManager to broadcast node status changes
     # Pass NodeMonitor's get_all_nodes method and PrintManager
-    ws_manager = WebSocketManager(node_monitor.get_all_nodes, print_manager)
+    ws_manager = WebSocketManager(node_monitor.get_all_nodes, print_manager, database)
     # Hook NodeMonitor's on_change_callback to broadcast updates to WebSocket clients
     node_monitor.on_change_callback = ws_manager.broadcast
 
@@ -81,13 +81,13 @@ def main():
     mqtt_handler = MQTTHandler(
         broker_host=mqtt_host, 
         broker_port=mqtt_port, 
-        database=db,
+        database=database,
         topic="printer/measurements"
     )
     mqtt_handler.start()
 
     # Initialize CoAP server to listen for node messages (e.g., registrations, print notifications)
-    server = CoAPServer(coap_host, coap_port, False, db, node_monitor, print_manager)
+    server = CoAPServer(coap_host, coap_port, False, database, node_monitor, print_manager)
 
     def run_server():
         try:
@@ -128,7 +128,7 @@ def main():
         
         # Set all nodes to OFFLINE in the database before shutdown
         try:
-            db.execute("UPDATE Node SET status = 'OFFLINE'")
+            database.execute("UPDATE Node SET status = 'OFFLINE'")
             logger.info("Database: All nodes set to OFFLINE.")
         except Exception as e:
             logger.error(f"Database update failed: {e}")
@@ -141,7 +141,7 @@ def main():
 
         # Close database connection
         try:
-            db.close()
+            database.close()
         except: 
             pass
         

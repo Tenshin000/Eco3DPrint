@@ -7,8 +7,11 @@ import tkinter as tk
 import websockets
 from tkinter import ttk, messagebox
 
+from frontend.DailyReport import DailyReportScreen
+from frontend.MonthlyReport import MonthlyReportScreen
+from frontend.WeeklyReport import WeeklyReportScreen
+from frontend.Printers import PrinterScreen
 from utility.Log import Log
-from frontend.Printer import PrinterScreen
 
 class UserApp:
     """Frontend User Application for managing 3D printers via WebSockets."""
@@ -17,23 +20,26 @@ class UserApp:
         self.root = root
 
         self.root.title("Eco3DPrint - Dashboard")
-        self.root.geometry("900x600")
-        self.root.configure(bg="#1E1E1E")
-
+        self.root.geometry("1100x700") # Slightly wider to accommodate tables
+        
         self.logger = Log(logger_name="gui_logger", module_name="FRONTEND").get_logger()
         self.ws_url = "ws://localhost:8765"
 
+        # ECOLOGY-THEMED COLOR PALETTE
         self.COLORS = {
-            "bg": "#1E1E1E",
-            "header": "#2E7D32",
-            "card_bg": "#2D2D2D",
-            "card_hover": "#3D3D3D",
-            "text_light": "#FFFFFF",
-            "text_muted": "#AAAAAA",
-            "filter_online": "#00FF00",
-            "filter_offline": "#FF0000",
-            "filter_printing": "#FFFF00" 
+            "bg": "#121F17",              # Very dark forest green/black for background
+            "header": "#1B5E20",          # Deep eco green for the header
+            "card_bg": "#1E2D24",         # Slightly lighter green-gray for cards
+            "card_hover": "#2B4034",      # Lighter green for hover states
+            "text_light": "#E8F5E9",      # Very light green/white for primary text
+            "text_muted": "#A5D6A7",      # Muted green for secondary text
+            "button_bg": "#2E7D32",       # Eco green for buttons and highlights
+            "filter_online": "#00FF00",   # Green color
+            "filter_offline": "#FF0000",  # Red color
+            "filter_printing": "#FFFF00"  # Yellow color
         }
+        
+        self.root.configure(bg=self.COLORS["bg"])
 
         self.is_running = True
         self.update_queue = queue.Queue()
@@ -63,13 +69,13 @@ class UserApp:
         )
         title.pack(side=tk.LEFT, padx=20, pady=15)
 
-        # Style the Notebook to match the dark theme (Hanging Folder effect)
+        # Style the Notebook to match the dark eco theme (Hanging Folder effect)
         style = ttk.Style()
         style.theme_use('default')
         style.configure('TNotebook', background=self.COLORS["bg"], borderwidth=0)
         style.configure('TNotebook.Tab', background=self.COLORS["card_bg"], foreground=self.COLORS["text_light"], 
                         padding=[15, 5], font=('Helvetica', 12, 'bold'), borderwidth=0)
-        style.map('TNotebook.Tab', background=[('selected', '#005CBF')]) # Blue highlight for selected tab
+        style.map('TNotebook.Tab', background=[('selected', self.COLORS["button_bg"])]) # Eco green highlight for selected tab
 
         # Main Notebook container
         self.notebook = ttk.Notebook(self.root)
@@ -88,9 +94,58 @@ class UserApp:
             colors=self.COLORS
         )
 
-        # Space for future tabs (e.g., Settings, Analytics)
-        # settings_frame = tk.Frame(self.notebook, bg=self.COLORS["bg"])
-        # self.notebook.add(settings_frame, text="  Settings  ")
+        # Tab 2: Daily Report
+        report_frame = tk.Frame(self.notebook, bg=self.COLORS["bg"])
+        self.notebook.add(report_frame, text="  Daily Report  ")
+        
+        # Instantiate the DailyReportScreen module inside the tab
+        self.screens["report"] = DailyReportScreen(
+            parent_frame=report_frame,
+            send_ws_callback=self.send_ws_message,
+            colors=self.COLORS
+        )
+
+        # Tab 3: Weekly Report
+        weekly_frame = tk.Frame(self.notebook, bg=self.COLORS["bg"])
+        self.notebook.add(weekly_frame, text="  Weekly Report  ")
+        self.screens["weekly_report"] = WeeklyReportScreen(
+            parent_frame=weekly_frame,
+            send_ws_callback=self.send_ws_message,
+            colors=self.COLORS
+        )
+
+        # Tab 4: Monthly Report 
+        monthly_frame = tk.Frame(self.notebook, bg=self.COLORS["bg"])
+        self.notebook.add(monthly_frame, text="  Monthly Report  ")
+        self.screens["monthly_report"] = MonthlyReportScreen(
+            parent_frame=monthly_frame,
+            send_ws_callback=self.send_ws_message,
+            colors=self.COLORS
+        )
+
+        # Bind the tab change event to automatically refresh data
+        self.notebook.bind("<<NotebookTabChanged>>", self._on_tab_changed)
+
+    def _on_tab_changed(self, event):
+        """
+        Triggered whenever the user switches tabs in the Notebook.
+        Used to automatically refresh data for specific screens.
+        """
+        # Get the currently selected tab index
+        selected_tab = self.notebook.index(self.notebook.select())
+        
+        # If the Daily Report tab (index 1) is selected, fetch the latest data
+        if selected_tab == 1 and "report" in self.screens:
+            self.logger.info("Daily Report tab selected. Auto-fetching latest data...")
+            self.screens["report"].request_report()
+        # If the Weekly Report tab (index 2) is selected, fetch the latest data
+        elif selected_tab == 2 and "weekly_report" in self.screens:
+            self.logger.info("Weekly Report tab selected. Auto-fetching latest data...")
+            self.screens["weekly_report"].request_report()
+        # If the Monthly Report tab (index 3) is selected 
+        elif selected_tab == 3 and "monthly_report" in self.screens:
+            self.logger.info("Monthly Report tab selected. Auto-fetching latest data...")
+            self.screens["monthly_report"].request_report()
 
     def _start_websocket_thread(self):
         """Spawns a daemon thread to execute the asyncio WebSocket loop asynchronously."""
@@ -144,11 +199,25 @@ class UserApp:
         try:
             while True:
                 message = self.update_queue.get_nowait()
-                # Route the message to the Printers screen
-                if "printers" in self.screens:
-                    self.screens["printers"].process_incoming_data(message)
-                    
+                parsed_data = json.loads(message)
+                
+                # Intelligent routing to the correct screen based on the message "type"
+                if "type" in parsed_data:
+                    if parsed_data["type"] == "daily_report" and "report" in self.screens:
+                        self.screens["report"].process_incoming_data(message)
+                    elif parsed_data["type"] == "weekly_report" and "weekly_report" in self.screens:
+                        self.screens["weekly_report"].process_incoming_data(message)
+                    elif parsed_data["type"] == "monthly_report" and "monthly_report" in self.screens:
+                        self.screens["monthly_report"].process_incoming_data(message)
+                    elif parsed_data["type"] == "stl_list" and "printers" in self.screens:
+                        self.screens["printers"].process_incoming_data(message)
+                else:
+                    # If there's no "type", it's the standard active_nodes status dictionary
+                    if "printers" in self.screens:
+                        self.screens["printers"].process_incoming_data(message)    
         except queue.Empty:
             pass
+        except json.JSONDecodeError:
+            self.logger.error("Failed to decode JSON from queue.")
 
         self.root.after(100, self._process_queue)
