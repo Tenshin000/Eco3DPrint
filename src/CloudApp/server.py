@@ -49,7 +49,7 @@ def main():
     db.execute("UPDATE Node SET status = 'OFFLINE'")
 
     # If the server crashed during a print, set any stuck PRINTING jobs to ERROR. This prevents phantom jobs from blocking the queue upon server restart.
-    db.execute("UPDATE `Print` SET status = 'ERROR' WHERE status = 'PRINTING'")
+    db.execute("UPDATE `Print` SET status = 'ERROR', energy = 0 WHERE status = 'PRINTING'")
 
     # CoAP server configuration (Fallback to fd00::1/5683 if not in config.ini)   
     coap_host = config.get('coap', 'host', fallback='fd00::1') # IPv6 address

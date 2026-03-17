@@ -110,13 +110,15 @@ static uint8_t error_count = 0;
 /* =                 DECLARATIONS                     = */
 /* ==================================================== */ 
 static void set_state(device_state_t new_state);
-static float calculate_instantaneous_ac_power(float tension, float current, float phase_shift);
 static uint32_t calculate_print_duration(size_t stl_size);
 static void prepare_coap_request(const char* message, coap_message_type_t type, uint8_t method, const char* uri_path);
 static void registration_handler(coap_message_t* response);
 static void res_health_get_handler(coap_message_t* request, coap_message_t* response, uint8_t* buffer, uint16_t preferred_size, int32_t* offset);
 static void res_print_post_handler(coap_message_t* request, coap_message_t* response, uint8_t* buffer, uint16_t preferred_size, int32_t* offset);
 static void print_finished_handler(coap_message_t* response);
+
+// Track total power consumed during a print job (in Watt-seconds / Joules)
+static float total_power_consumed = 0.0f;
 
 /* ==================================================== */
 /* =                    PROCESSES                     = */
@@ -165,12 +167,6 @@ static void set_state(device_state_t new_state){
     leds_on(LEDS_NUM_TO_MASK(LEDS_GREEN));
   }
   LOG_INFO("STATE: %s\n", state_to_string(current_state));
-}
-// Alternate Current Power Formula
-static float calculate_instantaneous_ac_power(float tension, float current, float phase_shift){
-  // P = V * I * cos(phi)
-  float power = tension * current * cosf(phase_shift);
-  return power;
 }
 
 // Calculate print time based on STL file size
@@ -484,7 +480,6 @@ PROCESS_THREAD(setup_process, ev, data){
 
   PROCESS_END();
 }
-
 /* ==================================================== */
 /* =              SMART PRINTER PROCESS               = */
 /* ==================================================== */ 
@@ -522,6 +517,12 @@ PROCESS_THREAD(smart_printer_process, ev, data){
       if(btn == btn0){
         // If we finished printing (or ML stopped it) and are waiting for the user...
         if(current_state == STATE_PRINTING && waiting_for_confirmation){
+          // Format the CoAP payload with status and accumulated power
+          char end_payload[64];
+          int en_i = (int)total_power_consumed;
+          int en_d = (int)(fabs(total_power_consumed - en_i) * 100);
+          snprintf(end_payload, sizeof(end_payload), "{\"status\":\"%s\",\"energy\":%d.%02d}", print_result, en_i, en_d);
+
           // Short press (< 2 seconds): Confirm the current print_result
           if(btn->press_duration_seconds < 2){
             // Let's stop the running timers
@@ -535,7 +536,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             LOG_INFO("Button released (< 2s). Sending %s notification to server...\n", print_result);
             waiting_for_confirmation = false; // Reset the flag
               
-            prepare_coap_request(print_result, COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
+            prepare_coap_request(end_payload, COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
             COAP_BLOCKING_REQUEST(&server_ep, request, print_finished_handler);
           }
           // Long press (between 2 and 4 seconds): Override or Manual Fail
@@ -560,8 +561,10 @@ PROCESS_THREAD(smart_printer_process, ev, data){
               
               waiting_for_confirmation = false;
               
-              // Send FAILED instead of FINISHED
-              prepare_coap_request("FAILED", COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
+              // Overwrite the payload to ensure status is FAILED instead of FINISHED
+              snprintf(end_payload, sizeof(end_payload), "{\"status\":\"FAILED\",\"energy\":%d.%02d}", en_i, en_d);
+              
+              prepare_coap_request(end_payload, COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
               COAP_BLOCKING_REQUEST(&server_ep, request, print_finished_handler);
             }
           }
@@ -580,7 +583,12 @@ PROCESS_THREAD(smart_printer_process, ev, data){
           LOG_INFO("Button held >= 5s -> Hard reset\n");
 
           if(current_state == STATE_PRINTING){
-            prepare_coap_request("ERROR", COAP_TYPE_NON, COAP_PUT, END_PRINT_URI_PATH);
+            char reset_payload[64];
+            int en_i = (int)total_power_consumed;
+            int en_d = (int)(fabs(total_power_consumed - en_i) * 100);
+            snprintf(reset_payload, sizeof(reset_payload), "{\"status\":\"ERROR\",\"energy\":%d.%02d}", en_i, en_d);
+
+            prepare_coap_request(reset_payload, COAP_TYPE_NON, COAP_PUT, END_PRINT_URI_PATH);
             // Create a transaction for sending
             coap_transaction_t* transaction = coap_new_transaction(request->mid, &server_ep);
             if(transaction) {
@@ -601,6 +609,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
           sample_count = 0;
           error_count = 0;
           stl_length = 0;
+          total_power_consumed = 0.0f; // Reset energy tracking
           waiting_for_confirmation = false;
 
           etimer_stop(&retry_timer);
@@ -667,8 +676,9 @@ PROCESS_THREAD(smart_printer_process, ev, data){
       if(ev == PROCESS_EVENT_POLL){
         LOG_INFO("STL fully received. Starting physical print simulation...\n");
         
-        // Reset the sample counter for the sliding window
+        // Reset the sample counter for the sliding window and the total power consumed
         sample_count = 0;
+        total_power_consumed = 0.0f;
 
         // Calculate time dynamically
         uint32_t dynamic_print_time = calculate_print_duration(stl_length);
@@ -694,10 +704,11 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         accel_data_t plate = read_plate_acceleration();
         accel_data_t extruder = read_extruder_acceleration();
         float tension = read_tension();
-        float current = read_current();
-        float phase = read_phase_shift();
-        float power = calculate_instantaneous_ac_power(tension, current, phase);
+        float power = read_power(); // Read power directly
         
+        // Accumulate consumed energy (Watt-seconds)
+        total_power_consumed += power;
+
         // Print the current readings
         LOG_INFO("Measurements: Plate(%.3f, %.3f, %.3f), Extruder(%.3f, %.3f, %.3f), Tension(%.3fV), Power(%.3fW)\n", 
                  plate.x, plate.y, plate.z, extruder.x, extruder.y, extruder.z, tension, power);
@@ -837,7 +848,9 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             
             // Set flags to wait for user confirmation instead of sending CoAP immediately
             waiting_for_confirmation = true;
+            
             strncpy(print_result, "FAILED", sizeof(print_result));
+            
             LOG_INFO("Print aborted. Press the button to confirm and notify the server.\n");            
           }
           else{
@@ -877,7 +890,9 @@ PROCESS_THREAD(smart_printer_process, ev, data){
 
         // Set flags to wait for user confirmation instead of sending CoAP immediately
         waiting_for_confirmation = true;
+        
         strncpy(print_result, "FINISHED", sizeof(print_result));
+        
         LOG_INFO("Print finished successfully. Press the button to confirm and notify the server.\n");
       }
     }

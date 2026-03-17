@@ -274,7 +274,7 @@ class NodeMonitor:
         :param ip: Node IP address
         """
         if self._db:
-            query = "UPDATE Print SET status='ERROR' WHERE ip=%s AND status='PRINTING'"
+            query = "UPDATE Print SET status='ERROR', energy=0 WHERE ip=%s AND status='PRINTING'"
             # We execute the query. If there are no active prints, it safely does nothing.
             if self._db.execute(query, (ip,)):
                 self._logger.info(f"Checked and enforced ERROR state for any active prints on node {ip}.")

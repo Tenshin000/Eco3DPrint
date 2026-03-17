@@ -57,8 +57,9 @@ class PrintManager:
         Add a new print job to the database queue. If the node is ONLINE,
         it immediately attempts to start the print.
         """
-        query = "INSERT INTO `Print` (ip, stl_name, status) VALUES (%s, %s, %s)"
-        self._db.execute(query, (ip, original_stl_name, "QUEUE"))
+        query = "INSERT INTO `Print` (ip, stl_name, status, energy) VALUES (%s, %s, %s, %s)"
+        # Energy is initialized to 0.0 for new prints in queue
+        self._db.execute(query, (ip, original_stl_name, "QUEUE", 0.0))
         self._logger.info(f"Added print job for {ip} (File: {original_stl_name}) to QUEUE.")
 
         # Check if the node is currently available to print
@@ -183,10 +184,14 @@ class PrintManager:
             if ip in self._active_transfers:
                 self._active_transfers.remove(ip)
     
-    def handle_print_finished(self, ip, result):
+    def handle_print_finished(self, ip, result, energy=0.0):
         """
-        Manages the reception of the FINISHED or FAILED payload from the node,
+        Manages the reception of the status and energy payload from the node,
         updates the Print table row, and releases the queue.
+        
+        :param ip: The IP address of the node sending the update.
+        :param result: The final status of the print ("FINISHED", "FAILED", "ERROR").
+        :param energy: The total accumulated energy consumed by the print job.
         """        
         query = "SELECT id FROM `Print` WHERE ip = %s AND status = 'PRINTING'"
         records = self._db.execute(query, (ip,))
@@ -213,9 +218,10 @@ class PrintManager:
         # Let's take the first valid ID
         job_id = records[0].get('id') if isinstance(records[0], dict) else records[0][0]
         
-        update_query = "UPDATE `Print` SET status = %s WHERE id = %s"
-        self._db.execute(update_query, (result, job_id))
-        self._logger.info(f"Print #{job_id} for node {ip} updated to status: {result}")
+        # Update both the status and the total energy of the finished print job
+        update_query = "UPDATE `Print` SET status = %s, energy = %s WHERE id = %s"
+        self._db.execute(update_query, (result, energy, job_id))
+        self._logger.info(f"Print #{job_id} for node {ip} updated to status: {result} with total energy: {energy} Ws")
         
         status_changed = False
         

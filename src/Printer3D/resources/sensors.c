@@ -22,7 +22,7 @@ typedef enum{
 
 // State variables
 static printer_state_t current_state = PRINTER_STATE_NORMAL;
-static float current_power_draw_amps = 2.75; 
+static float current_power_draw_watts = 150.0; // Starting at the middle of 120W - 180W
 
 // Sophisticated Gaussian Noise Generator (Box-Muller Transform)
 static float get_gaussian_float(float mean, float std_dev){
@@ -46,8 +46,7 @@ void sensors_init(void){
     random_init((unsigned short)clock_time());
 }
 
-/* 
- * Markov Chain State Update 
+/* * Markov Chain State Update 
  * Call this function once at the beginning of every sampling cycle
 */
 void sensor_activate(void){
@@ -129,33 +128,25 @@ float read_tension(void){
     return tension;
 }
 
-// Amperometer
-float read_current(void){
+// Wattmeter (DC Power)
+float read_power(void){
     float delta;
     if(current_state == PRINTER_STATE_NORMAL){
-        delta = get_gaussian_float(0.0, 0.15); 
+        // Normal power fluctuations
+        delta = get_gaussian_float(0.0, 2.5); 
     } 
     else{
-        // Erratic power spikes during failure
-        delta = get_gaussian_float(0.0, 0.60); 
+        // Erratic power spikes/drops during failure
+        delta = get_gaussian_float(0.0, 15.0); 
     }
     
-    current_power_draw_amps += delta;
+    current_power_draw_watts += delta;
     
-    // Bounds check
-    if(current_power_draw_amps < 1.0) 
-        current_power_draw_amps = 1.0;
-    if(current_power_draw_amps > 4.5) 
-        current_power_draw_amps = 4.5;
+    // Bounds check to keep it between 120W and 180W
+    if(current_power_draw_watts < 120.0) 
+        current_power_draw_watts = 120.0;
+    if(current_power_draw_watts > 180.0) 
+        current_power_draw_watts = 180.0;
     
-    return current_power_draw_amps;
-}
-
-// Phase Shifter
-float read_phase_shift(void){
-    if(current_state == PRINTER_STATE_NORMAL)
-        return get_gaussian_float(0.43, 0.04);
-    else
-        return get_gaussian_float(0.50, 0.15);
-    return get_gaussian_float(0.43, 0.04);
+    return current_power_draw_watts;
 }

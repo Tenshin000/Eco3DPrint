@@ -20,7 +20,6 @@ accel_data_t read_plate_acceleration(void);
 accel_data_t read_extruder_acceleration(void);
 
 float read_tension(void);       // Returns Voltage (V)
-float read_current(void);       // Returns Current (A) 
-float read_phase_shift(void);   // Returns phase shift angle (radians) 
+float read_power(void);         // Returns Power (W)
 
 #endif /* SMART_PRINTER_SENSORS_H_ */

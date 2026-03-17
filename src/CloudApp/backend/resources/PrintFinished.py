@@ -1,3 +1,4 @@
+import json
 from coapthon.resources.resource import Resource
 from coapthon import defines
 
@@ -11,8 +12,9 @@ class PrintFinished(Resource):
 
     This resource processes PUT requests sent by nodes when a print job
     completes, fails, or encounters an error. The resource extracts the
-    source IP and result payload from the request and passes it to the
-    PrintManager to update the internal print job status and node state.
+    source IP, result payload, and energy consumed from the request, 
+    then passes it to the PrintManager to update the internal print job 
+    status and node state.
     
     Depending on the outcome of the processing, an appropriate CoAP response
     code is returned to the node:
@@ -52,14 +54,14 @@ class PrintFinished(Resource):
         """
         Handle PUT requests from nodes indicating a finished print job.
 
-        The request payload should indicate the print result, such as:
-        "FINISHED", "FAILED", or "ERROR". The source IP of the node is used
-        to identify the corresponding print job.
+        The request payload should be a JSON containing the print status 
+        ("FINISHED", "FAILED", or "ERROR") and the accumulated energy.
+        The source IP of the node is used to identify the corresponding print job.
 
         The method performs the following steps:
             1. Preserve the original URI query in the response.
             2. Log incoming request metadata and payload.
-            3. Validate the payload against expected print result values.
+            3. Parse the JSON payload to extract 'status' and 'energy'.
             4. Call the PrintManager to update the job and node state.
             5. Set an appropriate CoAP response code based on processing outcome.
 
@@ -74,28 +76,44 @@ class PrintFinished(Resource):
         self._logger.info(f"Received message {request.mid} from {request.source[0]}:{request.source[1]} (Token: {request.token})")
         self._logger.info(f"Payload content: {request.payload}")
 
-        # Extract source IP and payload result
+        # Extract source IP
         source_ip = request.source[0]
-        result = request.payload
-
-        # Validate payload and forward to PrintManager
-        if result in ["FINISHED", "FAILED", "ERROR"]:
-            if self._print_manager:
-                state_correct = self._print_manager.handle_print_finished(source_ip, result)
-
-                if state_correct:
-                    response.code = defines.Codes.CHANGED.number  # 2.04 Changed
-                    response.payload = "Notification Received"
-                    self._logger.info(f"Sending a correct response to {source_ip}")
-                    return self._resource, response
-                else:
-                    response.code = defines.Codes.INTERNAL_SERVER_ERROR.number  # 5.00 Internal Server Error
-                    response.payload = "Server Error"
-                    self._logger.info(f"Sending Internal Server Error to {source_ip}")
-                    return self._resource, response
-        else:
-            response.code = defines.Codes.BAD_REQUEST.number  # 4.00 Bad Request
-            response.payload = "Invalid Result Payload"
-            self._logger.info(f"Sending Bad Request to {source_ip}")
-            return self._resource, response
+        
+        try:
+            # Parse the incoming JSON payload
+            payload_data = json.loads(request.payload)
+            status = payload_data.get("status")
+            # Using get with default 0.0 to prevent errors if energy key is missing
+            energy = float(payload_data.get("energy", 0.0))
             
+            # Validate payload status and forward to PrintManager
+            if status in ["FINISHED", "FAILED", "ERROR"]:
+                if self._print_manager:
+                    state_correct = self._print_manager.handle_print_finished(source_ip, status, energy)
+
+                    if state_correct:
+                        response.code = defines.Codes.CHANGED.number  # 2.04 Changed
+                        response.payload = "Notification Received"
+                        self._logger.info(f"Sending a correct response to {source_ip}")
+                        return self._resource, response
+                    else:
+                        response.code = defines.Codes.INTERNAL_SERVER_ERROR.number  # 5.00 Internal Server Error
+                        response.payload = "Server Error"
+                        self._logger.info(f"Sending Internal Server Error to {source_ip}")
+                        return self._resource, response
+            else:
+                response.code = defines.Codes.BAD_REQUEST.number  # 4.00 Bad Request
+                response.payload = "Invalid Result Payload Status"
+                self._logger.info(f"Sending Bad Request to {source_ip}: Invalid Status")
+                return self._resource, response
+
+        except json.JSONDecodeError:
+            response.code = defines.Codes.BAD_REQUEST.number  # 4.00 Bad Request
+            response.payload = "Invalid JSON Format"
+            self._logger.info(f"Sending Bad Request to {source_ip}: Failed to parse JSON")
+            return self._resource, response
+        except ValueError:
+            response.code = defines.Codes.BAD_REQUEST.number  # 4.00 Bad Request
+            response.payload = "Invalid Energy Value"
+            self._logger.info(f"Sending Bad Request to {source_ip}: Invalid Energy float")
+            return self._resource, response

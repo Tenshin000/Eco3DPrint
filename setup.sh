@@ -72,6 +72,7 @@ create_tables(){
         stl_name VARCHAR(255) NOT NULL,
         status VARCHAR(255) NOT NULL,
         activation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        energy DOUBLE NOT NULL,
         PRIMARY KEY (id),
         CONSTRAINT fk_node_ip FOREIGN KEY (ip) REFERENCES Node(ip) ON DELETE CASCADE ON UPDATE CASCADE
     );"
