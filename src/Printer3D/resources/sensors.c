@@ -43,6 +43,23 @@ static float get_gaussian_float(float mean, float std_dev){
     return final_value;
 }
 
+float get_bounded_gaussian(float mean, float std_dev, float limit_val){
+    float generated_val = get_gaussian_float(mean, std_dev);
+    float max_val = mean + limit_val;
+    float min_val = mean - limit_val;
+    
+    if(generated_val > max_val)
+        generated_val = max_val;
+    else{
+        if(generated_val < min_val)
+            generated_val = min_val;
+        else
+            generated_val = generated_val;
+    }
+    
+    return generated_val;
+}
+
 static float get_uniform_probability(void){
     float prob_value;
     // Generate uniform probability
@@ -63,7 +80,7 @@ void sensor_activate(void){
 
     if(current_state == PRINTER_STATE_NORMAL){
         // Enter error state occasionally
-        if(roll < 0.05f){ 
+        if(roll < 0.005f){ 
             current_state = PRINTER_STATE_ERROR;
             LOG_DBG("SIMULATION: Natural transition to ERROR state!\n");
         } 
@@ -72,7 +89,7 @@ void sensor_activate(void){
     } 
     else{
         // Recover to normal state
-        if(roll < 0.10f){ 
+        if(roll < 0.20f){ 
             current_state = PRINTER_STATE_NORMAL;
             LOG_DBG("SIMULATION: Natural recovery to NORMAL state.\n");
         } 
@@ -95,9 +112,9 @@ accel_data_t read_plate_acceleration(void){
     
     if(current_state == PRINTER_STATE_NORMAL){
         // Normal printing plate readings
-        data_value.x = get_gaussian_float(-0.35, 0.25);
-        data_value.y = get_gaussian_float(-0.20, 0.20);
-        data_value.z = get_gaussian_float(9.67, 0.10); 
+        data_value.x = get_bounded_gaussian(-0.35, 0.20, 0.65);
+        data_value.y = get_bounded_gaussian(-0.20, 0.15, 0.50);
+        data_value.z = get_bounded_gaussian(9.67, 0.05, 0.20);
     } 
     else{
         // Plate stuttering and sinking
@@ -114,9 +131,9 @@ accel_data_t read_extruder_acceleration(void){
     
     if(current_state == PRINTER_STATE_NORMAL){
         // Smooth extruder movements
-        data_value.x = get_gaussian_float(0.25, 0.40);
-        data_value.y = get_gaussian_float(0.32, 0.50);
-        data_value.z = get_gaussian_float(-9.78, 0.28);
+        data_value.x = get_bounded_gaussian(0.25, 0.30, 1.10);
+        data_value.y = get_bounded_gaussian(0.32, 0.40, 1.40);
+        data_value.z = get_bounded_gaussian(-9.78, 0.18, 0.75);
     } 
     else{
         // Massive vibration spike during mechanical failure
@@ -128,6 +145,7 @@ accel_data_t read_extruder_acceleration(void){
     return data_value;
 }
 
+// Voltmeter
 float read_tension(void){
     float tension_value;
     if(current_state == PRINTER_STATE_NORMAL){

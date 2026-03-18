@@ -17,7 +17,8 @@ build/cooja/obj/device.o: device.c \
  ../../../../os/net/linkaddr.h ../../../../os/sys/log-conf.h \
  ../../../../os/net/ipv6/uip.h ../../../../os/net/ipv6/uipopt.h \
  ../../../../os/net/ipv6/uipbuf.h ../../../../os/net/ipv6/tcpip.h \
- ../../../../os/dev/button-hal.h ../../../../os/dev/gpio-hal.h \
+ ../../../../os/sys/node-id.h ../../../../os/dev/button-hal.h \
+ ../../../../os/dev/gpio-hal.h \
  ../../../../arch/platform/cooja/./dev/gpio-hal-arch.h \
  ../../../../os/sys/ctimer.h ../../../../os/dev/leds.h \
  ../../../../os/dev/serial-line.h ../../../../os/net/ipv6/uip-ds6.h \
@@ -103,6 +104,7 @@ project-conf.h:
 ../../../../os/net/ipv6/uipopt.h:
 ../../../../os/net/ipv6/uipbuf.h:
 ../../../../os/net/ipv6/tcpip.h:
+../../../../os/sys/node-id.h:
 ../../../../os/dev/button-hal.h:
 ../../../../os/dev/gpio-hal.h:
 ../../../../arch/platform/cooja/./dev/gpio-hal-arch.h:

@@ -1,6 +1,7 @@
 /* Contiki core */
 #include "contiki.h"
 #include "sys/log.h"
+#include "sys/node-id.h"
 
 /* Hardware */
 #include "os/dev/button-hal.h"
@@ -395,6 +396,21 @@ PROCESS_THREAD(setup_process, ev, data){
   PROCESS_BEGIN();
 
   LOG_INFO("Smart Printer SETUP process starting...\n");
+
+  // Generate a unique name based on the node ID
+  snprintf(device_name, sizeof(device_name), "printer_%02u", node_id - 1);
+
+  // Generate the device type
+  if(node_id == 2 || node_id == 3)
+    device_type = "Filament";
+  else if(node_id == 4 || node_id == 5)
+    device_type = "Resin";
+  else{
+    if(node_id % 2 != 0)
+      device_type = "Filament";
+    else
+      device_type = "Resin";
+  }
 
   // Initialize global state 
   current_state = STATE_OFF;
@@ -823,7 +839,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
           
           if(prediction == 1){
             error_count++;
-            LOG_WARN("Anomaly Detected! (Alarm %d/2)\n", error_count);
+            LOG_WARN("Anomaly Detected! (Alarm %d/3)\n", error_count);
           } 
           else{
             LOG_INFO("Machine Learning Model: Regular print...\n");
@@ -831,8 +847,8 @@ PROCESS_THREAD(smart_printer_process, ev, data){
           }
 
           // EARLY STOPPING LOGIC
-          if(error_count >= 2) {
-            LOG_ERR("EARLY STOPPING: Two consecutive anomalies detected. Printing aborted preemptively!\n");
+          if(error_count >= 3){
+            LOG_ERR("EARLY STOPPING: Three consecutive anomalies detected. Printing stopped preemptively!\n");
             // Turn ON Red LED and ensure others are OFF due to Machine Learning anomaly
             leds_off(LEDS_ALL);
             leds_on(LEDS_NUM_TO_MASK(LEDS_RED));
