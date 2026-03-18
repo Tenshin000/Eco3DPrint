@@ -1,4 +1,5 @@
 import json
+
 from coapthon.resources.resource import Resource
 from coapthon import defines
 

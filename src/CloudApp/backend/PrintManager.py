@@ -233,12 +233,7 @@ class PrintManager:
                         self._monitor._nodes[ip]["status"] = "ONLINE"
                         status_changed = True
         else:
-            self._monitor._update_db_status(ip, "OFFLINE")
-            with self._monitor._lock:
-                if ip in self._monitor._nodes:
-                    if self._monitor._nodes[ip]["status"] != "OFFLINE":
-                        self._monitor._nodes[ip]["status"] = "OFFLINE"
-                        status_changed = True
+            self._monitor.set_node_offline(ip)
         
         if status_changed and self._monitor.on_change_callback:
              self._monitor.on_change_callback(self._monitor.get_all_nodes())

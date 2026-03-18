@@ -609,9 +609,17 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             prepare_coap_request(reset_payload, COAP_TYPE_NON, COAP_PUT, END_PRINT_URI_PATH);
             // Create a transaction for sending
             coap_transaction_t* transaction = coap_new_transaction(coap_get_mid(), &server_ep);
-            if(transaction) {
+            if(transaction){
               transaction->message_len = coap_serialize_message(request, transaction->message);
               coap_send_transaction(transaction);
+            }
+          }
+          else{
+            prepare_coap_request(NULL, COAP_TYPE_NON, COAP_DELETE, OFF_SIGNAL_URI_PATH);
+            coap_transaction_t* off_transaction = coap_new_transaction(coap_get_mid(), &server_ep);
+            if(off_transaction){
+              off_transaction->message_len = coap_serialize_message(request, off_transaction->message);
+              coap_send_transaction(off_transaction);
             }
           }
 
@@ -622,15 +630,6 @@ PROCESS_THREAD(smart_printer_process, ev, data){
 
           // Ensure all LEDs are OFF when the system is resetting
           leds_off(LEDS_ALL);
-
-          // Send OFF signal (DELETE, Non-Confirmable)
-          LOG_INFO("Sending OFF signal to server...\n");
-          prepare_coap_request(NULL, COAP_TYPE_NON, COAP_DELETE, OFF_SIGNAL_URI_PATH);
-          coap_transaction_t* off_transaction = coap_new_transaction(coap_get_mid(), &server_ep);
-          if(off_transaction){
-            off_transaction->message_len = coap_serialize_message(request, off_transaction->message);
-            coap_send_transaction(off_transaction);
-          }
           
           sample_count = 0;
           error_count = 0;

@@ -3,7 +3,6 @@ import coapthon.defines as defines
 from coapthon.resources.resource import Resource
 
 from .BasicResource import BasicResource
-from ..Database import Database
 from utility.Log import Log
 
 class OFFSignal(Resource):
@@ -32,7 +31,7 @@ class OFFSignal(Resource):
         
         # We require a monitor instance to update the node's state
         if monitor is None:
-            self._monitor = NodeMonitor(Database())
+            self._monitor = NodeMonitor()
         else:
             self._monitor = monitor
 
