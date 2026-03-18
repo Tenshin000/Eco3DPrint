@@ -131,6 +131,44 @@ class NodeMonitor:
             if self.on_change_callback:
                 self.on_change_callback(self.get_all_nodes())
 
+    def set_node_offline(self, ip):
+        """
+        Explicitly mark a node as OFFLINE.
+        
+        This method is typically called when a node gracefully notifies the server
+        that it is shutting down (e.g., via the /offSignal endpoint), bypassing
+        the need for the watchdog to detect the timeout.
+
+        :param ip: IPv6 address of the node
+        """
+        status_changed = False
+        old_status_val = None
+        
+        with self._lock:
+            if ip in self._nodes:
+                old_status = self._nodes[ip]["status"]
+                if old_status != "OFFLINE":
+                    self._nodes[ip]["status"] = "OFFLINE"
+                    status_changed = True
+                    old_status_val = old_status
+
+        if status_changed:
+            self._logger.info(f"Node {ip} explicitly reported shutdown. State changed from {old_status_val} to OFFLINE.")
+            
+            # Update the database
+            self._update_db_status(ip, "OFFLINE")
+            
+            # Ensure any active prints are handled (marked as ERROR)
+            self._fail_active_prints(ip)
+            
+            # Trigger callbacks to notify the rest of the system (PrintManager, Frontend)
+            if self.print_manager_callback:
+                self.print_manager_callback(ip, old_status_val, "OFFLINE")
+            if self.on_change_callback:
+                self.on_change_callback(self.get_all_nodes())
+        else:
+            self._logger.debug(f"Received explicit offline signal for node {ip}, but it was already OFFLINE or unknown.")
+
     def get_all_nodes(self):
         """
         Return a safe copy of the current node list.

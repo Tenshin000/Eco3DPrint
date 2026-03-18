@@ -12,7 +12,7 @@ class MQTTHandler:
     parses incoming JSON payloads from the nodes, retrieves the active print_id,
     and stores the measurements into the database.
     """
-    def __init__(self, broker_host="127.0.0.1", broker_port=1883, database=None, topic="printer/measurements"):
+    def __init__(self, broker_host="127.0.0.1", broker_port=1883, database=None, topic="/print/measurements"):
         """
         Initialize the MQTT Handler.
 

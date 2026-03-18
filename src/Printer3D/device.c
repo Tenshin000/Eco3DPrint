@@ -41,12 +41,13 @@
 // CoAP Configuration
 #define CLOUD_SERVER_EP "coap://[fd00::1]:5683"
 #define REG_URI_PATH "/registration"
-#define END_PRINT_URI_PATH "/printFinished"
+#define END_PRINT_URI_PATH "/print/finished"
+#define OFF_SIGNAL_URI_PATH "/signal/off"
 
 // MQTT Configuration
 #define MQTT_BROKER_IP "fd00::1"
 #define MQTT_BROKER_PORT 1883
-#define MQTT_PUB_TOPIC "printer/measurements"
+#define MQTT_PUB_TOPIC "/print/measurements"
 
 /* ==================================================== */ 
 /* =                  CONFIGURATION                   = */ 
@@ -598,7 +599,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         // Hard Reset (>= 5 seconds)
         if(btn->press_duration_seconds >= 5 && current_state != STATE_OFF){
           LOG_INFO("Button held >= 5s -> Hard reset\n");
-
+          
           if(current_state == STATE_PRINTING){
             char reset_payload[64];
             int en_i = (int)total_power_consumed;
@@ -607,7 +608,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
 
             prepare_coap_request(reset_payload, COAP_TYPE_NON, COAP_PUT, END_PRINT_URI_PATH);
             // Create a transaction for sending
-            coap_transaction_t* transaction = coap_new_transaction(request->mid, &server_ep);
+            coap_transaction_t* transaction = coap_new_transaction(coap_get_mid(), &server_ep);
             if(transaction) {
               transaction->message_len = coap_serialize_message(request, transaction->message);
               coap_send_transaction(transaction);
@@ -622,18 +623,27 @@ PROCESS_THREAD(smart_printer_process, ev, data){
           // Ensure all LEDs are OFF when the system is resetting
           leds_off(LEDS_ALL);
 
-          set_state(STATE_OFF);
+          // Send OFF signal (DELETE, Non-Confirmable)
+          LOG_INFO("Sending OFF signal to server...\n");
+          prepare_coap_request(NULL, COAP_TYPE_NON, COAP_DELETE, OFF_SIGNAL_URI_PATH);
+          coap_transaction_t* off_transaction = coap_new_transaction(coap_get_mid(), &server_ep);
+          if(off_transaction){
+            off_transaction->message_len = coap_serialize_message(request, off_transaction->message);
+            coap_send_transaction(off_transaction);
+          }
+          
           sample_count = 0;
           error_count = 0;
           stl_length = 0;
           total_power_consumed = 0.0f; // Reset energy tracking
-          waiting_for_confirmation = false;
+          
+          waiting_for_confirmation = false; 
 
           etimer_stop(&retry_timer);
           etimer_stop(&print_timer);
           etimer_stop(&sample_timer);
 
-          LOG_INFO("STATE: OFF\n");
+          set_state(STATE_OFF);
 
           PROCESS_EXIT();
         }

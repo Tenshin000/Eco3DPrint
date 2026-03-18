@@ -4,6 +4,7 @@ from backend.Database import Database
 from backend.NodeMonitor import NodeMonitor
 from backend.PrintManager import PrintManager
 from .resources.NodeRegistration import NodeRegistration
+from .resources.OFFSignal import OFFSignal
 from .resources.PrintFinished import PrintFinished
 from utility.Log import Log
 
@@ -40,7 +41,8 @@ class CoAPServer(CoAP):
             manager = PrintManager()
 
         self.add_resource("/registration", NodeRegistration(database=database, monitor=monitor))
-        self.add_resource("/printFinished", PrintFinished(print_manager=manager))
+        self.add_resource("/print/finished", PrintFinished(print_manager=manager))
+        self.add_resource("/signal/off", OFFSignal(monitor=monitor))
         
         self._logger = Log(
             logger_name="server_logger",

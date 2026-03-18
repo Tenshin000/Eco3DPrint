@@ -4,7 +4,7 @@
 DB_USER="iotuser"
 DB_PASS="iotpassword"
 DB_NAME="Eco3DPrintDB"
-SRC_DIR="src/"
+SRC_DIR="src"
 
 #---------------------------------------------#
 #                  FUNCTIONS                  #
@@ -135,26 +135,27 @@ launch_cooja(){
 build_border_router(){
     local mode=$1
     if [ "$mode" != "cooja" ]; then
-        gnome-terminal -- bash -c "cd ./src/Gateway; make TARGET=nrf52840 BOARD=dongle PORT=/dev/ttyACM0 connect-router; exec bash"
+        gnome-terminal -- bash -c "cd ./'${SRC_DIR}'/Gateway; make TARGET=nrf52840 BOARD=dongle PORT=/dev/ttyACM0 connect-router; exec bash"
         echo "Border router connecting to dongle"
     else
-        gnome-terminal -- bash -c "cd ./src/Gateway; make TARGET=cooja connect-router-cooja; exec bash"
+        gnome-terminal -- bash -c "cd ./'${SRC_DIR}'/Gateway; make TARGET=cooja connect-router-cooja; exec bash"
         echo "Border router connecting to Cooja"
     fi
 }
 
 function start_server(){
-    gnome-terminal -- bash -c 'cd ./'$SRC_DIR'CloudApp; python server.py; exec bash'
+    gnome-terminal -- bash -c 'cd ./'${SRC_DIR}'/CloudApp; python server.py; exec bash'
 }
 
 function start_app(){
-    gnome-terminal -- bash -c 'cd ./'$SRC_DIR'CloudApp; python app.py; exec bash'
+    gnome-terminal -- bash -c 'cd ./'${SRC_DIR}'/CloudApp; python app.py; exec bash'
 }
 
 function start_mosquito(){
     sudo pkill mosquitto 2>/dev/null
-    gnome-terminal -- bash -c "cd ./${SRC_DIR}CloudApp; mosquitto -c local_broker.conf -v; exec bash"
+    gnome-terminal -- bash -c "cd ./${SRC_DIR}/CloudApp; mosquitto -c local_broker.conf -v; exec bash"
 }
+
 #---------------------------------------------#
 #                    CLI                      #
 #---------------------------------------------#
