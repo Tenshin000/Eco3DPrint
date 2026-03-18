@@ -6,7 +6,7 @@
 #include <math.h>  
 #include <stdlib.h>
 
-// Logging configuration
+/* Macros and Definitions */
 #define LOG_MODULE "Sensors"
 #define LOG_LEVEL LOG_LEVEL_APP
 
@@ -14,30 +14,40 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-// Printer states for the Markov Chain
+/* Printer States */
 typedef enum{
     PRINTER_STATE_NORMAL,
     PRINTER_STATE_ERROR
 } printer_state_t;
 
-// State variables
+/* State Variables */
 static printer_state_t current_state = PRINTER_STATE_NORMAL;
-static float current_power_draw_watts = 150.0; // Starting at the middle of 120W - 180W
+static float current_power_draw_watts = 150.0; 
 
-// Sophisticated Gaussian Noise Generator (Box-Muller Transform)
+/* Utility Functions */
 static float get_gaussian_float(float mean, float std_dev){
-    float u1 = (float)random_rand() / RANDOM_RAND_MAX;;
-    float u2 = (float)random_rand() / RANDOM_RAND_MAX;;
+    float u1 = (float)random_rand() / RANDOM_RAND_MAX;
+    float u2 = (float)random_rand() / RANDOM_RAND_MAX;
+    float z0;
+    float final_value;
     
-    if (u1 <= 0.0001f) u1 = 0.0001f;
+    // Ensure no zero log
+    if(u1 <= 0.0001f)
+        u1 = 0.0001f;
+    else
+        u1 = u1;
     
-    float z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
-    return mean + z0 * std_dev;
+    z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
+    final_value = mean + z0 * std_dev;
+    
+    return final_value;
 }
 
-// Uniform probability generator (returns 0.0 to 1.0)
-static float get_uniform_probability(void) {
-    return (float)random_rand() / (float)RANDOM_RAND_MAX;;
+static float get_uniform_probability(void){
+    float prob_value;
+    // Generate uniform probability
+    prob_value = (float)random_rand() / (float)RANDOM_RAND_MAX;
+    return prob_value;
 }
 
 /* Public Functions */
@@ -46,86 +56,89 @@ void sensors_init(void){
     random_init((unsigned short)clock_time());
 }
 
-/* * Markov Chain State Update 
- * Call this function once at the beginning of every sampling cycle
-*/
 void sensor_activate(void){
     float roll = get_uniform_probability();
 
     LOG_INFO("Sensors Activated\n");
 
     if(current_state == PRINTER_STATE_NORMAL){
-        // 5% chance to transition into an ERROR state
+        // Enter error state occasionally
         if(roll < 0.05f){ 
             current_state = PRINTER_STATE_ERROR;
             LOG_DBG("SIMULATION: Natural transition to ERROR state!\n");
-        }
+        } 
+        else
+            current_state = PRINTER_STATE_NORMAL;
     } 
     else{
-        // 10% chance to recover back to NORMAL state
-        // This keeps error sequences shorter and normal sequences longer
+        // Recover to normal state
         if(roll < 0.10f){ 
             current_state = PRINTER_STATE_NORMAL;
             LOG_DBG("SIMULATION: Natural recovery to NORMAL state.\n");
-        }
+        } 
+        else
+            current_state = PRINTER_STATE_ERROR;
     }
 }
 
 void sensor_sleep(void){
     LOG_INFO("Sensors in Sleep Mode\n");
-    // No specific sleep logic needed for this simulation
 }
 
 void sensor_deactivate(void){
     LOG_INFO("Sensors Deactivated\n");
-    // No specific deactivation logic needed for this simulation
 }
 
-// Printing Plate Accelerometer
+/* Sensor Reading Functions */
 accel_data_t read_plate_acceleration(void){
-    accel_data_t data;
-    if (current_state == PRINTER_STATE_NORMAL){
-        data.x = get_gaussian_float(-0.45, 0.11);
-        data.y = get_gaussian_float(-0.14, 0.01);
-        data.z = get_gaussian_float(9.50, 0.16); 
-    } 
-    else{
-        // Massive vibration spike during error
-        data.x = get_gaussian_float(-0.2283, 0.2134); 
-        data.y = get_gaussian_float(-0.2355, 0.2255); 
-        data.z = get_gaussian_float(9.81, 0.4195);  
-    }
-    return data;
-}
-
-// Extrusion Head Accelerometer
-accel_data_t read_extruder_acceleration(void){
-    accel_data_t data;
+    accel_data_t data_value;
+    
     if(current_state == PRINTER_STATE_NORMAL){
-        data.x = get_gaussian_float(0.27, 0.03);
-        data.y = get_gaussian_float(0.32, 0.04);
-        data.z = get_gaussian_float(-9.50, 0.16);
+        // Normal printing plate readings
+        data_value.x = get_gaussian_float(-0.35, 0.25);
+        data_value.y = get_gaussian_float(-0.20, 0.20);
+        data_value.z = get_gaussian_float(9.67, 0.10); 
     } 
     else{
-        // Massive vibration spike during error
-        data.x = get_gaussian_float(0.2728, 1.2407); 
-        data.y = get_gaussian_float(0.3536, 1.2928); 
-        data.z = get_gaussian_float(-9.81, 0.6472);
-    }
-    return data;
-}
-
-// Voltmeter 
-float read_tension(void){
-    float tension;
-    if(current_state == PRINTER_STATE_NORMAL){
-        tension = get_gaussian_float(285.0, 38.0);
-    } 
-    else{
-        tension = get_gaussian_float(315.1302, 50.3328); 
+        // Plate stuttering and sinking
+        data_value.x = get_gaussian_float(-0.23, 0.24); 
+        data_value.y = get_gaussian_float(-0.25, 0.26); 
+        data_value.z = get_gaussian_float(9.81, 0.32);  
     }
     
-    return tension;
+    return data_value;
+}
+
+accel_data_t read_extruder_acceleration(void){
+    accel_data_t data_value;
+    
+    if(current_state == PRINTER_STATE_NORMAL){
+        // Smooth extruder movements
+        data_value.x = get_gaussian_float(0.25, 0.40);
+        data_value.y = get_gaussian_float(0.32, 0.50);
+        data_value.z = get_gaussian_float(-9.78, 0.28);
+    } 
+    else{
+        // Massive vibration spike during mechanical failure
+        data_value.x = get_gaussian_float(0.27, 1.40); 
+        data_value.y = get_gaussian_float(0.35, 1.45); 
+        data_value.z = get_gaussian_float(-9.81, 0.75);
+    }
+    
+    return data_value;
+}
+
+float read_tension(void){
+    float tension_value;
+    if(current_state == PRINTER_STATE_NORMAL){
+        // Stable tension supply
+        tension_value = get_gaussian_float(331.0, 15.0);
+    } 
+    else{
+        // Voltage drop during anomaly
+        tension_value = get_gaussian_float(312.0, 50.0); 
+    }
+    return tension_value;
 }
 
 // Wattmeter (DC Power)
