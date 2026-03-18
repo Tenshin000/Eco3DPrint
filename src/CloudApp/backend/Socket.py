@@ -249,7 +249,7 @@ class WebSocketManager:
     def _generate_weekly_report(self):
         """
         Queries the database to calculate weekly energy metrics (last 7 days) globally, 
-        by printer, and by STL file.
+        by printer, and by STL file. Data is aggregated by day of the week.
         """
         if not self._db:
             self._logger.error("Database access not available for report generation.")
@@ -257,33 +257,45 @@ class WebSocketManager:
             
         db = self._db
         
-        # Aggregate power sum per print_id for the current calendar week (Monday to Sunday)
+        # Aggregate power sum per print_id and extract the WEEKDAY (0 = Monday, 6 = Sunday)
         query = """
-            SELECT p.id, p.ip, p.stl_name, p.status, SUM(m.Power) as energy
+            SELECT p.id, p.ip, p.stl_name, p.status, WEEKDAY(p.activation_time) as wd, SUM(m.Power) as energy
             FROM `Print` p
             JOIN Measurement m ON p.id = m.print_id
             WHERE YEARWEEK(p.activation_time, 1) = YEARWEEK(CURDATE(), 1)
-            GROUP BY p.id, p.ip, p.stl_name, p.status
+            GROUP BY p.id, p.ip, p.stl_name, p.status, wd
         """
         records = db.execute(query)
             
-        global_metrics = self._report_init_metrics()
-        by_printer = {}
-        by_stl = {}
+        # Define the days of the week to ensure all tables exist even if empty
+        days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+        # Initialize global summary and daily structures
+        global_summary = self._report_init_metrics()
+        global_by_day = {day: self._report_init_metrics() for day in days_of_week}
+        printer_by_day = {day: {} for day in days_of_week}
+        stl_by_day = {day: {} for day in days_of_week}
         
         if records:
             for row in records:
-                # Support both dict and tuple return types depending on MySQL connector config
                 if isinstance(row, dict):
                     ip = row.get('ip', 'Unknown')
                     stl = row.get('stl_name', 'Unknown')
                     status = row.get('status', 'UNKNOWN')
+                    wd = row.get('wd')
                     energy = float(row.get('energy') or 0.0)
                 else:
                     ip = row[1]
                     stl = row[2]
                     status = row[3]
-                    energy = float(row[4] or 0.0)
+                    wd = row[4]
+                    energy = float(row[5] or 0.0)
+                
+                # Protect against malformed date returns
+                if wd is None or wd < 0 or wd > 6:
+                    continue
+                    
+                day_name = days_of_week[wd]
                     
                 def update_metrics(m, stat, en):
                     m["total_energy"] += en
@@ -295,17 +307,30 @@ class WebSocketManager:
                         m["wasted_energy"] += en
                         m["failed_count"] += 1
 
-                if ip not in by_printer: by_printer[ip] = self._report_init_metrics()
-                if stl not in by_stl: by_stl[stl] = self._report_init_metrics()
+                # Initialize specific IP/STL for the given day if missing
+                if ip not in printer_by_day[day_name]: 
+                    printer_by_day[day_name][ip] = self._report_init_metrics()
+                if stl not in stl_by_day[day_name]: 
+                    stl_by_day[day_name][stl] = self._report_init_metrics()
                 
-                update_metrics(global_metrics, status, energy)
-                update_metrics(by_printer[ip], status, energy)
-                update_metrics(by_stl[stl], status, energy)
+                # Update all hierarchies
+                update_metrics(global_summary, status, energy)
+                update_metrics(global_by_day[day_name], status, energy)
+                update_metrics(printer_by_day[day_name][ip], status, energy)
+                update_metrics(stl_by_day[day_name][stl], status, energy)
             
+        # Compile final response, calculating averages for every record
         return {
-            "global": self._calc_avgs(global_metrics),
-            "by_printer": {k: self._calc_avgs(v) for k, v in by_printer.items()},
-            "by_stl": {k: self._calc_avgs(v) for k, v in by_stl.items()}
+            "global_summary": self._calc_avgs(global_summary),
+            "global_by_day": {k: self._calc_avgs(v) for k, v in global_by_day.items()},
+            "printer_by_day": {
+                day: {ip: self._calc_avgs(metrics) for ip, metrics in printers.items()}
+                for day, printers in printer_by_day.items()
+            },
+            "stl_by_day": {
+                day: {stl: self._calc_avgs(metrics) for stl, metrics in stls.items()}
+                for day, stls in stl_by_day.items()
+            }
         }
 
     def _generate_monthly_report(self):

@@ -21,6 +21,9 @@ class DailyReportScreen:
         self.logger = Log(logger_name="report_logger", module_name="REPORT").get_logger()
         self.logger.info("Daily Report Screen initialized.")
 
+        # Conversion factor: 1 kWh = 3.6 * 10^6 Joules
+        self.J_TO_KWH = 3600000.0
+
         self._build_ui()
 
     def _build_ui(self):
@@ -153,6 +156,7 @@ class DailyReportScreen:
             self.logger.error(f"Error processing report data: {e}")
 
     def _make_card(self, parent, title, value, color):
+        "Make the cards for the UI"
         frame = tk.Frame(parent, bg=self.COLORS["bg"], bd=1, relief=tk.RIDGE)
         frame.pack(side=tk.LEFT, padx=10, pady=5, fill=tk.BOTH, expand=True)
         tk.Label(frame, text=title, bg=self.COLORS["bg"], fg=self.COLORS["text_muted"], font=("Helvetica", 11, "bold")).pack(pady=(15, 0))
@@ -184,18 +188,19 @@ class DailyReportScreen:
         tk.Label(prints_frame, text=str(global_data["prints_count"]), bg=self.COLORS["bg"], fg=self.COLORS["text_light"], font=("Helvetica", 24, "bold")).pack(pady=(5, 15))
 
         # Middle Section: Total Energies
+        # Convert Joules to kWh and format with 4 decimals
         row1 = tk.Frame(self.global_content, bg=self.COLORS["card_bg"])
         row1.pack(fill=tk.X, pady=5)
-        self._make_card(row1, "Total Energy", f"{global_data['total_energy']:.2f} J", "#00A2FF")
-        self._make_card(row1, "Well-Used Energy", f"{global_data['used_energy']:.2f} J", self.COLORS["filter_online"])
-        self._make_card(row1, "Wasted Energy", f"{global_data['wasted_energy']:.2f} J", self.COLORS["filter_offline"])
+        self._make_card(row1, "Total Energy", f"{global_data['total_energy'] / self.J_TO_KWH:.4f} kWh", "#00A2FF")
+        self._make_card(row1, "Well-Used Energy", f"{global_data['used_energy'] / self.J_TO_KWH:.4f} kWh", self.COLORS["filter_online"])
+        self._make_card(row1, "Wasted Energy", f"{global_data['wasted_energy'] / self.J_TO_KWH:.4f} kWh", self.COLORS["filter_offline"])
 
         # Bottom Section: Averages
         row2 = tk.Frame(self.global_content, bg=self.COLORS["card_bg"])
         row2.pack(fill=tk.X, pady=5)
-        self._make_card(row2, "Avg Energy / Print", f"{global_data['avg_per_print']:.2f} J", "#00A2FF")
-        self._make_card(row2, "Avg Energy / Success", f"{global_data['avg_success']:.2f} J", self.COLORS["filter_online"])
-        self._make_card(row2, "Avg Energy / Failed", f"{global_data['avg_failed']:.2f} J", self.COLORS["filter_offline"])
+        self._make_card(row2, "Avg Energy / Print", f"{global_data['avg_per_print'] / self.J_TO_KWH:.4f} kWh", "#00A2FF")
+        self._make_card(row2, "Avg Energy / Success", f"{global_data['avg_success'] / self.J_TO_KWH:.4f} kWh", self.COLORS["filter_online"])
+        self._make_card(row2, "Avg Energy / Failed", f"{global_data['avg_failed'] / self.J_TO_KWH:.4f} kWh", self.COLORS["filter_offline"])
 
     def _render_table(self, tree, data_dict):
         """Populates a Treeview with the provided dictionary data."""
@@ -208,15 +213,15 @@ class DailyReportScreen:
             # Decide if the row is even or odd for the zebra stripe effect
             tag = 'evenrow' if count % 2 == 0 else 'oddrow'
             
+            # Convert values from Joules to kWh before inserting into the table
             tree.insert("", tk.END, values=(
                 key,
-                f"{m['total_energy']:.2f} J",
-                f"{m['used_energy']:.2f} J",
-                f"{m['wasted_energy']:.2f} J",
-                f"{m['avg_per_print']:.2f} J",
-                f"{m['avg_success']:.2f} J",
-                f"{m['avg_failed']:.2f} J"
+                f"{m['total_energy'] / self.J_TO_KWH:.4f} kWh",
+                f"{m['used_energy'] / self.J_TO_KWH:.4f} kWh",
+                f"{m['wasted_energy'] / self.J_TO_KWH:.4f} kWh",
+                f"{m['avg_per_print'] / self.J_TO_KWH:.4f} kWh",
+                f"{m['avg_success'] / self.J_TO_KWH:.4f} kWh",
+                f"{m['avg_failed'] / self.J_TO_KWH:.4f} kWh"
             ), tags=(tag,))
             
             count += 1
-        
