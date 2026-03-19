@@ -36,39 +36,23 @@ build/cooja/obj/device.o: device.c \
  ../../../../os/net/mac/framer/framer.h \
  ../../../../os/net/ipv6/uip-packetqueue.h \
  ../../../../os/net/ipv6/uip-ds6-route.h ../../../../os/lib/list.h \
- ../../../../os/net/ipv6/uiplib.h \
+ ../../../../os/net/ipv6/uiplib.h utility/sensors.h \
+ utility/scaler_params.h utility/device_conf.h utility/coap_module.h \
+ ../../../../os/net/app-layer/coap/coap-engine.h \
  ../../../../os/net/app-layer/coap/coap.h \
  ../../../../os/net/app-layer/coap/coap-constants.h \
  ../../../../os/net/app-layer/coap/coap-conf.h \
  ../../../../os/net/app-layer/coap/coap-transport.h \
  ../../../../os/net/app-layer/coap/coap-endpoint.h \
- ../../../../os/net/app-layer/coap/coap-blocking-api.h \
- ../../../../os/net/app-layer/coap/coap-transactions.h \
- ../../../../os/net/app-layer/coap/coap.h \
- ../../../../os/net/app-layer/coap/coap-engine.h \
  ../../../../os/net/app-layer/coap/coap-timer.h \
+ ../../../../os/net/app-layer/coap/coap-transactions.h \
+ ../../../../os/net/app-layer/coap/coap-engine.h \
  ../../../../os/net/app-layer/coap/coap-observe.h \
  ../../../../os/net/app-layer/coap/coap-separate.h \
  ../../../../os/net/app-layer/coap/coap-observe-client.h \
+ ../../../../os/net/app-layer/coap/coap-blocking-api.h \
  ../../../../os/net/app-layer/coap/coap-request-state.h \
- ../../../../os/net/app-layer/coap/coap-engine.h \
- ../../../../os/net/app-layer/coap/coap-transactions.h \
- ../../../../os/net/app-layer/mqtt/mqtt.h ../../../../os/contiki-net.h \
- ../../../../os/contiki.h ../../../../os/net/ipv6/tcpip.h \
- ../../../../os/net/ipv6/uip.h ../../../../os/net/ipv6/uiplib.h \
- ../../../../os/net/ipv6/uip-udp-packet.h \
- ../../../../os/net/ipv6/simple-udp.h \
- ../../../../os/net/ipv6/uip-nameserver.h \
- ../../../../os/net/routing/routing.h ../../../../os/net/ipv6/uip-sr.h \
- ../../../../os/net/ipv6/uip-icmp6.h ../../../../os/net/ipv6/uip-ds6.h \
- ../../../../os/net/ipv6/psock.h ../../../../os/contiki-lib.h \
- ../../../../os/lib/list.h ../../../../os/lib/memb.h \
- ../../../../os/lib/random.h ../../../../os/net/ipv6/udp-socket.h \
- ../../../../os/net/ipv6/tcp-socket.h ../../../../os/net/ipv6/uip.h \
- ../../../../os/net/netstack.h ../../../../os/lib/random.h \
- ../../../../os/dev/leds.h ../../../../os/net/ipv6/tcp-socket.h \
- ../../../../os/net/ipv6/udp-socket.h resources/sensors.h \
- resources/scaler_params.h resources/print_prediction.h \
+ utility/mqtt_module.h utility/print_prediction.h \
  /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_net.h \
  /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_common.h \
  /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_log.h \
@@ -132,51 +116,26 @@ project-conf.h:
 ../../../../os/net/ipv6/uip-ds6-route.h:
 ../../../../os/lib/list.h:
 ../../../../os/net/ipv6/uiplib.h:
+utility/sensors.h:
+utility/scaler_params.h:
+utility/device_conf.h:
+utility/coap_module.h:
+../../../../os/net/app-layer/coap/coap-engine.h:
 ../../../../os/net/app-layer/coap/coap.h:
 ../../../../os/net/app-layer/coap/coap-constants.h:
 ../../../../os/net/app-layer/coap/coap-conf.h:
 ../../../../os/net/app-layer/coap/coap-transport.h:
 ../../../../os/net/app-layer/coap/coap-endpoint.h:
-../../../../os/net/app-layer/coap/coap-blocking-api.h:
-../../../../os/net/app-layer/coap/coap-transactions.h:
-../../../../os/net/app-layer/coap/coap.h:
-../../../../os/net/app-layer/coap/coap-engine.h:
 ../../../../os/net/app-layer/coap/coap-timer.h:
+../../../../os/net/app-layer/coap/coap-transactions.h:
+../../../../os/net/app-layer/coap/coap-engine.h:
 ../../../../os/net/app-layer/coap/coap-observe.h:
 ../../../../os/net/app-layer/coap/coap-separate.h:
 ../../../../os/net/app-layer/coap/coap-observe-client.h:
+../../../../os/net/app-layer/coap/coap-blocking-api.h:
 ../../../../os/net/app-layer/coap/coap-request-state.h:
-../../../../os/net/app-layer/coap/coap-engine.h:
-../../../../os/net/app-layer/coap/coap-transactions.h:
-../../../../os/net/app-layer/mqtt/mqtt.h:
-../../../../os/contiki-net.h:
-../../../../os/contiki.h:
-../../../../os/net/ipv6/tcpip.h:
-../../../../os/net/ipv6/uip.h:
-../../../../os/net/ipv6/uiplib.h:
-../../../../os/net/ipv6/uip-udp-packet.h:
-../../../../os/net/ipv6/simple-udp.h:
-../../../../os/net/ipv6/uip-nameserver.h:
-../../../../os/net/routing/routing.h:
-../../../../os/net/ipv6/uip-sr.h:
-../../../../os/net/ipv6/uip-icmp6.h:
-../../../../os/net/ipv6/uip-ds6.h:
-../../../../os/net/ipv6/psock.h:
-../../../../os/contiki-lib.h:
-../../../../os/lib/list.h:
-../../../../os/lib/memb.h:
-../../../../os/lib/random.h:
-../../../../os/net/ipv6/udp-socket.h:
-../../../../os/net/ipv6/tcp-socket.h:
-../../../../os/net/ipv6/uip.h:
-../../../../os/net/netstack.h:
-../../../../os/lib/random.h:
-../../../../os/dev/leds.h:
-../../../../os/net/ipv6/tcp-socket.h:
-../../../../os/net/ipv6/udp-socket.h:
-resources/sensors.h:
-resources/scaler_params.h:
-resources/print_prediction.h:
+utility/mqtt_module.h:
+utility/print_prediction.h:
 /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_net.h:
 /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_common.h:
 /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_log.h:

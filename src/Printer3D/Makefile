@@ -7,7 +7,9 @@ CONTIKI=../../../..
 MODULES += os/net/app-layer/coap
 
 # Add external source files (relative to project dir)
-PROJECT_SOURCEFILES += resources/sensors.c
+PROJECT_SOURCEFILES += utility/coap_module.c
+PROJECT_SOURCEFILES += utility/mqtt_module.c
+PROJECT_SOURCEFILES += utility/sensors.c
 
 include $(CONTIKI)/Makefile.dir-variables
 
