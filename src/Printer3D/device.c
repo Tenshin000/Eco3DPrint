@@ -115,7 +115,7 @@ static uint8_t error_count = 0;
 /* ==================================================== */ 
 static void set_state(device_state_t new_state);
 static uint32_t calculate_print_duration(size_t stl_size);
-static void prepare_coap_request(const char* message, coap_message_type_t type, uint8_t method, const char* uri_path);
+static uint16_t prepare_coap_request(const char* message, coap_message_type_t type, uint8_t method, const char* uri_path);
 static void registration_handler(coap_message_t* response);
 static void res_health_get_handler(coap_message_t* request, coap_message_t* response, uint8_t* buffer, uint16_t preferred_size, int32_t* offset);
 static void res_print_post_handler(coap_message_t* request, coap_message_t* response, uint8_t* buffer, uint16_t preferred_size, int32_t* offset);
@@ -216,7 +216,7 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data
 }
 
 // Prepare CoAP request payload from provided message (generic helper)
-static void prepare_coap_request(const char* message, coap_message_type_t type, uint8_t method, const char* uri_path){
+static uint16_t prepare_coap_request(const char* message, coap_message_type_t type, uint8_t method, const char* uri_path){
   memset(payload, 0, sizeof(payload));
 
   if(message != NULL)
@@ -224,13 +224,16 @@ static void prepare_coap_request(const char* message, coap_message_type_t type, 
 
   coap_endpoint_parse(CLOUD_SERVER_EP, strlen(CLOUD_SERVER_EP), &server_ep);
 
-  coap_init_message(request, type, method, 0);
+  uint16_t mid = coap_get_mid();
+  coap_init_message(request, type, method, mid);
 
   if(uri_path != NULL)
     coap_set_header_uri_path(request, uri_path);
 
   if(message != NULL)
     coap_set_payload(request, (uint8_t *)payload, strlen(payload));
+
+  return mid;
 }
 
 // CoAP response handler (blocking request callback)
@@ -620,23 +623,23 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         if(btn->press_duration_seconds >= 5 && current_state != STATE_OFF){
           LOG_INFO("Button held >= 5s -> Hard reset\n");
           
+          // Create a transaction for sending
           if(current_state == STATE_PRINTING){
             char reset_payload[64];
             int en_i = (int)total_power_consumed;
             int en_d = (int)(fabs(total_power_consumed - en_i) * 100);
             snprintf(reset_payload, sizeof(reset_payload), "{\"status\":\"ERROR\",\"energy\":%d.%02d}", en_i, en_d);
 
-            prepare_coap_request(reset_payload, COAP_TYPE_NON, COAP_POST, END_PRINT_URI_PATH);
-            // Create a transaction for sending
-            coap_transaction_t* transaction = coap_new_transaction(coap_get_mid(), &server_ep);
+            uint16_t mid = prepare_coap_request(reset_payload, COAP_TYPE_NON, COAP_POST, END_PRINT_URI_PATH);
+            coap_transaction_t* transaction = coap_new_transaction(mid, &server_ep);
             if(transaction){
               transaction->message_len = coap_serialize_message(request, transaction->message);
               coap_send_transaction(transaction);
             }
           }
           else{
-            prepare_coap_request(NULL, COAP_TYPE_NON, COAP_POST, OFF_SIGNAL_URI_PATH);
-            coap_transaction_t* off_transaction = coap_new_transaction(coap_get_mid(), &server_ep);
+            uint16_t mid = prepare_coap_request(NULL, COAP_TYPE_NON, COAP_POST, OFF_SIGNAL_URI_PATH);
+            coap_transaction_t* off_transaction = coap_new_transaction(mid, &server_ep);
             if(off_transaction){
               off_transaction->message_len = coap_serialize_message(request, off_transaction->message);
               coap_send_transaction(off_transaction);

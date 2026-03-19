@@ -3,7 +3,6 @@ import json
 from coapthon.resources.resource import Resource
 from coapthon import defines
 
-from .BasicResource import BasicResource
 from backend.PrintManager import PrintManager
 from utility.Log import Log
 
@@ -47,9 +46,6 @@ class PrintFinished(Resource):
             logger_name="print_finished_logger",
             module_name="CoAP_SERVER"
         ).get_logger()
-
-        # Basic CoAP resource helper for response handling
-        self._resource = BasicResource()
 
     def render_POST_advanced(self, request, response):
         """
@@ -96,25 +92,25 @@ class PrintFinished(Resource):
                         response.code = defines.Codes.CHANGED.number  # 2.04 Changed
                         response.payload = "Notification Received"
                         self._logger.info(f"Sending a correct response to {source_ip}")
-                        return self._resource, response
+                        return self, response
                     else:
                         response.code = defines.Codes.INTERNAL_SERVER_ERROR.number  # 5.00 Internal Server Error
                         response.payload = "Server Error"
                         self._logger.info(f"Sending Internal Server Error to {source_ip}")
-                        return self._resource, response
+                        return self, response
             else:
                 response.code = defines.Codes.BAD_REQUEST.number  # 4.00 Bad Request
                 response.payload = "Invalid Result Payload Status"
                 self._logger.info(f"Sending Bad Request to {source_ip}: Invalid Status")
-                return self._resource, response
+                return self, response
 
         except json.JSONDecodeError:
             response.code = defines.Codes.BAD_REQUEST.number  # 4.00 Bad Request
             response.payload = "Invalid JSON Format"
             self._logger.info(f"Sending Bad Request to {source_ip}: Failed to parse JSON")
-            return self._resource, response
+            return self, response
         except ValueError:
             response.code = defines.Codes.BAD_REQUEST.number  # 4.00 Bad Request
             response.payload = "Invalid Energy Value"
             self._logger.info(f"Sending Bad Request to {source_ip}: Invalid Energy float")
-            return self._resource, response
+            return self, response

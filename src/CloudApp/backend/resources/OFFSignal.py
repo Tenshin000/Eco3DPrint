@@ -1,8 +1,5 @@
 import coapthon.defines as defines
-
 from coapthon.resources.resource import Resource
-
-from .BasicResource import BasicResource
 from utility.Log import Log
 
 class OFFSignal(Resource):
@@ -35,8 +32,6 @@ class OFFSignal(Resource):
         else:
             self._monitor = monitor
 
-        self._resource = BasicResource()
-
     def render_POST_advanced(self, request, response):
         """
         Process incoming CoAP POST requests.
@@ -55,8 +50,8 @@ class OFFSignal(Resource):
         
         if self._monitor is None:
             self._logger.error("NodeMonitor is missing. Cannot update node status.")
-            # response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-            return self._resource, None
+            response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+            return self, response
 
         # Use the monitor to forcefully set the node to OFFLINE
         self._monitor.set_node_offline(node_ip)
@@ -64,7 +59,7 @@ class OFFSignal(Resource):
         self._logger.info(f"Successfully processed OFF signal. Node {node_ip} is now OFFLINE.")
         
         # Respond with 2.02 Deleted (Code 66) as acknowledgment
-        # response.code = defines.Codes.DELETED.number
-        # response.payload = "Node marked as OFFLINE."
+        response.code = defines.Codes.DELETED.number
+        response.payload = "Node marked as OFFLINE."
         
-        return self._resource, None
+        return self, response

@@ -1,4 +1,5 @@
 from coapthon.server.coap import CoAP
+from configparser import ConfigParser
 
 from backend.Database import Database
 from backend.NodeMonitor import NodeMonitor
@@ -16,6 +17,11 @@ class CoAPServer(CoAP):
         port: int, CoAP standard UDP port 5683
         """
         super().__init__((host, port), multicast=multicast)
+
+        self._logger = Log(
+            logger_name="server_logger",
+            module_name="CoAP_SERVER"
+        ).get_logger()
 
         if database is None:
             # Load database configuration parameters
@@ -40,13 +46,9 @@ class CoAPServer(CoAP):
         if manager is None:
             manager = PrintManager(database=self._db, node_monitor=monitor)
 
-        self.add_resource("/registration", NodeRegistration(coap_server=self, database=database, monitor=monitor))
+        self.add_resource("/registration", NodeRegistration(coap_server=self, database=self._db, monitor=monitor))
         self.add_resource("/print/finished", PrintFinished(coap_server=self, print_manager=manager))
         self.add_resource("/signal/off", OFFSignal(coap_server=self, monitor=monitor))
         
-        self._logger = Log(
-            logger_name="server_logger",
-            module_name="CoAP_SERVER"
-        ).get_logger()
         self._logger.info(f"CoAP Server Initialized on [{host}]:{port}...")
         
