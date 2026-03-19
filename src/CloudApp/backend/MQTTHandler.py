@@ -1,6 +1,8 @@
 import json
 import paho.mqtt.client as mqtt
 
+from configparser import ConfigParser
+
 from backend.Database import Database
 from utility.Log import Log
 
@@ -42,7 +44,6 @@ class MQTTHandler:
                 exit(1)
         else:
             self._db = database
-            self._db.connect()
 
         # Initialize the Paho MQTT Client using the modern v2 API
         self._client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -64,11 +65,10 @@ class MQTTHandler:
             self._logger.error(f"Failed to start MQTT Handler: {e}")
 
     def stop(self):
-        """Stop the network loop, disconnect from the broker, and close the DB connection gracefully."""
+        """Stop the network loop and disconnect from the broker gracefully."""
         self._logger.info("Stopping MQTT Server...")
         self._client.loop_stop()
         self._client.disconnect()
-        self._db.close()
 
     def _on_connect(self, client, userdata, flags, reason_code, properties):
         """Callback triggered when the client connects to the broker."""
@@ -115,7 +115,7 @@ class MQTTHandler:
                 self._logger.warning(f"No active print found for IP: {node_ip}. Measurement dropped.")
                 return
                 
-            print_id = result[0][0]
+            print_id = result[0]["id"]
 
             # Insert the measurement into the database
             insert_query = """
@@ -137,12 +137,14 @@ class MQTTHandler:
                 data.get("Tension"),
                 data.get("Power")
             )
-            
-            if self._db.execute(insert_query, params):
-                self._logger.debug(f"Measurement saved for Print ID {print_id} (Node: {node_ip})")
-            else:
-                self._logger.error("Failed to insert measurement into database.")
 
+            insert_result = self._db.execute(insert_query, params)
+            
+            if insert_result is not None:
+                self._logger.debug(f"Measurement processed for Print ID {print_id} (Node: {node_ip})")
+            else:
+                self._logger.error("Database query failed while inserting measurement.")
+            
         except json.JSONDecodeError:
             self._logger.error("Failed to parse MQTT message payload as JSON.")
         except Exception as e:

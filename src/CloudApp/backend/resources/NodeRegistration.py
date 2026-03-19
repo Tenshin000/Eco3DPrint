@@ -4,9 +4,8 @@ import json
 from coapthon.resources.resource import Resource
 from configparser import ConfigParser
 
-from .BasicResource import BasicResource
-from ..Database import Database
-from ..NodeMonitor import NodeMonitor
+from backend.Database import Database
+from backend.NodeMonitor import NodeMonitor
 from utility.Log import Log
 
 class NodeRegistration(Resource):
@@ -16,7 +15,7 @@ class NodeRegistration(Resource):
     This class interfaces with a MySQL database to store, verify, or update 
     the metadata of connecting nodes based on their IPv6 address.
     """
-    def __init__(self, name="Node Registration", database=None, monitor=None):
+    def __init__(self, name="Node Registration", coap_server=None, database=None, monitor=None):
         """
         Initialize the NodeRegistration resource.
 
@@ -54,8 +53,6 @@ class NodeRegistration(Resource):
         else:
             self._monitor = monitor
 
-        self._resource = BasicResource()
-
     def render_POST_advanced(self, request, response):
         """
         Process incoming CoAP POST requests using the advanced interface.
@@ -80,7 +77,7 @@ class NodeRegistration(Resource):
             self._logger.error(f"Payload validation failed (JSON Decode Error): {je.msg}")
             response.code = defines.Codes.BAD_REQUEST.number
             response.payload = "Error: Invalid JSON format provided."
-            return self._resource, response
+            return self, response
 
         self._logger.info("Node payload successfully parsed and validated.")
 
@@ -92,7 +89,7 @@ class NodeRegistration(Resource):
             self._logger.error("Database transaction failed during IP verification.")
             response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
             response.payload = "Error: Internal database exception during verification."
-            return self._resource, response
+            return self, response
 
         # Handle Existing Node (Login)
         if existing:
@@ -102,14 +99,14 @@ class NodeRegistration(Resource):
                 self._logger.error(f"Failed to update alias/status for node {request.source[0]}.")
                 response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 response.payload = "Error: Internal database exception during node update."
-                return self._resource, response
+                return self, response
             
             self._monitor.register_node(request.source[0], node_data["name"], node_data["type"], node_data["utilization"])
 
             self._logger.info(f"Node {request.source[0]} successfully authenticated (Already registered).")
             response.code = defines.Codes.VALID.number # CoAP Code 2.03
             response.payload = "Success: Node already registered and validated."
-            return self._resource, response
+            return self, response
 
         # Register New Node
         sql_query = """
@@ -137,7 +134,7 @@ class NodeRegistration(Resource):
             self._logger.error(f"Failed to insert metadata for new node {request.source[0]}.")
             response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
             response.payload = "Error: Database insertion query failed."
-            return self._resource, response
+            return self, response
 
         self._monitor.register_node(request.source[0], node_data["name"], node_data["type"], node_data["utilization"])
 
@@ -145,5 +142,5 @@ class NodeRegistration(Resource):
         response.code = defines.Codes.CREATED.number  # CoAP Code 2.01
         response.payload = "Success: Node registered successfully." 
 
-        return self._resource, response
+        return self, response
     

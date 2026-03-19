@@ -1,11 +1,13 @@
 import os
 import asyncio
 import json
+import threading
 import websockets
+
 from configparser import ConfigParser
 
-from backend.PrintManager import PrintManager 
 from backend.Database import Database
+from backend.PrintManager import PrintManager 
 from utility.Log import Log
 
 class WebSocketManager:
@@ -107,7 +109,7 @@ class WebSocketManager:
                     # Handle Daily Report request
                     elif action == "get_daily_report":
                         self._logger.info("Frontend requested Daily Energy Report.")
-                        report_data = self._generate_daily_report()
+                        report_data = await asyncio.to_thread(self._generate_daily_report)
                         response = {"type": "daily_report", "data": report_data}
                         await websocket.send(json.dumps(response))
 

@@ -23,7 +23,7 @@ class PrintFinished(Resource):
         - 4.00 Bad Request: The payload format or value is invalid.
         - 5.00 Internal Server Error: PrintManager failed to handle the result.
     """
-    def __init__(self, name="Print Finished", print_manager=None):
+    def __init__(self, name="Print Finished", coap_server=None, print_manager=None):
         """
         Initialize the PrintFinished CoAP resource.
 
@@ -51,9 +51,9 @@ class PrintFinished(Resource):
         # Basic CoAP resource helper for response handling
         self._resource = BasicResource()
 
-    def render_PUT_advanced(self, request, response):
+    def render_POST_advanced(self, request, response):
         """
-        Handle PUT requests from nodes indicating a finished print job.
+        Handle POST requests from nodes indicating a finished print job.
 
         The request payload should be a JSON containing the print status 
         ("FINISHED", "FAILED", or "ERROR") and the accumulated energy.

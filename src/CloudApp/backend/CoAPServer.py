@@ -35,14 +35,14 @@ class CoAPServer(CoAP):
             self._db = database
         
         if monitor is None:
-            monitor = NodeMonitor()
+            monitor = NodeMonitor(database=self._db)
 
         if manager is None:
-            manager = PrintManager()
+            manager = PrintManager(database=self._db, node_monitor=monitor)
 
-        self.add_resource("/registration", NodeRegistration(database=database, monitor=monitor))
-        self.add_resource("/print/finished", PrintFinished(print_manager=manager))
-        self.add_resource("/signal/off", OFFSignal(monitor=monitor))
+        self.add_resource("/registration", NodeRegistration(coap_server=self, database=database, monitor=monitor))
+        self.add_resource("/print/finished", PrintFinished(coap_server=self, print_manager=manager))
+        self.add_resource("/signal/off", OFFSignal(coap_server=self, monitor=monitor))
         
         self._logger = Log(
             logger_name="server_logger",

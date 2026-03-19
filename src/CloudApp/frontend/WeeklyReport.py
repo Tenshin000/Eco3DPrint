@@ -262,24 +262,37 @@ class WeeklyReportScreen:
         self._make_card(row2, "Avg Energy / Success", f"{global_summary['avg_success'] / self.J_TO_KWH:.4f} kWh", self.COLORS["filter_online"])
         self._make_card(row2, "Avg Energy / Failed", f"{global_summary['avg_failed'] / self.J_TO_KWH:.4f} kWh", self.COLORS["filter_offline"])
 
-        # Populate Global Daily Table
-        self._populate_single_table(self.global_tree, global_daily)
+        # Populate Global Daily Table (Set is_days_of_week to True)
+        self._populate_single_table(self.global_tree, global_daily, is_days_of_week=True)
 
     def _render_multiple_tables(self, trees_dict, grouped_data):
         """Iterates through the 7 daily trees and populates them with data."""
         for day, tree in trees_dict.items():
             daily_data = grouped_data.get(day, {})
-            self._populate_single_table(tree, daily_data)
+            # Keep is_days_of_week False here to sort IPs and STLs alphabetically
+            self._populate_single_table(tree, daily_data, is_days_of_week=False)
 
-    def _populate_single_table(self, tree, data_dict):
+    def _populate_single_table(self, tree, data_dict, is_days_of_week=False):
         """Populates a single Treeview with the provided dictionary data."""
         # Clear existing items
         for item in tree.get_children():
             tree.delete(item)
             
+        # Determine the correct sorting logic
+        if is_days_of_week:
+            # Map the days to an integer to enforce chronological order
+            day_order = {
+                "Monday": 0, "Tuesday": 1, "Wednesday": 2, 
+                "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6
+            }
+            # If a key is somehow missing from day_order, put it at the end (index 99)
+            sorted_keys = sorted(data_dict.keys(), key=lambda k: day_order.get(k, 99))
+        else:
+            # Standard alphabetical sort for Printer IPs and STL Names
+            sorted_keys = sorted(data_dict.keys())
+            
         count = 0
-        # Sort keys to ensure consistent order (e.g. Printer IPs are ordered the same every day)
-        for key in sorted(data_dict.keys()):
+        for key in sorted_keys:
             m = data_dict[key]
             tag = 'evenrow' if count % 2 == 0 else 'oddrow'
             

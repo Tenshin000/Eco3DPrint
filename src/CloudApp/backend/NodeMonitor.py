@@ -106,15 +106,26 @@ class NodeMonitor:
         
         self._logger.info(f"Node {ip} ({name}) registered and marked ONLINE.")
         self._update_db_status(ip, "ONLINE")
-
-        # If it had any job stuck in PRINTING, that physical print is definitively lost.
-        self._fail_active_prints(ip)
         
         if old_status != "ONLINE" and self.print_manager_callback:
             self.print_manager_callback(ip, old_status, "ONLINE")
         
         if self.on_change_callback:
             self.on_change_callback(self.get_all_nodes())
+
+    def set_node_online(self, ip):
+        """Explicitly returns a node to the ONLINE state."""
+        status_changed = False
+        with self._lock:
+            if ip in self._nodes and self._nodes[ip]["status"] != "ONLINE":
+                self._nodes[ip]["status"] = "ONLINE"
+                status_changed = True
+                
+        if status_changed:
+            self._update_db_status(ip, "ONLINE")
+            self._logger.info(f"Node {ip} returned to ONLINE state.")
+            if self.on_change_callback:
+                self.on_change_callback(self.get_all_nodes())
 
     def set_node_printing(self, ip):
         """Called by PrintManager when a print job is successfully acknowledged."""
@@ -157,9 +168,6 @@ class NodeMonitor:
             
             # Update the database
             self._update_db_status(ip, "OFFLINE")
-            
-            # Ensure any active prints are handled (marked as ERROR)
-            self._fail_active_prints(ip)
             
             # Trigger callbacks to notify the rest of the system (PrintManager, Frontend)
             if self.print_manager_callback:
@@ -284,10 +292,6 @@ class NodeMonitor:
                 
             self._update_db_status(ip, new_status_val)
             
-            # Ensure any active print jobs are marked as ERROR if the node drops offline
-            if new_status_val == "OFFLINE":
-                self._fail_active_prints(ip)
-            
             if self.print_manager_callback:
                 self.print_manager_callback(ip, old_status_val, new_status_val)
             if self.on_change_callback:
@@ -303,19 +307,6 @@ class NodeMonitor:
         if self._db:
             query = "UPDATE Node SET status=%s WHERE ip=%s"
             self._db.execute(query, (status, ip))
-
-    def _fail_active_prints(self, ip):
-        """
-        Check if the node has any prints in PRINTING state and set them to ERROR.
-        This is triggered when a node unexpectedly goes OFFLINE.
-
-        :param ip: Node IP address
-        """
-        if self._db:
-            query = "UPDATE Print SET status='ERROR', energy=0 WHERE ip=%s AND status='PRINTING'"
-            # We execute the query. If there are no active prints, it safely does nothing.
-            if self._db.execute(query, (ip,)):
-                self._logger.info(f"Checked and enforced ERROR state for any active prints on node {ip}.")
 
     def _load_initial_state(self):
         """Load existing nodes from the database on startup."""

@@ -151,7 +151,7 @@ function start_app(){
     gnome-terminal -- bash -c 'cd ./'${SRC_DIR}'/CloudApp; python app.py; exec bash'
 }
 
-function start_mosquito(){
+function start_mosquitto(){
     sudo pkill mosquitto 2>/dev/null
     gnome-terminal -- bash -c "cd ./${SRC_DIR}/CloudApp; mosquitto -c local_broker.conf -v; exec bash"
 }
@@ -184,8 +184,8 @@ case $1 in
     -br)
         build_border_router $2
         ;;
-    -sm)
-    	start_mosquito
+    -mosquitto)
+    	start_mosquitto
     	;;
     -sim)
         echo "Starting Cooja..."
@@ -193,73 +193,92 @@ case $1 in
         echo "Press any key to start the border-router..."
         read -n 1 -s
         build_border_router "cooja"
-        echo "Press any key to start the mosquito server..."
+        echo "Press any key to start the mosquitto server..."
         read -n 1 -s
-        start_mosquito
+        start_mosquitto
+        echo "Press any key to start the Server and the App..."
+        read -n 1 -s
+        start_server
+        start_app
+        ;;
+     -simulation)
+        echo "Starting Cooja..."
+        launch_cooja
+        echo "Press any key to start the border-router..."
+        read -n 1 -s
+        build_border_router "cooja"
+        echo "Press any key to start the mosquitto server..."
+        read -n 1 -s
+        start_mosquitto
         echo "Press any key to start the Server and the App..."
         read -n 1 -s
         start_server
         start_app
         ;;
         *)
-        echo "===================================================================="
-        echo "=                          Eco3DPrint CLI                          ="
-        echo "===================================================================="
-        echo
-        echo "USAGE:"
-        echo "  $0 <command> [options]"
-        echo
-        echo "--------------------------------------------------------------------"
-        echo "                        SIMULATION COMMANDS"
-        echo "--------------------------------------------------------------------"
-        echo "  -cooja"
-        echo "      Launch the Cooja network simulator."
-        echo
-        echo "  -sim"
-        echo "      Start the full simulation workflow:"
-        echo "        1) Launch Cooja"
-        echo "        2) Start the border router (Cooja mode)"
-        echo "        3) Start Cloud server and application"
-        echo
-        echo "  -br <target>"
-        echo "      Start the RPL border router."
-        echo "      target:"
-        echo "        cooja    -> connect router to Cooja simulation"
-        echo "        hardware -> connect router to nRF52840 dongle"
-        echo
-        echo "--------------------------------------------------------------------"
-        echo "                          DATABASE MANAGEMENT"
-        echo "--------------------------------------------------------------------"
-        echo "  -create-db"
-        echo "      Install MySQL if missing and initialize the database."
-        echo
-        echo "  -sql \"<query>\""
-        echo "      Execute a custom SQL query on ${DB_NAME}."
-        echo
-        echo "      Example:"
-        echo "      $0 -sql \"SELECT * FROM Node;\""
-        echo
-        echo "--------------------------------------------------------------------"
-        echo "                          TABLE VISUALIZATION"
-        echo "--------------------------------------------------------------------"
-        echo "  -nodes"
-        echo "      Display the Node table."
-        echo
-        echo "  -prints"
-        echo "      Display the Print table."
-        echo
-        echo "  -measurements"
-        echo "      Display the Measurement table."
-        echo
-        echo "  -table <table_name>"
-        echo "      Display the contents of any table."
-        echo
-        echo "      Examples:"
-        echo "      $0 -table Node"
-        echo "      $0 -table Print"
-        echo "      $0 -table Measurement"
-        echo
-        echo "===================================================================="
-        exit 1
-        ;;
-esac
+	echo "===================================================================="
+	echo "=                          Eco3DPrint CLI                          ="
+	echo "===================================================================="
+	echo
+	echo "USAGE:"
+	echo "  $0 <command> [options]"
+	echo
+	echo "--------------------------------------------------------------------"
+	echo "                        SIMULATION COMMANDS"
+	echo "--------------------------------------------------------------------"
+	echo "  -cooja"
+	echo "      Launch the Cooja network simulator."
+	echo
+	echo "  -sim | -simulation"
+	echo "      Start the full simulation workflow (step-by-step):"
+	echo "        1) Launch Cooja"
+	echo "        2) Start the border router (Cooja mode)"
+	echo "        3) Start Mosquitto broker"
+	echo "        4) Start Cloud server and application"
+	echo "      (waits for key press between each step)"
+	echo
+	echo "  -br <target>"
+	echo "      Start the RPL border router."
+	echo "      target:"
+	echo "        cooja    -> connect router to Cooja simulation"
+	echo "        hardware -> connect router to nRF52840 dongle (/dev/ttyACM0)"
+	echo
+	echo "  -mosquitto"
+	echo "      Start the local Mosquitto MQTT broker using config file."
+	echo
+	echo "--------------------------------------------------------------------"
+	echo "                          DATABASE MANAGEMENT"
+	echo "--------------------------------------------------------------------"
+	echo "  -create-db"
+	echo "      Install MySQL (if missing) and initialize the database."
+	echo
+	echo "  -sql \"<query>\""
+	echo "      Execute a custom SQL query on ${DB_NAME}."
+	echo
+	echo "      Example:"
+	echo "      $0 -sql \"SELECT * FROM Node;\""
+	echo
+	echo "--------------------------------------------------------------------"
+	echo "                          TABLE VISUALIZATION"
+	echo "--------------------------------------------------------------------"
+	echo "  -nodes"
+	echo "      Display the Node table."
+	echo
+	echo "  -prints"
+	echo "      Display the Print table."
+	echo
+	echo "  -measurements"
+	echo "      Display the Measurement table."
+	echo
+	echo "  -table <table_name>"
+	echo "      Display the contents of any table."
+	echo
+	echo "      Examples:"
+	echo "      $0 -table Node"
+	echo "      $0 -table Print"
+	echo "      $0 -table Measurement"
+	echo
+	echo "===================================================================="
+	exit 1
+	;;
+	esac

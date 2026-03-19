@@ -69,15 +69,23 @@ class PrintManager:
 
     def on_node_status_change(self, ip, old_status, new_status):
         """Callback triggered by NodeMonitor when a node changes its status."""
-        if new_status == 'ONLINE':
-            # Node came back online, check if there are pending jobs in QUEUE
-            self._check_and_start_print(ip)
+        # CASE 1: The node goes offline (crash, disconnection, or shutdown)
+        if new_status == 'OFFLINE':
+            # We put in ERROR any print that was left hanging in PRINTING for that node
+            query = "UPDATE `Print` SET status = 'ERROR', energy = 0.0 WHERE ip = %s AND status = 'PRINTING'"
+            if self._db.execute(query, (ip,)):
+                self._logger.warning(f"Node {ip} went OFFLINE. Active print jobs marked as ERROR.")
+
+        # CASE 2: The node comes back online or has just rebooted
+        elif new_status == 'ONLINE':
+            # If it was printing before and is now simply ONLINE, it means that printing was physically interrupted (e.g. hardware reset of the node)
+            if old_status == 'PRINTING':
+                query = "UPDATE `Print` SET status = 'ERROR', energy = 0.0 WHERE ip = %s AND status = 'PRINTING'"
+                if self._db.execute(query, (ip,)):
+                    self._logger.warning(f"Node {ip} rebooted/reset during a print. Active job marked as ERROR.")
             
-        elif old_status == 'PRINTING' and new_status == 'OFFLINE':
-            # Node disconnected during a print. Mark the active print as ERROR.
-            query = "UPDATE `Print` SET status = 'ERROR' WHERE ip = %s AND status = 'PRINTING'"
-            self._db.execute(query, (ip,))
-            self._logger.warning(f"Node {ip} went OFFLINE during PRINTING. Job marked as ERROR.")
+            # Regardless of what it was doing before, it's ONLINE now: let's check if there's a queue!
+            threading.Timer(2.0, self._check_and_start_print, args=[ip]).start()
 
     def _check_and_start_print(self, ip):
         """
@@ -171,8 +179,12 @@ class PrintManager:
             self._monitor.set_node_printing(ip)
 
         except Exception as e:
-            self._logger.error(f"Transfer failed for {ip}: {e}")
-            self._db.execute("UPDATE `Print` SET status = 'ERROR' WHERE id = %s", (job_id,))
+            self._logger.error(f"Transfer failed for {ip} (node might still be booting): {e}")
+            self._db.execute("UPDATE `Print` SET status = 'QUEUE' WHERE id = %s", (job_id,))
+            self._logger.info(f"Print #{job_id} reverted to QUEUE pending node stabilization.")
+            
+            # 2. METTIAMO IL NODO OFFLINE: Così il watchdog proverà a pingarlo finché non risponde
+            self._monitor.set_node_offline(ip)
         finally:
             client.stop()
             # Ensure the lock is released regardless of success or failure
@@ -226,12 +238,7 @@ class PrintManager:
         status_changed = False
         
         if result != "ERROR":
-            self._monitor._update_db_status(ip, "ONLINE")
-            with self._monitor._lock:
-                if ip in self._monitor._nodes:
-                    if self._monitor._nodes[ip]["status"] != "ONLINE":
-                        self._monitor._nodes[ip]["status"] = "ONLINE"
-                        status_changed = True
+            self._monitor.set_node_online(ip)
         else:
             self._monitor.set_node_offline(ip)
         

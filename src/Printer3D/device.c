@@ -83,12 +83,14 @@ static coap_message_t request[1];
 // MQTT 
 static struct mqtt_connection conn;
 static bool mqtt_connected = false;
+static process_event_t event_mqtt_retry;
 static char mqtt_payload[256]; // Buffer for the JSON message
 
 // Timers
 static struct etimer retry_timer; // Timer to retry to connect with CoAP Server
 static struct etimer print_timer; // Timer to simulate printing duration 
 static struct etimer sample_timer; // Timer for takin the samples for prediction
+static struct etimer mqtt_timer; // Timer to retry MQTT Connection
 
 // Device Parameters
 static char device_name[] = "printer_01";
@@ -188,14 +190,19 @@ static uint32_t calculate_print_duration(size_t stl_size){
 /* ==================================================== */ 
 // MQTT Event Callback to handle connection status changes
 static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data) {
-  switch(event) {
+  switch(event){
     case MQTT_EVENT_CONNECTED:
       LOG_INFO("MQTT Connected to broker\n");
       mqtt_connected = true;
       break;
     case MQTT_EVENT_DISCONNECTED:
-      LOG_WARN("MQTT Disconnected\n");
-      mqtt_connected = false;
+      // Fix for the double print: check if it was actually connected before logging
+      if(mqtt_connected){
+        LOG_WARN("MQTT Disconnected\n");
+        mqtt_connected = false;
+      }
+      // Post an event to the main process to handle potential reconnection
+      process_post(&smart_printer_process, event_mqtt_retry, NULL);
       break;
     case MQTT_EVENT_PUBLISH:
       // Fired when an incoming message is received, not used in this publisher-only node
@@ -245,11 +252,11 @@ static void registration_handler(coap_message_t* response){
       // CoAP Code 2.01 (Created)
       LOG_INFO("Registration Successful\n");
       set_state(STATE_ONLINE);
-
+      
       // Connect to MQTT Broker once we are officially ONLINE
-      if(!mqtt_connected) {
-        LOG_INFO("Attempting MQTT connection to %s:%d\n", MQTT_BROKER_IP, MQTT_BROKER_PORT);
-        mqtt_connect(&conn, MQTT_BROKER_IP, MQTT_BROKER_PORT, 60 * 3, MQTT_CLEAN_SESSION_ON);
+      if(!mqtt_connected){
+        // Wake up the process to let the centralized MQTT retry logic handle it
+        process_post(&smart_printer_process, event_mqtt_retry, NULL);
       }
   }
   else if(response->code == 67){
@@ -258,9 +265,9 @@ static void registration_handler(coap_message_t* response){
       set_state(STATE_ONLINE);
 
       // Connect to MQTT Broker once we are officially ONLINE
-      if(!mqtt_connected) {
-        LOG_INFO("Attempting MQTT connection to %s:%d\n", MQTT_BROKER_IP, MQTT_BROKER_PORT);
-        mqtt_connect(&conn, MQTT_BROKER_IP, MQTT_BROKER_PORT, 60 * 3, MQTT_CLEAN_SESSION_ON);
+      if(!mqtt_connected){
+        // Wake up the process to let the centralized MQTT retry logic handle it
+        process_post(&smart_printer_process, event_mqtt_retry, NULL);
       }
   }
   else{
@@ -506,6 +513,8 @@ PROCESS_THREAD(smart_printer_process, ev, data){
   PROCESS_BEGIN();
 
   LOG_INFO("Smart Printer process started\n");
+
+  event_mqtt_retry = process_alloc_event();
   
   // Register the MQTT client context 
   mqtt_register(&conn, &smart_printer_process, device_name, mqtt_event, 256);
@@ -527,6 +536,17 @@ PROCESS_THREAD(smart_printer_process, ev, data){
 
   while(1){
     PROCESS_WAIT_EVENT();
+
+    if(ev == event_mqtt_retry || (ev == PROCESS_EVENT_TIMER && data == &mqtt_timer)){
+      // Only attempt to connect if we are supposed to be connected (ONLINE or PRINTING)
+      if(!mqtt_connected && (current_state == STATE_ONLINE || current_state == STATE_PRINTING)){
+        LOG_INFO("Attempting MQTT connection to %s:%d\n", MQTT_BROKER_IP, MQTT_BROKER_PORT);
+        mqtt_connect(&conn, MQTT_BROKER_IP, MQTT_BROKER_PORT, 60 * 3, MQTT_CLEAN_SESSION_ON);
+        
+        // Set a timer to retry in 10 seconds if the connection fails or drops again
+        etimer_set(&mqtt_timer, 10 * CLOCK_SECOND);
+      }
+    }
 
     /* BUTTON HANDLING */
     // Handle Button Release (for short press confirmation or 2-4s override)
@@ -554,7 +574,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             LOG_INFO("Button released (< 2s). Sending %s notification to server...\n", print_result);
             waiting_for_confirmation = false; // Reset the flag
               
-            prepare_coap_request(end_payload, COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
+            prepare_coap_request(end_payload, COAP_TYPE_CON, COAP_POST, END_PRINT_URI_PATH);
             COAP_BLOCKING_REQUEST(&server_ep, request, print_finished_handler);
           }
           // Long press (between 2 and 4 seconds): Override or Manual Fail
@@ -582,7 +602,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
               // Overwrite the payload to ensure status is FAILED instead of FINISHED
               snprintf(end_payload, sizeof(end_payload), "{\"status\":\"FAILED\",\"energy\":%d.%02d}", en_i, en_d);
               
-              prepare_coap_request(end_payload, COAP_TYPE_CON, COAP_PUT, END_PRINT_URI_PATH);
+              prepare_coap_request(end_payload, COAP_TYPE_CON, COAP_POST, END_PRINT_URI_PATH);
               COAP_BLOCKING_REQUEST(&server_ep, request, print_finished_handler);
             }
           }
@@ -606,7 +626,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             int en_d = (int)(fabs(total_power_consumed - en_i) * 100);
             snprintf(reset_payload, sizeof(reset_payload), "{\"status\":\"ERROR\",\"energy\":%d.%02d}", en_i, en_d);
 
-            prepare_coap_request(reset_payload, COAP_TYPE_NON, COAP_PUT, END_PRINT_URI_PATH);
+            prepare_coap_request(reset_payload, COAP_TYPE_NON, COAP_POST, END_PRINT_URI_PATH);
             // Create a transaction for sending
             coap_transaction_t* transaction = coap_new_transaction(coap_get_mid(), &server_ep);
             if(transaction){
@@ -615,7 +635,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             }
           }
           else{
-            prepare_coap_request(NULL, COAP_TYPE_NON, COAP_DELETE, OFF_SIGNAL_URI_PATH);
+            prepare_coap_request(NULL, COAP_TYPE_NON, COAP_POST, OFF_SIGNAL_URI_PATH);
             coap_transaction_t* off_transaction = coap_new_transaction(coap_get_mid(), &server_ep);
             if(off_transaction){
               off_transaction->message_len = coap_serialize_message(request, off_transaction->message);

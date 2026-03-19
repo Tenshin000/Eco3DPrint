@@ -119,13 +119,18 @@ class Database:
         try:
             # Check out a connection from the pool
             connection = self._pool.get_connection()
+
+            # Let's make sure the connection is still alive (avoid the "MySQL server has gone away" error)
+            if not connection.is_connected():
+                connection.ping(reconnect=True, attempts=3, delay=2)
             
             # Instantiate a buffered cursor to fetch all data immediately
-            cursor = connection.cursor(buffered=True)
+            cursor = connection.cursor(buffered=True, dictionary=True)
             cursor.execute(query, params)
 
             # Evaluate if the query is expected to return rows (e.g., SELECT statement)
-            if getattr(cursor, "with_rows", False):
+            if cursor.description is not None:
+                # SELECT query 
                 results = cursor.fetchall()
                 return results
 

@@ -45,10 +45,7 @@ def main():
 
     logger.info("Database Ready")
 
-    # Reset all nodes to OFFLINE at startup to ensure consistent state
     database.execute("UPDATE Node SET status = 'OFFLINE'")
-
-    # If the server crashed during a print, set any stuck PRINTING jobs to ERROR. This prevents phantom jobs from blocking the queue upon server restart.
     database.execute("UPDATE `Print` SET status = 'ERROR', energy = 0 WHERE status = 'PRINTING'")
 
     # CoAP server configuration (Fallback to fd00::1/5683 if not in config.ini)   
@@ -126,10 +123,13 @@ def main():
         # Stop MQTT Subscriber
         mqtt_handler.stop()
         
-        # Set all nodes to OFFLINE in the database before shutdown
         try:
+            # Set all nodes to OFFLINE in the database before shutdown
             database.execute("UPDATE Node SET status = 'OFFLINE'")
-            logger.info("Database: All nodes set to OFFLINE.")
+            logger.info("All nodes set to OFFLINE.")
+            # If the server crashed during a print, set any stuck PRINTING jobs to ERROR. This prevents phantom jobs from blocking the queue upon server restart.
+            database.execute("UPDATE `Print` SET status = 'ERROR', energy = 0 WHERE status = 'PRINTING'")
+            logger.info("Any PRINTING Jobs setted to ERROR.")
         except Exception as e:
             logger.error(f"Database update failed: {e}")
 

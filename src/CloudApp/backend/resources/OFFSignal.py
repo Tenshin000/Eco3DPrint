@@ -7,13 +7,13 @@ from utility.Log import Log
 
 class OFFSignal(Resource):
     """
-    Resource class handling CoAP DELETE requests for graceful node shutdown.
+    Resource class handling CoAP POST requests for graceful node shutdown.
     
     This class receives a signal from a node right before it turns OFF
     (e.g., due to a hard reset) and immediately notifies the NodeMonitor
     to update its status to OFFLINE, preventing unnecessary ping retries.
     """
-    def __init__(self, name="OFF Signal", monitor=None):
+    def __init__(self, name="OFF Signal", coap_server=None, monitor=None):
         """
         Initialize the OFFSignal resource.
 
@@ -37,11 +37,11 @@ class OFFSignal(Resource):
 
         self._resource = BasicResource()
 
-    def render_DELETE_advanced(self, request, response):
+    def render_POST_advanced(self, request, response):
         """
-        Process incoming CoAP DELETE requests.
+        Process incoming CoAP POST requests.
         
-        When a node sends a DELETE request to this endpoint, it signifies
+        When a node sends a POST request to this endpoint, it signifies
         that the node is shutting down. The method extracts the sender's IP
         and uses the NodeMonitor to explicitly set the node's status to OFFLINE.
 
@@ -51,12 +51,12 @@ class OFFSignal(Resource):
         """
         node_ip = request.source[0]
         
-        self._logger.info(f"Received OFF signal (DELETE) from node {node_ip}:{request.source[1]}")
+        self._logger.info(f"Received OFF signal from node {node_ip}:{request.source[1]}")
         
         if self._monitor is None:
             self._logger.error("NodeMonitor is missing. Cannot update node status.")
-            response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-            return self._resource, response
+            # response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+            return self._resource, None
 
         # Use the monitor to forcefully set the node to OFFLINE
         self._monitor.set_node_offline(node_ip)
@@ -64,7 +64,7 @@ class OFFSignal(Resource):
         self._logger.info(f"Successfully processed OFF signal. Node {node_ip} is now OFFLINE.")
         
         # Respond with 2.02 Deleted (Code 66) as acknowledgment
-        response.code = defines.Codes.DELETED.number
-        response.payload = "Node marked as OFFLINE."
+        # response.code = defines.Codes.DELETED.number
+        # response.payload = "Node marked as OFFLINE."
         
-        return self._resource, response
+        return self._resource, None
