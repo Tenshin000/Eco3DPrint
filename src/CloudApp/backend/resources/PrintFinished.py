@@ -35,17 +35,17 @@ class PrintFinished(Resource):
         super().__init__(name, observable=False)
         self.payload = "Print Finished Resource"
 
-        # Assign the provided PrintManager or create a new one
-        if print_manager is None:
-            print_manager = PrintManager()
-        else:
-            self._print_manager = print_manager
-
         # Logger for monitoring incoming notifications and responses
         self._logger = Log(
             logger_name="print_finished_logger",
             module_name="CoAP_SERVER"
         ).get_logger()
+
+        # Ensure a PrintManager instance is explicitly provided
+        if print_manager is None:
+            self._logger.error("PrintManager instance is strictly required but was not provided.")
+            raise ValueError("A PrintManager instance must be provided to CoAPServer.")
+        self._print_manager = print_manager
 
     def render_POST_advanced(self, request, response):
         """

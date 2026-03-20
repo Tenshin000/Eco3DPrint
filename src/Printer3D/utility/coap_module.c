@@ -30,7 +30,8 @@ static void res_health_get_handler(coap_message_t *req, coap_message_t *response
   }
 
   LOG_INFO("Health check ping received! Responding with state: %s\n", msg);
-  
+
+  coap_set_status_code(response, CONTENT_2_05);
   coap_set_header_content_format(response, TEXT_PLAIN);
   coap_set_payload(response, (uint8_t *)msg, strlen(msg));
 }

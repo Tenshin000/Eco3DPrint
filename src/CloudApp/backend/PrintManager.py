@@ -37,11 +37,12 @@ class PrintManager:
                 exit(1)
         else:
             self._db = database
-            
+
+        # Ensure a NodeMonitor instance is explicitly provided
         if node_monitor is None:
-            self._monitor = NodeMonitor()
-        else: 
-            self._monitor = node_monitor
+            self._logger.error("NodeMonitor instance is strictly required but was not provided.")
+            raise ValueError("A NodeMonitor instance must be provided to PrintManager.")
+        self._monitor = node_monitor
             
         self._logger = Log("print_manager", "PRINT_MANAGER").get_logger()
         
@@ -49,8 +50,8 @@ class PrintManager:
         self._lock = threading.Lock()
         self._active_transfers = set()
         
-        # Register this manager to receive status change events from NodeMonitor
-        self._monitor.print_manager_callback = self.on_node_status_change
+        # Cleanly subscribe to the NodeMonitor event
+        self._monitor.subscribe('node_status_changed', self.on_node_status_change)
 
     def add_print_job(self, ip, original_stl_name):
         """

@@ -60,14 +60,14 @@ def main():
     # Initialize NodeMonitor to track node health and status
     node_monitor = NodeMonitor(database)
     
-    # Initialize PrintManager to handle print jobs, linked with NodeMonitor
+    # Initialize PrintManager to handle print jobs, passing the shared NodeMonitor
     print_manager = PrintManager(database, node_monitor)
 
     # Initialize WebSocketManager to broadcast node status changes
-    # Pass NodeMonitor's get_all_nodes method and PrintManager
     ws_manager = WebSocketManager(node_monitor.get_all_nodes, print_manager, database)
-    # Hook NodeMonitor's on_change_callback to broadcast updates to WebSocket clients
-    node_monitor.on_change_callback = ws_manager.broadcast
+    
+    # Subscribe WebSocketManager to 'nodes_updated' event to automatically push to frontend
+    node_monitor.subscribe('nodes_updated', ws_manager.broadcast)
 
     # Run WebSocket server in a separate daemon thread
     ws_thread = threading.Thread(target=ws_manager.run, daemon=True)

@@ -11,7 +11,7 @@ from utility.Log import Log
 
 class CoAPServer(CoAP):
     """Component for a Custom CoAP server with IPv6 support."""
-    def __init__(self, host="::", port=5683, multicast=False, database=None, monitor=None, manager=None):
+    def __init__(self, host="::", port=5683, multicast=False, database=None, node_monitor=None, print_manager=None):
         """
         host: str, default "::" binds all IPv6 addresses
         port: int, CoAP standard UDP port 5683
@@ -40,15 +40,21 @@ class CoAPServer(CoAP):
         else:
             self._db = database
         
-        if monitor is None:
-            monitor = NodeMonitor(database=self._db)
+        # Ensure a NodeMonitor instance is explicitly provided
+        if node_monitor is None:
+            self._logger.error("NodeMonitor instance is strictly required but was not provided.")
+            raise ValueError("A NodeMonitor instance must be provided to CoAPServer.")
+        self._monitor = node_monitor
 
-        if manager is None:
-            manager = PrintManager(database=self._db, node_monitor=monitor)
+        # Ensure a PrintManager instance is explicitly provided
+        if print_manager is None:
+            self._logger.error("PrintManager instance is strictly required but was not provided.")
+            raise ValueError("A PrintManager instance must be provided to CoAPServer.")
+        self.print_manager = print_manager
 
-        self.add_resource("/registration", NodeRegistration(coap_server=self, database=self._db, monitor=monitor))
-        self.add_resource("/print/finished", PrintFinished(coap_server=self, print_manager=manager))
-        self.add_resource("/signal/off", OFFSignal(coap_server=self, monitor=monitor))
+        self.add_resource("/registration", NodeRegistration(coap_server=self, database=self._db, node_monitor=node_monitor))
+        self.add_resource("/print/finished", PrintFinished(coap_server=self, print_manager=print_manager))
+        self.add_resource("/signal/off", OFFSignal(coap_server=self, node_monitor=node_monitor))
         
         self._logger.info(f"CoAP Server Initialized on [{host}]:{port}...")
         

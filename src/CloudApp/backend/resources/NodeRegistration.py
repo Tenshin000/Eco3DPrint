@@ -15,7 +15,7 @@ class NodeRegistration(Resource):
     This class interfaces with a MySQL database to store, verify, or update 
     the metadata of connecting nodes based on their IPv6 address.
     """
-    def __init__(self, name="Node Registration", coap_server=None, database=None, monitor=None):
+    def __init__(self, name="Node Registration", coap_server=None, database=None, node_monitor=None):
         """
         Initialize the NodeRegistration resource.
 
@@ -48,10 +48,11 @@ class NodeRegistration(Resource):
         else:
             self._db = database
         
-        if monitor is None:
-            self._monitor = NodeMonitor(self._db)
-        else:
-            self._monitor = monitor
+        # Ensure a NodeMonitor instance is explicitly provided
+        if node_monitor is None:
+            self._logger.error("NodeMonitor instance is strictly required but was not provided.")
+            raise ValueError("A NodeMonitor instance must be provided to CoAPServer.")
+        self._monitor = node_monitor
 
     def render_POST_advanced(self, request, response):
         """

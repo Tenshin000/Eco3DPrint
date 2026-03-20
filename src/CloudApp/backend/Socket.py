@@ -52,12 +52,11 @@ class WebSocketManager:
         else:
             self._db = database
 
-        # Initialize or assign the PrintManager instance
+        # Ensure a PrintManager instance is explicitly provided
         if print_manager is None:
-            # We pass the db instance to avoid multiple connection pools if not necessary
-            self.print_manager = PrintManager(database=self._db)
-        else:
-            self.print_manager = print_manager
+            self._logger.error("PrintManager instance is strictly required but was not provided.")
+            raise ValueError("A PrintManager instance must be provided to WebSocketManager.")
+        self.print_manager = print_manager
 
     async def handler(self, websocket, path=None):
         """

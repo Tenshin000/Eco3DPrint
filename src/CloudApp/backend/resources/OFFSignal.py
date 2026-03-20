@@ -10,7 +10,7 @@ class OFFSignal(Resource):
     (e.g., due to a hard reset) and immediately notifies the NodeMonitor
     to update its status to OFFLINE, preventing unnecessary ping retries.
     """
-    def __init__(self, name="OFF Signal", coap_server=None, monitor=None):
+    def __init__(self, name="OFF Signal", coap_server=None, node_monitor=None):
         """
         Initialize the OFFSignal resource.
 
@@ -26,11 +26,11 @@ class OFFSignal(Resource):
             module_name="CoAP_SERVER"
         ).get_logger()
         
-        # We require a monitor instance to update the node's state
-        if monitor is None:
-            self._monitor = NodeMonitor()
-        else:
-            self._monitor = monitor
+        # Ensure a NodeMonitor instance is explicitly provided
+        if node_monitor is None:
+            self._logger.error("NodeMonitor instance is strictly required but was not provided.")
+            raise ValueError("A NodeMonitor instance must be provided to CoAPServer.")
+        self._monitor = node_monitor
 
     def render_POST_advanced(self, request, response):
         """

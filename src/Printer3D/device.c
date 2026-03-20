@@ -72,10 +72,10 @@ static clock_time_t remaining_print_time = 0; // Remaining time when print is pa
 
 // Sensing Variables
 static float sensor_buffer[8][5]; 
-static uint8_t sample_count = 0;
-static float features[35];
-static uint8_t error_count = 0;
-static float total_power_consumed = 0.0f;
+static uint8_t sample_count = 0; 
+static float features[35]; 
+static uint8_t error_count = 0; 
+static float total_power_consumed = 0.0f; 
 
 /* ==================================================== */
 /* =                    PROCESSES                     = */
