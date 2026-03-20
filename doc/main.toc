@@ -1,3 +1,13 @@
 \babel@toc {english}{}\relax 
 \contentsline {chapter}{\numberline {1}Introduction}{2}{chapter.1}%
-\contentsline {chapter}{\numberline {A}Appendix}{3}{appendix.A}%
+\contentsline {chapter}{\numberline {2}Environment}{4}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Simulation}{4}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Contiki-NG}{4}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Cooja}{4}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Tunslip}{5}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Nordic Dongle NRF52840}{5}{section.2.5}%
+\contentsline {chapter}{\numberline {3}Architecture}{6}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Ecosystem}{6}{section.3.1}%
+\contentsline {section}{\numberline {3.2}IoT Network}{6}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}IoT Protocol Stack}{6}{subsection.3.2.1}%
+\contentsline {chapter}{\numberline {A}Appendix}{8}{appendix.A}%

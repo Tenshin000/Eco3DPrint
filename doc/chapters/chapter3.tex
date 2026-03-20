@@ -1,0 +1,26 @@
+\chapter{Architecture}
+\section{Ecosystem}
+The system is composed of an \textbf{IoT Network} and a \textbf{Cloud Application}. 
+
+The \textit{IoT Network} consists of a \textbf{Border Router} and a set of \textbf{Printers}, each connected to a \textbf{Dongle} and a set of \textbf{sensors}.
+
+The \textit{Cloud Application} serves as the central orchestration hub of the \textbf{\textit{Eco3DPrint} ecosystem}, coordinating communication between the distributed hardware nodes and the \textbf{User App interface}. 
+
+\section{IoT Network}
+\subsection{IoT Protocol Stack}
+The communication architecture implements a specialized multi-layered stack to bridge physical sensors with the cloud. At the base, \textbf{IEEE 802.15.4} provides the low-power radio foundation, while the \textbf{6LoWPAN} adaptation layer compresses headers to allow \textbf{IPv6} traffic over constrained links. Networking is maintained by \textbf{RPL} (Routing Protocol for Low-Power and Lossy Networks), which constructs dynamic routing paths to ensure data reaches the gateway even in lossy wireless environments.
+
+\medspace
+
+The application layer is split according to functional requirements. \textbf{CoAP} (Constrained Application Protocol) is used for control-plane operations, including node registration, health monitoring, and reliable block-wise transfer of \textbf{STL files}, following a lightweight request–response model. It runs over \textbf{UDP} (User Datagram Protocol), a connectionless transport protocol that minimizes overhead and latency but does not guarantee delivery or ordering. In contrast, \textbf{MQTT} (Message Queuing Telemetry Transport) provides a dedicated telemetry channel based on a publish–subscribe architecture to stream high-frequency vibration and voltage data for real-time machine learning inference. It operates over \textbf{TCP} (Transmission Control Protocol), a connection-oriented transport protocol that ensures reliable, ordered, and error-checked delivery of data streams. 
+
+\medspace
+
+The system utilizes \textbf{JSON} (JavaScript Object Notation) as the primary data encoding format for control and telemetry messages. For the transmission of 3D models, the application implements a \textbf{CoAP Block-wise transfer mechanism}. 
+
+\newpage
+
+
+\medspace
+
+... 

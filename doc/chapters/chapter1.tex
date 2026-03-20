@@ -1,2 +1,20 @@
 \chapter{Introduction}
-...
+The advent of \textbf{3D Printing} has revolutionized manufacturing, prototyping, and personal fabrication by allowing digital models to be transformed into physical objects layer by layer. However, the additive \textbf{manufacturing process is inherently susceptible to physical anomalies}. A slight deviation in temperature, extrusion rate, or mechanical calibration can lead to catastrophic print failures. When a printer operates unmonitored for extended periods, these undetected failures result in a significant waste of filament materials, excessive energy consumption, and lost time.
+
+To mitigate this inefficiency, we must look toward modern networking paradigms. The \textbf{Internet of Things} (IoT) represents the evolution of the network that extends connectivity to physical objects of daily life. By transforming standalone, "dumb" 3D printers into smart, interconnected assets, we can actively monitor their health and intervene dynamically before resources are wasted.
+
+\medspace
+
+This report presents \textbf{\textit{\underline{Eco3DPrint}}}, \textit{an intelligent monitoring application designed to safeguard the 3D printing process}. An IoT system is composed of four functional levels: devices and sensors that collect data, connectivity that allows data to travel, data processing on the cloud, and a user interface. The architecture is inspired to the "\textit{Comprehensive Review on Internet of Things Applications in Power Systems}"\cite{iot_power}. 
+
+Our solution fully embodies this architecture. We deploy specialized, network-connected dongles equipped with accelerometers and voltage sensors directly onto the printers. As the machine operates, these sensors continuously monitor the physical dynamics of the extruder and the build plate, alongside the power drawn by the system. The collected data is fed into a localized \textit{Machine Learning (ML) model} trained to distinguish between normal operational vibrations and the erratic, anomalous patterns indicative of a failing print.
+
+Upon detecting an anomaly, the system automatically halts the printing process to prevent further material and energy waste. Users manage the entire ecosystem through a comprehensive software suite (a \textit{Cloud backend} and a \textit{User Application frontend}) which facilitates the direct transfer of STL files to the machines via the network. Furthermore, \textit{the application provides transparent, analytical tracking of daily, weekly, and monthly energy consumption, explicitly differentiating between "well-used" energy (successful prints) and "wasted" energy (failed attempts)}.
+
+\newpage
+
+From a technical standpoint, deploying \textbf{constrained embedded devices} at the edge of the network is a deliberate and crucial architectural choice. While a high-powered, general-purpose computer could theoretically monitor a printer, this application aligns with the principles of the \textit{Industrial Internet of Things (IIoT)}, where efficiency and scalability are paramount.
+
+Using constrained devices enables cost-effective retrofitting, allowing existing 3D printers without built-in monitoring to be integrated into an IoT ecosystem through inexpensive embedded dongles, avoiding costly hardware replacement. It also improves network efficiency by processing high-frequency telemetry locally thereby reducing bandwidth usage while relying on lightweight protocols such as \textit{CoAP} and \textit{MQTT} instead of heavier alternatives like \textit{HTTP}.
+
+Finally, constrained devices support net-positive energy savings. Since they consume far less power than traditional computing systems, they ensure that the energy required for monitoring does not outweigh the savings gained from preventing failed prints, maintaining both economic and environmental viability. 

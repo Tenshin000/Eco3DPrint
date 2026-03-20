@@ -1,9 +1,10 @@
-\documentclass[10pt, oneside]{book}
+\documentclass[11pt, oneside]{book}
 \usepackage[english]{babel}
 \usepackage[margin=1in]{geometry}
 \usepackage{multicol, graphicx, float, multirow}
 \usepackage{url}
 \usepackage{hyperref}
+\usepackage[none]{hyphenat}
 \usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{pdfpages}
@@ -28,12 +29,14 @@
 \input{chapters/titlepage}
 \tableofcontents
 \input{chapters/chapter1}
+\input{chapters/chapter2}
+\input{chapters/chapter3}
 
 \appendix
 
 \input{chapters/appendix}
 
-%\bibliographystyle{ieeetr}
-%\bibliography{bibliography.bib}
+\bibliographystyle{IEEEtran}
+\bibliography{chapters/bibliography}
 
 \end{document}
