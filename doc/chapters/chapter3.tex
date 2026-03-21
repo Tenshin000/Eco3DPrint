@@ -7,7 +7,7 @@ The \textit{IoT Network} consists of a \textbf{Border Router} and a set of \text
 The \textit{Cloud Application} serves as the central orchestration hub of the \textbf{\textit{Eco3DPrint} ecosystem}, coordinating communication between the distributed hardware nodes and the \textbf{User App interface}. 
 
 \section{IoT Network}
-\subsection{IoT Protocol Stack}
+\subsection{Protocol Stack}
 The communication architecture implements a specialized multi-layered stack to bridge physical sensors with the cloud. At the base, \textbf{IEEE 802.15.4} provides the low-power radio foundation, while the \textbf{6LoWPAN} adaptation layer compresses headers to allow \textbf{IPv6} traffic over constrained links. Networking is maintained by \textbf{RPL} (Routing Protocol for Low-Power and Lossy Networks), which constructs dynamic routing paths to ensure data reaches the gateway even in lossy wireless environments.
 
 \medspace
@@ -20,6 +20,108 @@ The system utilizes \textbf{JSON} (JavaScript Object Notation) as the primary da
 
 \newpage
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{img/Protocol_Stack.png}
+	\caption{Personalized Protocol Stack of the App}
+	\label{fig:Protocol-Stack}
+\end{figure}
+
+\subsection{Nodes}
+The IoT Network consists of a variable number of Printer nodes connected to the Network with a nRF52840 Dongle. These nodes serve as the physical interface of the system, integrating sensors that collect real-time vibration and voltage data, alongside the Printer as an actuator. By running an embedded Machine Learning model, the nodes autonomously stop print jobs when anomalies are detected, improving energy efficiency without external intervention. The border router acts as the critical gateway of the architecture, enabling the translation of traffic between the low-power wireless network and the standard IPv6 infrastructure. This component allows the devices to communicate seamlessly with the Cloud Application. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.4444\textwidth]{img/Printer3D.png}
+	\caption{3D Printer with Dongle and Sensors}
+	\label{fig:Printer-3D}
+\end{figure}
+
+\newpage
+
+\section{Cloud Application}
+\subsection{Backend}
+The \textbf{Cloud Application backend} is built on a multi-threaded Python architecture, and it bridges the resource-constrained IoT network with the graphical User Application (the frontend). The backend is strictly \textbf{modular}, separating network communication, business logic, and data persistence into dedicated functional components. 
+\begin{itemize}
+	\item \textbf{Database Access Layer:} Manages persistent data storage in a MySQL database, utilizing Connection Pooling to safely handle concurrent, thread-safe read and write operations;
+	\item \textbf{CoAP Server:} Runs over UDP/IPv6 to handle low-frequency control events, including node registration, end-of-print notifications, and shutdown signals. It is implemented using \textbf{CoAPthon} \cite{coapthon};
+	\item \textbf{MQTT Handler:} Runs as a background subscriber to continuously ingest high-frequency JSON telemetry (vibration and voltage data) during active prints, mapping the data directly to the database. It is implemented using \textbf{Paho} \cite{paho}; 
+	\item \textbf{Node Monitor:} Maintains real-time fleet health by concurrently pinging active nodes via CoAP /health requests every 60 seconds. It utilizes an Observer pattern to instantly broadcast state changes (\textit{OFFLINE}, \textit{ONLINE}, \textit{PRINTING}) across the system;
+	\item \textbf{Print Manager:} Orchestrates the print job queue and handles the reliable transmission of 3D models. It utilizes CoAP Block-wise transfer (Block1) to partition and sequentially send large binary STL files to available nodes;
+	\item \textbf{WebSocket Manager:} Provides a full-duplex asynchronous connection to the User App. It pushes live node status updates to the dashboard and processes complex analytical requests to generate daily, weekly, and monthly energy reports.
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{img/Backend.png}
+	\caption{Backend Architecture}
+	\label{fig:Backend}
+\end{figure}
+
+\newpage
+
+\subsection{Frontend}
+The \textbf{Frontend Application} (\textbf{User App}) is a desktop-based graphical interface built using the Python \textbf{tkinter framework} \cite{tkinter}. A background daemon thread runs an asyncio event loop to manage a persistent WebSocket connection, enabling continuous data exchange without blocking the interface. Incoming messages are passed via a thread-safe queue to the main GUI thread, which polls, parses, and routes them to the appropriate screen based on their type:
+\begin{itemize}
+	\item \textbf{3D Printers Dashboard:} Displays a responsive grid of interactive cards for real-time fleet management. It dynamically applies color filters to printer icons to reflect current operational states (\textit{OFFLINE}, \textit{ONLINE}, \textit{PRINTING}) and includes modal dialogs for viewing node details and queueing STL files;
+	\item \textbf{Daily Report:} Visualizes the current day's energy metrics, automatically converting raw Joules to kWh. It features high-level global summary cards and scrollable tables (ttk.Treeview) that break down well-used versus wasted energy by individual printer and STL file;
+	\item \textbf{Weekly Report:} Aggregates telemetry over the week. It implements a zero-padded data structure to ensure consistent daily rendering and utilizes multiple centered tables to highlight energy consumption trends throughout the week;
+	\item \textbf{Monthly Report:} Provides a long-term analytical view with a Year-To-Date (YTD) summary. It displays a month-by-month historical table tracking total print volume, successful energy usage, and energy lost to anomalies.
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{img/Frontend.png}
+	\caption{Frontend Architecture}
+	\label{fig:Frontend}
+\end{figure}
+
+\newpage
+
+\section{Project Alignment}
+\subsection{Project Objective}
+\begin{quote}
+	\textbf{Smart Homes and Buildings:} enabling real-time control and energy efficiency in residential or commercial environments.
+\end{quote}
+
+I choose "\textit{Smart Homes and Buildings}" as a domain for my project. I have enabled a \textbf{real-time monitoring application} where I monitor the status of the printers, create a list of STLs to print in real time and monitor the energy consumption of the printers. All of this is \textbf{designed to monitor energy efficiency}, supported by a \textbf{Machine Learning model} that proactively halts faulty prints before they occur. This system is primarily intended for \textbf{commercial environments} where multiple 3D printers operate simultaneously, such as print farms or production labs, where efficiency, reliability, and cost control are critical. However, it is equally applicable in advanced home setups with multiple 3D printers, offering the same benefits of centralized monitoring, energy optimization, and failure prevention on a smaller scale. 
+
+\subsection{Application Protocol}
+The architecture utilizes \textbf{CoAP} as the primary mechanism for the \textbf{Eco3DPrint} application. It is used for for control-plane operations, including node registration, health monitoring, and file transfers. 
+
+\medspace
+
+CoAP was selected over MQTT for these specific reasons:
+\begin{itemize}
+	\item \textbf{RESTful Interaction for Registration and Health:} Unlike the publish-subscribe model of MQTT, CoAP is a request-response protocol that operates over UDP. This eliminates the need for the device to maintain a persistent, energy-intensive connection just to signal availability, significantly improving energy efficiency during idle periods; 
+	\item \textbf{File Transfering:} CoAP is simply better at sending larger objects like files than MQTT; 
+	\item \textbf{Reduced Protocol Overhead:} Because CoAP does not require the overhead of the TCP three-way handshake for every interaction, it reduces the total number of radio transmissions needed for occasional tasks like registration. Fewer transmissions directly translate to lower power consumption, extending the battery life of the monitoring dongles. 
+\end{itemize}
+
+While CoAP is well suited for discrete control tasks, \textbf{MQTT} is used exclusively to stream high-frequency sensor data during the active printing phase. Since this phase already represents peak power consumption for the printer, the additional energy overhead of MQTT is relatively negligible. To further optimize resource usage, a 10-second timer is implemented: if no new print job is received, the MQTT connection is automatically closed, minimizing the node's power footprint once peak activity ends.
+
+\medspace
+
+Furthermore a \textbf{Publish–Subscribe model is more efficient for this telemetry plane than a Request–Response approach}. Once connected, it streams large volumes of JSON data with minimal overhead, avoiding per-message acknowledgment costs. 
+
+\subsection{Edge Intelligence and Autonomous Decision-Making}
+The system runs a \textbf{Machine Learning model} directly on constrained nRF52840 nodes, enabling real-time, autonomous responses to local anomalies without relying on the cloud. A C-based implementation performs on-device feature extraction (mean, standard deviation, and peak-to-peak across multiple axes) reducing bandwidth usage and ensuring the printer can be stopped even during temporary connectivity loss. 
+
+\subsection{Hardware Interaction}
+The project strictly adheres to the mandatory button and LED interaction requirements. 
+
+A \textbf{physical button} is used for manual overrides, system resets, and confirming print completions, ensuring a human-in-the-loop safety mechanism. 
+
+At the same time, \textbf{LEDs} provide essential visual feedback through color coding—yellow for initialization, green for online status, and red for failure—allowing an on-site operator to quickly assess device status without a display. 
+
+\textit{(REWRITE FOR THE DONGLE)}
+
+\subsection{Data Encoding}
+\textbf{JSON} (JavaScript Object Notation) is the optimal encoding choice because its minimalist key-value structure drastically reduces packet overhead compared to the verbose tagging required by XML. 
+
+JSON facilitates a seamless data pipeline between the C-based firmware and the Python backend without the heavy memory or CPU requirements of an XML DOM parser. 
+
+For the transmission of STL models, the system implements CoAP Block-wise transfer to overcome hardware link limitations by partitioning binary data into sequential 64-byte chunks. This mechanism ensures reliable delivery through application-layer acknowledgments and prevents RAM exhaustion on the constrained nRF52840 nodes by processing only one fragment at a time.
 
 \medspace
 

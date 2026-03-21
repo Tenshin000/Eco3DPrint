@@ -35,4 +35,20 @@ A.~Majhi, A.~Kumar, and S.~Mohanty, ``A comprehensive review on internet of
   \url{https://github.com/contiki-ng/contiki-ng/wiki}
 \BIBentrySTDinterwordspacing
 
+\bibitem{coapthon}
+\BIBentryALTinterwordspacing
+``Coapthon.'' [Online]. Available: \url{https://github.com/Tanganelli/CoAPthon}
+\BIBentrySTDinterwordspacing
+
+\bibitem{paho}
+\BIBentryALTinterwordspacing
+``Paho.'' [Online]. Available: \url{https://pypi.org/project/paho-mqtt/}
+\BIBentrySTDinterwordspacing
+
+\bibitem{tkinter}
+\BIBentryALTinterwordspacing
+``Tkinter.'' [Online]. Available:
+  \url{https://docs.python.org/3/library/tkinter.html}
+\BIBentrySTDinterwordspacing
+
 \end{thebibliography}
