@@ -11,11 +11,6 @@ SRC_DIR="src"
 #---------------------------------------------#
 #                  FUNCTIONS                  #
 #---------------------------------------------#
-
-/*
- * Function: check_mysql_install
- * Description: Checks if MySQL is installed, otherwise installs it.
- */
 check_mysql_install(){
     if ! command -v mysql >/dev/null 2>&1; then
         echo "MySQL not detected. Installing..."
@@ -35,10 +30,6 @@ check_mysql_install(){
     fi
 }
 
-/*
- * Function: ensure_db_user
- * Description: Creates the database user if it does not exist.
- */
 ensure_db_user(){
     local exists
     exists=$(sudo mysql -sse "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user='${DB_USER}');")
@@ -52,10 +43,6 @@ ensure_db_user(){
     fi
 }
 
-/*
- * Function: setup_database
- * Description: Recreates the database and assigns privileges.
- */
 setup_database(){
     echo "Removing old database..."
     sudo mysql -e "DROP DATABASE IF EXISTS ${DB_NAME};"
@@ -68,10 +55,6 @@ setup_database(){
     sudo mysql -e "FLUSH PRIVILEGES;"
 }
 
-/*
- * Function: create_tables
- * Description: Initializes the database schema.
- */
 create_tables(){
     sudo mysql -e "USE ${DB_NAME};
     CREATE TABLE IF NOT EXISTS Node (
@@ -117,10 +100,6 @@ create_tables(){
     echo -e "\t- Measurement table ready"
 }
 
-/*
- * Function: create_db
- * Description: Wraps the entire database creation process.
- */
 create_db() {
     check_mysql_install
     ensure_db_user
@@ -129,10 +108,6 @@ create_db() {
     echo "Database initialized successfully!"
 }
 
-/*
- * Function: install_dependencies
- * Description: Installs Tkinter and Python requirements.
- */
 install_dependencies(){
     echo "Installing Tkinter..."
     sudo apt update
@@ -146,10 +121,6 @@ install_dependencies(){
     fi
 }
 
-/*
- * Function: full_setup
- * Description: Runs the complete environment setup.
- */
 full_setup(){
     echo "Starting full system setup..."
     create_db
