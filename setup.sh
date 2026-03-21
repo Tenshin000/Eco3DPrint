@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #---------------------------------------------#
 #                 CONFIGURATION               #
 #---------------------------------------------#
@@ -9,6 +11,11 @@ SRC_DIR="src"
 #---------------------------------------------#
 #                  FUNCTIONS                  #
 #---------------------------------------------#
+
+/*
+ * Function: check_mysql_install
+ * Description: Checks if MySQL is installed, otherwise installs it.
+ */
 check_mysql_install(){
     if ! command -v mysql >/dev/null 2>&1; then
         echo "MySQL not detected. Installing..."
@@ -28,6 +35,10 @@ check_mysql_install(){
     fi
 }
 
+/*
+ * Function: ensure_db_user
+ * Description: Creates the database user if it does not exist.
+ */
 ensure_db_user(){
     local exists
     exists=$(sudo mysql -sse "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user='${DB_USER}');")
@@ -41,6 +52,10 @@ ensure_db_user(){
     fi
 }
 
+/*
+ * Function: setup_database
+ * Description: Recreates the database and assigns privileges.
+ */
 setup_database(){
     echo "Removing old database..."
     sudo mysql -e "DROP DATABASE IF EXISTS ${DB_NAME};"
@@ -53,6 +68,10 @@ setup_database(){
     sudo mysql -e "FLUSH PRIVILEGES;"
 }
 
+/*
+ * Function: create_tables
+ * Description: Initializes the database schema.
+ */
 create_tables(){
     sudo mysql -e "USE ${DB_NAME};
     CREATE TABLE IF NOT EXISTS Node (
@@ -98,12 +117,44 @@ create_tables(){
     echo -e "\t- Measurement table ready"
 }
 
+/*
+ * Function: create_db
+ * Description: Wraps the entire database creation process.
+ */
 create_db() {
     check_mysql_install
     ensure_db_user
     setup_database
     create_tables
     echo "Database initialized successfully!"
+}
+
+/*
+ * Function: install_dependencies
+ * Description: Installs Tkinter and Python requirements.
+ */
+install_dependencies(){
+    echo "Installing Tkinter..."
+    sudo apt update
+    sudo apt install -y python3-tk
+
+    if [ -f "requirements.txt" ]; then
+        echo "Installing Python dependencies from requirements.txt..."
+        pip install -r requirements.txt
+    else
+        echo "Warning: requirements.txt not found."
+    fi
+}
+
+/*
+ * Function: full_setup
+ * Description: Runs the complete environment setup.
+ */
+full_setup(){
+    echo "Starting full system setup..."
+    create_db
+    install_dependencies
+    echo "Setup completed successfully!"
 }
 
 execute_sql(){
@@ -143,15 +194,15 @@ build_border_router(){
     fi
 }
 
-function start_server(){
+start_server(){
     gnome-terminal -- bash -c 'cd ./'${SRC_DIR}'/CloudApp; python server.py; exec bash'
 }
 
-function start_app(){
+start_app(){
     gnome-terminal -- bash -c 'cd ./'${SRC_DIR}'/CloudApp; python app.py; exec bash'
 }
 
-function start_mosquitto(){
+start_mosquitto(){
     sudo pkill mosquitto 2>/dev/null
     gnome-terminal -- bash -c "cd ./${SRC_DIR}/CloudApp; mosquitto -c local_broker.conf -v; exec bash"
 }
@@ -160,6 +211,9 @@ function start_mosquitto(){
 #                    CLI                      #
 #---------------------------------------------#
 case $1 in
+    -setup)
+        full_setup
+        ;;
     -cooja)
         launch_cooja
         ;;
@@ -185,9 +239,9 @@ case $1 in
         build_border_router $2
         ;;
     -mosquitto)
-    	start_mosquitto
-    	;;
-    -sim)
+        start_mosquitto
+        ;;
+    -sim | -simulation)
         echo "Starting Cooja..."
         launch_cooja
         echo "Press any key to start the border-router..."
@@ -201,84 +255,45 @@ case $1 in
         start_server
         start_app
         ;;
-     -simulation)
-        echo "Starting Cooja..."
-        launch_cooja
-        echo "Press any key to start the border-router..."
-        read -n 1 -s
-        build_border_router "cooja"
-        echo "Press any key to start the mosquitto server..."
-        read -n 1 -s
-        start_mosquitto
-        echo "Press any key to start the Server and the App..."
-        read -n 1 -s
-        start_server
-        start_app
-        ;;
-        *)
-	echo "===================================================================="
-	echo "=                          Eco3DPrint CLI                          ="
-	echo "===================================================================="
-	echo
-	echo "USAGE:"
-	echo "  $0 <command> [options]"
-	echo
-	echo "--------------------------------------------------------------------"
-	echo "                        SIMULATION COMMANDS"
-	echo "--------------------------------------------------------------------"
-	echo "  -cooja"
-	echo "      Launch the Cooja network simulator."
-	echo
-	echo "  -sim | -simulation"
-	echo "      Start the full simulation workflow (step-by-step):"
-	echo "        1) Launch Cooja"
-	echo "        2) Start the border router (Cooja mode)"
-	echo "        3) Start Mosquitto broker"
-	echo "        4) Start Cloud server and application"
-	echo "      (waits for key press between each step)"
-	echo
-	echo "  -br <target>"
-	echo "      Start the RPL border router."
-	echo "      target:"
-	echo "        cooja    -> connect router to Cooja simulation"
-	echo "        hardware -> connect router to nRF52840 dongle (/dev/ttyACM0)"
-	echo
-	echo "  -mosquitto"
-	echo "      Start the local Mosquitto MQTT broker using config file."
-	echo
-	echo "--------------------------------------------------------------------"
-	echo "                          DATABASE MANAGEMENT"
-	echo "--------------------------------------------------------------------"
-	echo "  -create-db"
-	echo "      Install MySQL (if missing) and initialize the database."
-	echo
-	echo "  -sql \"<query>\""
-	echo "      Execute a custom SQL query on ${DB_NAME}."
-	echo
-	echo "      Example:"
-	echo "      $0 -sql \"SELECT * FROM Node;\""
-	echo
-	echo "--------------------------------------------------------------------"
-	echo "                          TABLE VISUALIZATION"
-	echo "--------------------------------------------------------------------"
-	echo "  -nodes"
-	echo "      Display the Node table."
-	echo
-	echo "  -prints"
-	echo "      Display the Print table."
-	echo
-	echo "  -measurements"
-	echo "      Display the Measurement table."
-	echo
-	echo "  -table <table_name>"
-	echo "      Display the contents of any table."
-	echo
-	echo "      Examples:"
-	echo "      $0 -table Node"
-	echo "      $0 -table Print"
-	echo "      $0 -table Measurement"
-	echo
-	echo "===================================================================="
-	exit 1
-	;;
-	esac
+    *)
+    echo "===================================================================="
+    echo "=                        Eco3DPrint CLI                            ="
+    echo "===================================================================="
+    echo
+    echo "USAGE:"
+    echo "  $0 <command> [options]"
+    echo
+    echo "--------------------------------------------------------------------"
+    echo "                        GENERAL COMMANDS"
+    echo "--------------------------------------------------------------------"
+    echo "  -setup"
+    echo "      Full environment setup: Database, Tkinter, and Pip requirements."
+    echo
+    echo "--------------------------------------------------------------------"
+    echo "                        SIMULATION COMMANDS"
+    echo "--------------------------------------------------------------------"
+    echo "  -cooja"
+    echo "      Launch the Cooja network simulator."
+    echo
+    echo "  -sim | -simulation"
+    echo "      Start the full simulation workflow (step-by-step)."
+    echo
+    echo "  -br <target>"
+    echo "      Start the RPL border router (cooja|hardware)."
+    echo
+    echo "  -mosquitto"
+    echo "      Start the local Mosquitto MQTT broker."
+    echo
+    echo "--------------------------------------------------------------------"
+    echo "                        DATABASE MANAGEMENT"
+    echo "--------------------------------------------------------------------"
+    echo "  -create-db"
+    echo "      Install MySQL (if missing) and initialize the database."
+    echo
+    echo "  -sql \"<query>\""
+    echo "      Execute a custom SQL query."
+    echo
+    echo "===================================================================="
+    exit 1
+    ;;
+esac
