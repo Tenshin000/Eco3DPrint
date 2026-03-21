@@ -51,15 +51,6 @@ The \textbf{Cloud Application backend} is built on a multi-threaded Python archi
 	\item \textbf{WebSocket Manager:} Provides a full-duplex asynchronous connection to the User App. It pushes live node status updates to the dashboard and processes complex analytical requests to generate daily, weekly, and monthly energy reports.
 \end{itemize}
 
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.8\textwidth]{img/Backend.png}
-	\caption{Backend Architecture}
-	\label{fig:Backend}
-\end{figure}
-
-\newpage
-
 \subsection{Frontend}
 The \textbf{Frontend Application} (\textbf{User App}) is a desktop-based graphical interface built using the Python \textbf{tkinter framework} \cite{tkinter}. A background daemon thread runs an asyncio event loop to manage a persistent WebSocket connection, enabling continuous data exchange without blocking the interface. Incoming messages are passed via a thread-safe queue to the main GUI thread, which polls, parses, and routes them to the appropriate screen based on their type:
 \begin{itemize}
@@ -68,15 +59,6 @@ The \textbf{Frontend Application} (\textbf{User App}) is a desktop-based graphic
 	\item \textbf{Weekly Report:} Aggregates telemetry over the week. It implements a zero-padded data structure to ensure consistent daily rendering and utilizes multiple centered tables to highlight energy consumption trends throughout the week;
 	\item \textbf{Monthly Report:} Provides a long-term analytical view with a Year-To-Date (YTD) summary. It displays a month-by-month historical table tracking total print volume, successful energy usage, and energy lost to anomalies.
 \end{itemize}
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.9\textwidth]{img/Frontend.png}
-	\caption{Frontend Architecture}
-	\label{fig:Frontend}
-\end{figure}
-
-\newpage
 
 \section{Project Alignment}
 \subsection{Project Objective}
@@ -114,14 +96,14 @@ A \textbf{physical button} is used for manual overrides, system resets, and conf
 
 At the same time, \textbf{LEDs} provide essential visual feedback through color coding—yellow for initialization, green for online status, and red for failure—allowing an on-site operator to quickly assess device status without a display. 
 
-\textit{(REWRITE FOR THE DONGLE)}
+\textit{(REWRITE FOR THE DONGLE)} 
 
 \subsection{Data Encoding}
-\textbf{JSON} (JavaScript Object Notation) is the optimal encoding choice because its minimalist key-value structure drastically reduces packet overhead compared to the verbose tagging required by XML. 
+\textbf{JSON} (JavaScript Object Notation), structured via the \textbf{SenML} (Sensor Measurement Lists \cite{senml}) data model, is the optimal encoding choice because its minimalist key-value structure drastically reduces packet overhead compared to the verbose tagging required by XML. This standardized approach facilitates a seamless data pipeline between the C-based firmware and the Python backend without the heavy memory or CPU requirements of an XML DOM parser.
 
-JSON facilitates a seamless data pipeline between the C-based firmware and the Python backend without the heavy memory or CPU requirements of an XML DOM parser. 
+\medspace 
 
-For the transmission of STL models, the system implements CoAP Block-wise transfer to overcome hardware link limitations by partitioning binary data into sequential 64-byte chunks. This mechanism ensures reliable delivery through application-layer acknowledgments and prevents RAM exhaustion on the constrained nRF52840 nodes by processing only one fragment at a time.
+For the transmission of STL models, the system implements \textbf{CoAP Block-wise transfer} to overcome hardware link limitations by partitioning binary data into sequential 64-byte chunks. This mechanism ensures reliable delivery through application-layer acknowledgments and prevents RAM exhaustion on the constrained nRF52840 nodes by processing only one fragment at a time.
 
 \medspace
 

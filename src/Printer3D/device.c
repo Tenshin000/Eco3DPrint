@@ -21,7 +21,7 @@
 /* Project Utility */
 #include "utility/sensors.h"
 #include "utility/scaler_params.h"
-#include "utility/device_conf.h" // Oppure device_hooks.h a seconda di come l'hai chiamato
+#include "utility/device_conf.h" 
 #include "utility/coap_module.h"
 #include "utility/mqtt_module.h"
 
@@ -52,8 +52,8 @@ static struct etimer mqtt_disconnect_timer; // Timer to delay MQTT disconnection
 static char device_name[32];
 static const char* device_type = "Filament";
 static const char* device_utilization = "Printing";
-static char registration_msg[128];
-static char mqtt_payload[256];
+static char registration_msg[256]; // Increased buffer size for SenML
+static char mqtt_payload[512];     // Greatly increased buffer size for SenML array
 
 // Printing Parameters
 static size_t stl_length = 0;
@@ -110,7 +110,8 @@ static void set_state(device_state_t new_state){
   } 
   else if(current_state == STATE_ONLINE && last_state == STATE_PRINTING) {
     // Delay disconnection to wait for potential incoming QUEUE jobs
-    etimer_set(&mqtt_disconnect_timer, 10 * CLOCK_SECOND);
+    LOG_INFO("Print finished. Starting MQTT disconnect timer (15s)...\n");
+    etimer_set(&mqtt_disconnect_timer, 15 * CLOCK_SECOND);
   }
   else if(current_state == STATE_OFF || current_state == STATE_OFFLINE) {
     // Immediate disconnect on critical states
@@ -167,8 +168,7 @@ PROCESS_THREAD(setup_process, ev, data){
   if(btn){
     LOG_WARN("Setup: button initialized: %s on pin %u\n", BUTTON_HAL_GET_DESCRIPTION(btn), btn->pin);
     LOG_WARN("Short press to start SmartPrinter. Hold 5s to reset when active.\n");
-  } 
-  else{
+  } else {
     LOG_WARN("Setup: no button available\n");
   }
 
@@ -182,8 +182,7 @@ PROCESS_THREAD(setup_process, ev, data){
         process_start(&smart_printer_process, NULL);
         smart_printer_active = true;
         process_poll(&smart_printer_process);
-      } 
-      else{
+      } else {
         LOG_WARN("Smart Printer already active. Hold button 5 seconds to perform hard reset.\n");
         LOG_INFO("STATE: %s\n", state_to_string(current_state));
       }
@@ -199,9 +198,9 @@ PROCESS_THREAD(setup_process, ev, data){
           if(addr != NULL) {
             uiplib_ipaddr_snprint(ipaddr_str, sizeof(ipaddr_str), &addr->ipaddr);
             LOG_INFO("Current IPv6 address: %s\n", ipaddr_str);
-          } 
-          else
+          } else {
             LOG_INFO("No global IPv6 address assigned yet\n");
+          }
         }
       }
     }
@@ -214,9 +213,9 @@ PROCESS_THREAD(setup_process, ev, data){
         sensor_deactivate();
         set_state(STATE_OFF);
         LOG_INFO("Device reset to STATE: OFF - await short press to start again\n");
-      } 
-      else
+      } else {
         LOG_ERR("Some other process exited: %s\n", exited->name);
+      }
     }
   }
 
@@ -239,8 +238,9 @@ PROCESS_THREAD(smart_printer_process, ev, data){
   btn0 = button_hal_get_by_index(0);
   if(!btn0) LOG_WARN("Smart Printer: No button available\n");
   
+  // Format the CoAP Registration Message using SenML standard
   snprintf(registration_msg, sizeof(registration_msg),
-    "{\"name\":\"%s\",\"type\":\"%s\",\"utilization\":\"%s\"}",
+    "[{\"bn\":\"%s\",\"n\":\"type\",\"vs\":\"%s\"},{\"n\":\"utilization\",\"vs\":\"%s\"}]",
     device_name, device_type, device_utilization);
 
   while(1){
@@ -267,10 +267,14 @@ PROCESS_THREAD(smart_printer_process, ev, data){
       button_hal_button_t *btn = (button_hal_button_t *)data;
       if(btn == btn0){
         if(current_state == STATE_PRINTING && waiting_for_confirmation){
-          char end_payload[64];
+          char end_payload[128]; // Increased buffer size for SenML
           int en_i = (int)total_power_consumed;
           int en_d = (int)(fabs(total_power_consumed - en_i) * 100);
-          snprintf(end_payload, sizeof(end_payload), "{\"status\":\"%s\",\"energy\":%d.%02d}", print_result, en_i, en_d);
+          
+          // Format the End-of-Print message using SenML
+          snprintf(end_payload, sizeof(end_payload), 
+                   "[{\"bn\":\"%s\",\"n\":\"status\",\"vs\":\"%s\"},{\"n\":\"energy\",\"u\":\"J\",\"v\":%d.%02d}]", 
+                   device_name, print_result, en_i, en_d);
 
           if(btn->press_duration_seconds < 2){
             etimer_stop(&sample_timer);
@@ -293,7 +297,11 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             else if(strcmp(print_result, "FINISHED") == 0){
               LOG_INFO("Button released (2-4s). Manual override: Declaring print as FAILED.\n");
               waiting_for_confirmation = false;
-              snprintf(end_payload, sizeof(end_payload), "{\"status\":\"FAILED\",\"energy\":%d.%02d}", en_i, en_d);
+              
+              snprintf(end_payload, sizeof(end_payload), 
+                       "[{\"bn\":\"%s\",\"n\":\"status\",\"vs\":\"FAILED\"},{\"n\":\"energy\",\"u\":\"J\",\"v\":%d.%02d}]", 
+                       device_name, en_i, en_d);
+                       
               coap_module_prepare_request(end_payload, COAP_TYPE_CON, COAP_POST, END_PRINT_URI_PATH);
               COAP_BLOCKING_REQUEST(&server_ep, request, print_finished_handler);
             }
@@ -309,10 +317,14 @@ PROCESS_THREAD(smart_printer_process, ev, data){
           LOG_INFO("Button held >= 5s -> Hard reset\n");
           
           if(current_state == STATE_PRINTING){
-            char reset_payload[64];
+            char reset_payload[128];
             int en_i = (int)total_power_consumed;
             int en_d = (int)(fabs(total_power_consumed - en_i) * 100);
-            snprintf(reset_payload, sizeof(reset_payload), "{\"status\":\"ERROR\",\"energy\":%d.%02d}", en_i, en_d);
+            
+            // Format the Hard Reset message using SenML
+            snprintf(reset_payload, sizeof(reset_payload), 
+                     "[{\"bn\":\"%s\",\"n\":\"status\",\"vs\":\"ERROR\"},{\"n\":\"energy\",\"u\":\"J\",\"v\":%d.%02d}]", 
+                     device_name, en_i, en_d);
 
             uint16_t mid = coap_module_prepare_request(reset_payload, COAP_TYPE_NON, COAP_POST, END_PRINT_URI_PATH);
             coap_transaction_t* transaction = coap_new_transaction(mid, &server_ep);
@@ -320,8 +332,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
               transaction->message_len = coap_serialize_message(request, transaction->message);
               coap_send_transaction(transaction);
             }
-          }
-          else{
+          } else {
             uint16_t mid = coap_module_prepare_request(NULL, COAP_TYPE_NON, COAP_POST, OFF_SIGNAL_URI_PATH);
             coap_transaction_t* off_transaction = coap_new_transaction(mid, &server_ep);
             if(off_transaction){
@@ -405,11 +416,6 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         LOG_INFO("Measurements: Plate(%.3f, %.3f, %.3f), Extruder(%.3f, %.3f, %.3f), Tension(%.3fV), Power(%.3fW)\n", 
                  plate.x, plate.y, plate.z, extruder.x, extruder.y, extruder.z, tension, power);
 
-        char ipaddr_str[UIPLIB_IPV6_MAX_STR_LEN];
-        uip_ds6_addr_t *addr = uip_ds6_get_global(ADDR_PREFERRED);
-        if(addr != NULL) uiplib_ipaddr_snprint(ipaddr_str, sizeof(ipaddr_str), &addr->ipaddr);
-        else strcpy(ipaddr_str, "unknown");
-
         if(mqtt_module_is_connected()){
           int px_i = (int)plate.x; int px_d = (int)(fabs(plate.x - px_i) * 1000);
           int py_i = (int)plate.y; int py_d = (int)(fabs(plate.y - py_i) * 1000);
@@ -429,9 +435,20 @@ PROCESS_THREAD(smart_printer_process, ev, data){
           const char* ten_sign = (tension < 0 && ten_i == 0) ? "-" : "";
           const char* pow_sign = (power < 0 && pow_i == 0) ? "-" : "";
 
+          // Format MQTT message using SenML JSON standard array
           snprintf(mqtt_payload, sizeof(mqtt_payload),
-            "{\"ip\":\"%s\",\"X_Axis_Plate\":%s%d.%03d,\"Y_Axis_Plate\":%s%d.%03d,\"Z_Axis_Plate\":%s%d.%03d,\"X_Axis_Extrusion\":%s%d.%03d,\"Y_Axis_Extrusion\":%s%d.%03d,\"Z_Axis_Extrusion\":%s%d.%03d,\"Tension\":%s%d.%03d,\"Power\":%s%d.%03d}",
-            ipaddr_str, px_sign, px_i, px_d, py_sign, py_i, py_d, pz_sign, pz_i, pz_d, 
+            "["
+            "{\"bn\":\"%s\",\"n\":\"X_Axis_Plate\",\"u\":\"m/s2\",\"v\":%s%d.%03d},"
+            "{\"n\":\"Y_Axis_Plate\",\"u\":\"m/s2\",\"v\":%s%d.%03d},"
+            "{\"n\":\"Z_Axis_Plate\",\"u\":\"m/s2\",\"v\":%s%d.%03d},"
+            "{\"n\":\"X_Axis_Extrusion\",\"u\":\"m/s2\",\"v\":%s%d.%03d},"
+            "{\"n\":\"Y_Axis_Extrusion\",\"u\":\"m/s2\",\"v\":%s%d.%03d},"
+            "{\"n\":\"Z_Axis_Extrusion\",\"u\":\"m/s2\",\"v\":%s%d.%03d},"
+            "{\"n\":\"Tension\",\"u\":\"V\",\"v\":%s%d.%03d},"
+            "{\"n\":\"Power\",\"u\":\"W\",\"v\":%s%d.%03d}"
+            "]",
+            device_name,
+            px_sign, px_i, px_d, py_sign, py_i, py_d, pz_sign, pz_i, pz_d, 
             ex_sign, ex_i, ex_d, ey_sign, ey_i, ey_d, ez_sign, ez_i, ez_d, 
             ten_sign, ten_i, ten_d, pow_sign, pow_i, pow_d);
 
@@ -484,8 +501,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
           if(prediction == 1){
             error_count++;
             LOG_WARN("Anomaly Detected! (Alarm %d/3)\n", error_count);
-          } 
-          else{
+          } else {
             LOG_INFO("Machine Learning Model: Regular print...\n");
             error_count = 0; 
           }

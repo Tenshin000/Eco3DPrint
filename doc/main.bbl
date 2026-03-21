@@ -51,4 +51,10 @@ A.~Majhi, A.~Kumar, and S.~Mohanty, ``A comprehensive review on internet of
   \url{https://docs.python.org/3/library/tkinter.html}
 \BIBentrySTDinterwordspacing
 
+\bibitem{senml}
+\BIBentryALTinterwordspacing
+``Senml - a lightweight format for representing sensor data.'' [Online].
+  Available: \url{https://www.rfc-editor.org/rfc/rfc8428.html}
+\BIBentrySTDinterwordspacing
+
 \end{thebibliography}

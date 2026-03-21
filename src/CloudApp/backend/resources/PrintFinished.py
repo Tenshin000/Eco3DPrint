@@ -74,14 +74,26 @@ class PrintFinished(Resource):
         self._logger.info(f"Payload content: {request.payload}")
 
         # Extract source IP
-        source_ip = request.source[0]
+        source_ip = request.source[0]            
         
         try:
             # Parse the incoming JSON payload
-            payload_data = json.loads(request.payload)
-            status = payload_data.get("status")
-            # Using get with default 0.0 to prevent errors if energy key is missing
-            energy = float(payload_data.get("energy", 0.0))
+            payload_array = json.loads(request.payload)
+            if not isinstance(payload_array, list):
+                raise TypeError("Payload must be a SenML array.")
+
+            status = None
+            energy = None
+            
+            for item in payload_array:
+                metric_name = item.get("n")
+                if metric_name == "status":
+                    status = item.get("vs")
+                elif metric_name == "energy":
+                    energy = float(item.get("v"))
+            
+            if status is None or energy is None:
+                raise ValueError("Missing 'status' or 'energy' in SenML payload")
             
             # Validate payload status and forward to PrintManager
             if status in ["FINISHED", "FAILED", "ERROR"]:
@@ -107,7 +119,7 @@ class PrintFinished(Resource):
         except json.JSONDecodeError:
             response.code = defines.Codes.BAD_REQUEST.number  # 4.00 Bad Request
             response.payload = "Invalid JSON Format"
-            self._logger.info(f"Sending Bad Request to {source_ip}: Failed to parse JSON")
+            self._logger.info(f"Sending Bad Request to {source_ip}: Invalid SenML Format")
             return self, response
         except ValueError:
             response.code = defines.Codes.BAD_REQUEST.number  # 4.00 Bad Request

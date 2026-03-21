@@ -73,12 +73,28 @@ class NodeRegistration(Resource):
         
         # Payload Validation
         try:
-            node_data = json.loads(request.payload)
-        except json.JSONDecodeError as je:
-            self._logger.error(f"Payload validation failed (JSON Decode Error): {je.msg}")
+            payload_array = json.loads(request.payload)
+            if not isinstance(payload_array, list):
+                raise TypeError("Payload must be a SenML array (list).")
+
+            node_data = {"name": "Unknown", "type": "Unknown", "utilization": "Unknown"}
+            
+            for item in payload_array:
+                if "bn" in item:
+                    node_data["name"] = item["bn"]
+                
+                metric_name = item.get("n")
+                if metric_name == "type":
+                    node_data["type"] = item.get("vs", "Unknown")
+                elif metric_name == "utilization":
+                    node_data["utilization"] = item.get("vs", "Unknown")
+                    
+        except (json.JSONDecodeError, TypeError) as e:
+            msg = str(e) if isinstance(e, TypeError) else e.msg
+            self._logger.error(f"Payload validation failed: {msg}")
             response.code = defines.Codes.BAD_REQUEST.number
-            response.payload = "Error: Invalid JSON format provided."
-            return self, response
+            response.payload = "Error: Invalid SenML JSON format."
+            return self._resource, response
 
         self._logger.info("Node payload successfully parsed and validated.")
 

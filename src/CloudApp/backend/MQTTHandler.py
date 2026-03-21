@@ -91,31 +91,45 @@ class MQTTHandler:
         """
         try:
             # Decode the payload
-            payload_str = msg.payload.decode('utf-8')
-            # self._logger.debug(f"RAW PAYLOAD RECEIVED: '{payload_str}'")
-            data = json.loads(payload_str)
+            payload_array = json.loads(msg.payload.decode())
+            if not isinstance(payload_array, list):
+                raise TypeError("MQTT payload is not a SenML array.")
+
+            data = {}
+            device_name = None
             
-            node_ip = data.get("ip")
-            if not node_ip:
-                self._logger.warning("Received MQTT message without 'ip' field. Ignoring.")
+            # Parse the SenML array
+            for item in payload_array:
+                if "bn" in item:
+                    device_name = item["bn"]
+                
+                metric_name = item.get("n")
+                if metric_name and "v" in item:
+                    data[metric_name] = item["v"]
+            
+            if not device_name:
+                self._logger.warning("Received MQTT message without a Base Name (bn). Ignoring.")
                 return
 
-            # Ensure the database connection is active
-            self._db.connect()
-
-            # Retrieve the active print_id for this specific node IP.
-            get_print_query = """
-                SELECT id FROM Print 
-                WHERE ip = %s AND status = 'PRINTING'
-                ORDER BY id DESC LIMIT 1
-            """
-            result = self._db.execute(get_print_query, (node_ip,))
+            # Retrieve the IP of the node based on its Base Name (bn)
+            ip_query = "SELECT ip FROM Node WHERE name=%s LIMIT 1"
+            ip_result = self._db.execute(ip_query, (device_name,))
             
-            if not result:
-                self._logger.warning(f"No active print found for IP: {node_ip}. Measurement dropped.")
+            if not ip_result:
+                self._logger.warning(f"Device name '{device_name}' not found in DB. Dropping measurement.")
                 return
                 
-            print_id = result[0]["id"]
+            node_ip = ip_result[0].get('ip') if isinstance(ip_result[0], dict) else ip_result[0][0]
+
+            # Retrieve active print_id for the node using the discovered IP
+            query = "SELECT id FROM `Print` WHERE ip=%s AND status='PRINTING' ORDER BY id DESC LIMIT 1"
+            result = self._db.execute(query, (node_ip,))
+            
+            if not result:
+                self._logger.debug(f"No active print found for IP: {node_ip}. Measurement dropped.")
+                return
+                
+            print_id = result[0].get("id") if isinstance(result[0], dict) else result[0][0]
 
             # Insert the measurement into the database
             insert_query = """
@@ -145,7 +159,7 @@ class MQTTHandler:
             else:
                 self._logger.error("Database query failed while inserting measurement.")
             
-        except json.JSONDecodeError:
-            self._logger.error("Failed to parse MQTT message payload as JSON.")
+        except (json.JSONDecodeError, TypeError) as e:
+            self._logger.error(f"Failed to parse MQTT message payload as SenML JSON: {e}")
         except Exception as e:
-            self._logger.error(f"Error processing MQTT message: {e}")
+            self._logger.error(f"Unexpected error in MQTT message processing: {e}")
