@@ -16,7 +16,7 @@ The application layer is split according to functional requirements. \textbf{CoA
 
 \medspace
 
-The system utilizes \textbf{JSON} (JavaScript Object Notation) as the primary data encoding format for control and telemetry messages. For the transmission of 3D models, the application implements a \textbf{CoAP Block-wise transfer mechanism}. 
+The system utilizes \textbf{JSON} (JavaScript Object Notation) as the primary data encoding format for control and telemetry messages. For the transmission of 3D models, the application implements a \textbf{CoAP Block-wise (Block1) transfer mechanism}. 
 
 \newpage
 
@@ -47,18 +47,20 @@ The \textbf{Cloud Application backend} is built on a multi-threaded Python archi
 	\item \textbf{CoAP Server:} Runs over UDP/IPv6 to handle low-frequency control events, including node registration, end-of-print notifications, and shutdown signals. It is implemented using \textbf{CoAPthon} \cite{coapthon};
 	\item \textbf{MQTT Handler:} Runs as a background subscriber to continuously ingest high-frequency JSON telemetry (vibration and voltage data) during active prints, mapping the data directly to the database. It is implemented using \textbf{Paho} \cite{paho}; 
 	\item \textbf{Node Monitor:} Maintains real-time fleet health by concurrently pinging active nodes via CoAP /health requests every 60 seconds. It utilizes an Observer pattern to instantly broadcast state changes (\textit{OFFLINE}, \textit{ONLINE}, \textit{PRINTING}) across the system;
-	\item \textbf{Print Manager:} Orchestrates the print job queue and handles the reliable transmission of 3D models. It utilizes CoAP Block-wise transfer (Block1) to partition and sequentially send large binary STL files to available nodes;
-	\item \textbf{WebSocket Manager:} Provides a full-duplex asynchronous connection to the User App. It pushes live node status updates to the dashboard and processes complex analytical requests to generate daily, weekly, and monthly energy reports.
+	\item \textbf{Print Manager:} Orchestrates the print job queue and handles the reliable transmission of 3D models. It utilizes CoAP Block-wise transfer to partition and sequentially send large binary STL files to available nodes;
+	\item \textbf{WebSocket Manager:} It pushes live node status updates to the User App's dashboard and processes complex analytical requests to generate daily, weekly, and monthly energy reports.
 \end{itemize}
 
 \subsection{Frontend}
-The \textbf{Frontend Application} (\textbf{User App}) is a desktop-based graphical interface built using the Python \textbf{tkinter framework} \cite{tkinter}. A background daemon thread runs an asyncio event loop to manage a persistent WebSocket connection, enabling continuous data exchange without blocking the interface. Incoming messages are passed via a thread-safe queue to the main GUI thread, which polls, parses, and routes them to the appropriate screen based on their type:
+The \textbf{Frontend Application} (\textbf{User App}) is a desktop-based graphical interface built using the Python \textbf{tkinter framework} \cite{tkinter}. A background daemon thread runs an asyncio event loop for a persistent, non-blocking WebSocket. Messages move through a thread-safe queue to the main GUI, which polls and routes them to the appropriate screen based on their type:
 \begin{itemize}
 	\item \textbf{3D Printers Dashboard:} Displays a responsive grid of interactive cards for real-time fleet management. It dynamically applies color filters to printer icons to reflect current operational states (\textit{OFFLINE}, \textit{ONLINE}, \textit{PRINTING}) and includes modal dialogs for viewing node details and queueing STL files;
 	\item \textbf{Daily Report:} Visualizes the current day's energy metrics, automatically converting raw Joules to kWh. It features high-level global summary cards and scrollable tables (ttk.Treeview) that break down well-used versus wasted energy by individual printer and STL file;
 	\item \textbf{Weekly Report:} Aggregates telemetry over the week. It implements a zero-padded data structure to ensure consistent daily rendering and utilizes multiple centered tables to highlight energy consumption trends throughout the week;
 	\item \textbf{Monthly Report:} Provides a long-term analytical view with a Year-To-Date (YTD) summary. It displays a month-by-month historical table tracking total print volume, successful energy usage, and energy lost to anomalies.
 \end{itemize}
+
+\newpage
 
 \section{Project Alignment}
 \subsection{Project Objective}
@@ -104,7 +106,3 @@ At the same time, \textbf{LEDs} provide essential visual feedback through color 
 \medspace 
 
 For the transmission of STL models, the system implements \textbf{CoAP Block-wise transfer} to overcome hardware link limitations by partitioning binary data into sequential 64-byte chunks. This mechanism ensures reliable delivery through application-layer acknowledgments and prevents RAM exhaustion on the constrained nRF52840 nodes by processing only one fragment at a time.
-
-\medspace
-
-... 
