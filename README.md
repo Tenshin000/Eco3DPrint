@@ -1,6 +1,13 @@
 # Eco3DPrint
-Project for the exam of Internet of Things at the University of Pisa for the Master's Degree in Artificial Intelligence and Data Engineering. 
+*Internet of Things, a.y. 2025/2026*
 
+*Univeristy of Pisa,*
+*Department of Information Engineering,*
+*m.sc. Artificial Intelligence and Data Engineering*
+
+*Project by Francesco Panattoni*
+
+## Initial Recommendation
 The ***cooja*** branch contains the version of the project designed to run on the Virtual Machine provided during the Internet of Things course. The ***main*** branch, instead, includes a containerized setup that allows the project to be run locally. 
 
 *If you are a student at the University of Pisa looking for reference material or inspiration, the cooja branch may be useful. Otherwise, if you are not enrolled in the course or prefer to run the project in a containerized environment, refer to the main branch.*
