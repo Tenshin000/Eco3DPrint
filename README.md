@@ -1,6 +1,10 @@
 # Eco3DPrint
 Project for the exam of Internet of Things at the University of Pisa for the Master's Degree in Artificial Intelligence and Data Engineering. 
 
+The ***cooja*** branch contains the version of the project designed to run on the Virtual Machine provided during the Internet of Things course. The ***main*** branch, instead, includes a containerized setup that allows the project to be run locally. 
+
+*If you are a student at the University of Pisa looking for reference material or inspiration, the cooja branch may be useful. Otherwise, if you are not enrolled in the course or prefer to run the project in a containerized environment, refer to the main branch.*
+
 ## Introduction
 The advent of **3D Printing** has revolutionized manufacturing, prototyping, and personal fabrication by allowing digital models to be transformed into physical objects layer by layer. However, the additive **manufacturing process is inherently susceptible to physical anomalies**. A slight deviation in temperature, extrusion rate, or mechanical calibration can lead to catastrophic print failures. When a printer operates unmonitored for extended periods, these undetected failures result in a significant waste of filament materials, excessive energy consumption, and lost time.
 
