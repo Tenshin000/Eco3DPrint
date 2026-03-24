@@ -1,0 +1,19 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-docker-compose
+// 	"initializeCommand": "wsl -d Ubuntu bash -c 'xhost +local:docker'",
+{
+	"name": "Contiki NG",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "contiki-ng",
+	"workspaceFolder": "/workspace",
+	"shutdownAction": "stopCompose",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.makefile-tools",
+				"ms-vscode.cpptools",
+				"ms-python.python"
+			]
+		}
+	}
+}
