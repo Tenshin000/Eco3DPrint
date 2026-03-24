@@ -57,4 +57,11 @@ A.~Majhi, A.~Kumar, and S.~Mohanty, ``A comprehensive review on internet of
   Available: \url{https://www.rfc-editor.org/rfc/rfc8428.html}
 \BIBentrySTDinterwordspacing
 
+\bibitem{joanna}
+\BIBentryALTinterwordspacing
+W.~M. B.-W.~R. Szydlo~Tomasz, Sendorek~Joanna, ``Dataset for anomalies
+  detection in 3d printing,'' Cham, 2021. [Online]. Available:
+  \url{https://github.com/joanna-/3D-Printing-Data}
+\BIBentrySTDinterwordspacing
+
 \end{thebibliography}

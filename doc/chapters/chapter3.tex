@@ -16,7 +16,7 @@ The application layer is split according to functional requirements. \textbf{CoA
 
 \medspace
 
-The system utilizes \textbf{JSON} (JavaScript Object Notation) as the primary data encoding format for control and telemetry messages. For the transmission of 3D models, the application implements a \textbf{CoAP Block-wise transfer mechanism}. 
+The system utilizes \textbf{JSON} (JavaScript Object Notation) as the primary data encoding format for control and telemetry messages. For the transmission of 3D models, the application implements a \textbf{CoAP Block-wise (Block1) transfer mechanism}. 
 
 \newpage
 
@@ -96,9 +96,7 @@ The project strictly adheres to the mandatory button and LED interaction require
 
 A \textbf{physical button} is used for manual overrides, system resets, and confirming print completions, ensuring a human-in-the-loop safety mechanism. 
 
-At the same time, \textbf{LEDs} provide essential visual feedback through color coding—yellow for initialization, green for online status, and red for failure—allowing an on-site operator to quickly assess device status without a display. 
-
-\textit{(REWRITE FOR THE DONGLE)} 
+At the same time, \textbf{LEDs} provide essential visual feedback through color coding, yellow for initialization, green for online status, and red for failure, allowing an on-site operator to quickly assess device status without a display. 
 
 \subsection{Data Encoding}
 \textbf{JSON} (JavaScript Object Notation), structured via the \textbf{SenML} (Sensor Measurement Lists \cite{senml}) data model, is the optimal encoding choice because its minimalist key-value structure drastically reduces packet overhead compared to the verbose tagging required by XML. This standardized approach facilitates a seamless data pipeline between the C-based firmware and the Python backend without the heavy memory or CPU requirements of an XML DOM parser.

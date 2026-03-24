@@ -1,6 +1,7 @@
-build/cooja/obj/nullradio.o: ../../../../os/dev/nullradio.c \
- ../../../../os/net/app-layer/coap/module-macros.h \
- ../../../../os/dev/nullradio.h ../../../../os/dev/radio.h
-../../../../os/net/app-layer/coap/module-macros.h:
-../../../../os/dev/nullradio.h:
-../../../../os/dev/radio.h:
+build/cooja/obj/nullradio.o: /home/user/contiki-ng/os/dev/nullradio.c \
+ /home/user/contiki-ng/os/net/app-layer/coap/module-macros.h \
+ /home/user/contiki-ng/os/dev/nullradio.h \
+ /home/user/contiki-ng/os/dev/radio.h
+/home/user/contiki-ng/os/net/app-layer/coap/module-macros.h:
+/home/user/contiki-ng/os/dev/nullradio.h:
+/home/user/contiki-ng/os/dev/radio.h:

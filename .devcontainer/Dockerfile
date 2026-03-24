@@ -7,9 +7,8 @@ RUN apt update && apt install -y \
     python3-tk \
     curl
 
-COPY ../requirements.txt /home/user/requirements.txt
-# Install packages bypassing the PEP 668 restriction
-RUN pip3 install --break-system-packages -r /home/user/requirements.txt && rm /home/user/requirements.txt
+COPY requirements.txt /home/user/requirements.txt
+RUN pip3 install -r /home/user/requirements.txt && rm /home/user/requirements.txt
 
 # Install Node.js and coap-cli
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash \

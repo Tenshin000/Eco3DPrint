@@ -3,13 +3,12 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
-    volumes:
-      - ..:/workspace:cached
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - $HOME/.Xauthority:/root/.Xauthority
-      - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - DISPLAY=${DISPLAY}
+      # Route display to the Windows host running VcXsrv
+      - DISPLAY=host.docker.internal:0.0
+    volumes:
+      # Mount the project workspace
+      - ..:/workspace:cached
     devices:
       - /dev/bus/usb/
       - /dev/net/tun:/dev/net/tun
@@ -18,6 +17,7 @@ services:
     command: sleep infinity
     ports:
       - "8000:8000"
+      
   mosquitto:
     image: eclipse-mosquitto:latest
     container_name: mosquitto
@@ -27,6 +27,7 @@ services:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
+      
   database:
     image: mysql:latest
     container_name: mysql_db

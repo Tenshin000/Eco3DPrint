@@ -1,66 +1,75 @@
 build/cooja/obj/uip-udp-packet.o: \
- ../../../../os/net/ipv6/uip-udp-packet.c \
- ../../../../os/services/rpl-border-router/module-macros.h \
- ../../../../os/contiki.h \
- ../../../../arch/platform/cooja/./contiki-conf.h project-conf.h \
- ../../../../os/contiki-default-conf.h ../../../../os/sys/process.h \
- ../../../../os/sys/pt.h ../../../../os/sys/lc.h \
- ../../../../os/sys/lc-switch.h ../../../../os/sys/cc.h \
- ../../../../os/sys/autostart.h ../../../../os/sys/process.h \
- ../../../../os/sys/timer.h ../../../../os/sys/clock.h \
- ../../../../os/sys/ctimer.h ../../../../os/sys/etimer.h \
- ../../../../os/sys/etimer.h ../../../../os/sys/rtimer.h \
- ../../../../os/dev/watchdog.h \
- ../../../../arch/platform/cooja/./rtimer-arch.h \
- ../../../../arch/platform/cooja/./lib/simEnvChange.h \
- ../../../../arch/platform/cooja/./sys/cooja_mt.h ../../../../os/sys/pt.h \
- ../../../../os/sys/clock.h ../../../../os/net/ipv6/uip-udp-packet.h \
- ../../../../os/net/ipv6/uip.h ../../../../os/net/ipv6/uipopt.h \
- ../../../../os/net/ipv6/uipbuf.h ../../../../os/net/linkaddr.h \
- ../../../../os/net/ipv6/tcpip.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6-engines.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6-route.h \
- ../../../../os/net/ipv6/multicast/smrf.h \
- ../../../../os/net/ipv6/multicast/esmrf.h \
- ../../../../os/net/ipv6/multicast/roll-tm.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6-stats.h \
- ../../../../os/net/ipv6/multicast/mpl.h
-../../../../os/services/rpl-border-router/module-macros.h:
-../../../../os/contiki.h:
-../../../../arch/platform/cooja/./contiki-conf.h:
+ /home/user/contiki-ng/os/net/ipv6/uip-udp-packet.c \
+ /home/user/contiki-ng/os/services/rpl-border-router/module-macros.h \
+ /home/user/contiki-ng/os/contiki.h \
+ /home/user/contiki-ng/arch/platform/cooja/./contiki-conf.h \
+ project-conf.h /home/user/contiki-ng/os/contiki-default-conf.h \
+ /home/user/contiki-ng/os/sys/process.h /home/user/contiki-ng/os/sys/pt.h \
+ /home/user/contiki-ng/os/sys/lc.h \
+ /home/user/contiki-ng/os/sys/lc-switch.h \
+ /home/user/contiki-ng/os/sys/cc.h \
+ /home/user/contiki-ng/os/sys/autostart.h \
+ /home/user/contiki-ng/os/sys/process.h \
+ /home/user/contiki-ng/os/sys/timer.h \
+ /home/user/contiki-ng/os/sys/clock.h \
+ /home/user/contiki-ng/os/sys/ctimer.h \
+ /home/user/contiki-ng/os/sys/etimer.h \
+ /home/user/contiki-ng/os/sys/etimer.h \
+ /home/user/contiki-ng/os/sys/rtimer.h \
+ /home/user/contiki-ng/os/dev/watchdog.h \
+ /home/user/contiki-ng/arch/platform/cooja/./rtimer-arch.h \
+ /home/user/contiki-ng/arch/platform/cooja/./lib/simEnvChange.h \
+ /home/user/contiki-ng/arch/platform/cooja/./sys/cooja_mt.h \
+ /home/user/contiki-ng/os/sys/pt.h /home/user/contiki-ng/os/sys/clock.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-udp-packet.h \
+ /home/user/contiki-ng/os/net/ipv6/uip.h \
+ /home/user/contiki-ng/os/net/ipv6/uipopt.h \
+ /home/user/contiki-ng/os/net/ipv6/uipbuf.h \
+ /home/user/contiki-ng/os/net/linkaddr.h \
+ /home/user/contiki-ng/os/net/ipv6/tcpip.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-engines.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-route.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/smrf.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/esmrf.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/roll-tm.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-stats.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/mpl.h
+/home/user/contiki-ng/os/services/rpl-border-router/module-macros.h:
+/home/user/contiki-ng/os/contiki.h:
+/home/user/contiki-ng/arch/platform/cooja/./contiki-conf.h:
 project-conf.h:
-../../../../os/contiki-default-conf.h:
-../../../../os/sys/process.h:
-../../../../os/sys/pt.h:
-../../../../os/sys/lc.h:
-../../../../os/sys/lc-switch.h:
-../../../../os/sys/cc.h:
-../../../../os/sys/autostart.h:
-../../../../os/sys/process.h:
-../../../../os/sys/timer.h:
-../../../../os/sys/clock.h:
-../../../../os/sys/ctimer.h:
-../../../../os/sys/etimer.h:
-../../../../os/sys/etimer.h:
-../../../../os/sys/rtimer.h:
-../../../../os/dev/watchdog.h:
-../../../../arch/platform/cooja/./rtimer-arch.h:
-../../../../arch/platform/cooja/./lib/simEnvChange.h:
-../../../../arch/platform/cooja/./sys/cooja_mt.h:
-../../../../os/sys/pt.h:
-../../../../os/sys/clock.h:
-../../../../os/net/ipv6/uip-udp-packet.h:
-../../../../os/net/ipv6/uip.h:
-../../../../os/net/ipv6/uipopt.h:
-../../../../os/net/ipv6/uipbuf.h:
-../../../../os/net/linkaddr.h:
-../../../../os/net/ipv6/tcpip.h:
-../../../../os/net/ipv6/multicast/uip-mcast6.h:
-../../../../os/net/ipv6/multicast/uip-mcast6-engines.h:
-../../../../os/net/ipv6/multicast/uip-mcast6-route.h:
-../../../../os/net/ipv6/multicast/smrf.h:
-../../../../os/net/ipv6/multicast/esmrf.h:
-../../../../os/net/ipv6/multicast/roll-tm.h:
-../../../../os/net/ipv6/multicast/uip-mcast6-stats.h:
-../../../../os/net/ipv6/multicast/mpl.h:
+/home/user/contiki-ng/os/contiki-default-conf.h:
+/home/user/contiki-ng/os/sys/process.h:
+/home/user/contiki-ng/os/sys/pt.h:
+/home/user/contiki-ng/os/sys/lc.h:
+/home/user/contiki-ng/os/sys/lc-switch.h:
+/home/user/contiki-ng/os/sys/cc.h:
+/home/user/contiki-ng/os/sys/autostart.h:
+/home/user/contiki-ng/os/sys/process.h:
+/home/user/contiki-ng/os/sys/timer.h:
+/home/user/contiki-ng/os/sys/clock.h:
+/home/user/contiki-ng/os/sys/ctimer.h:
+/home/user/contiki-ng/os/sys/etimer.h:
+/home/user/contiki-ng/os/sys/etimer.h:
+/home/user/contiki-ng/os/sys/rtimer.h:
+/home/user/contiki-ng/os/dev/watchdog.h:
+/home/user/contiki-ng/arch/platform/cooja/./rtimer-arch.h:
+/home/user/contiki-ng/arch/platform/cooja/./lib/simEnvChange.h:
+/home/user/contiki-ng/arch/platform/cooja/./sys/cooja_mt.h:
+/home/user/contiki-ng/os/sys/pt.h:
+/home/user/contiki-ng/os/sys/clock.h:
+/home/user/contiki-ng/os/net/ipv6/uip-udp-packet.h:
+/home/user/contiki-ng/os/net/ipv6/uip.h:
+/home/user/contiki-ng/os/net/ipv6/uipopt.h:
+/home/user/contiki-ng/os/net/ipv6/uipbuf.h:
+/home/user/contiki-ng/os/net/linkaddr.h:
+/home/user/contiki-ng/os/net/ipv6/tcpip.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-engines.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-route.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/smrf.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/esmrf.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/roll-tm.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-stats.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/mpl.h:

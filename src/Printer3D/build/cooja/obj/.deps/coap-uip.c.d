@@ -1,103 +1,121 @@
-build/cooja/obj/coap-uip.o: ../../../../os/net/app-layer/coap/coap-uip.c \
- ../../../../os/net/app-layer/coap/module-macros.h \
- ../../../../os/contiki.h \
- ../../../../arch/platform/cooja/./contiki-conf.h project-conf.h \
- ../../../../os/contiki-default-conf.h ../../../../os/sys/process.h \
- ../../../../os/sys/pt.h ../../../../os/sys/lc.h \
- ../../../../os/sys/lc-switch.h ../../../../os/sys/cc.h \
- ../../../../os/sys/autostart.h ../../../../os/sys/process.h \
- ../../../../os/sys/timer.h ../../../../os/sys/clock.h \
- ../../../../os/sys/ctimer.h ../../../../os/sys/etimer.h \
- ../../../../os/sys/etimer.h ../../../../os/sys/rtimer.h \
- ../../../../os/dev/watchdog.h \
- ../../../../arch/platform/cooja/./rtimer-arch.h \
- ../../../../arch/platform/cooja/./lib/simEnvChange.h \
- ../../../../arch/platform/cooja/./sys/cooja_mt.h ../../../../os/sys/pt.h \
- ../../../../os/sys/clock.h ../../../../os/net/ipv6/uip-udp-packet.h \
- ../../../../os/net/ipv6/uip.h ../../../../os/net/ipv6/uipopt.h \
- ../../../../os/net/ipv6/uipbuf.h ../../../../os/net/linkaddr.h \
- ../../../../os/net/ipv6/tcpip.h ../../../../os/net/ipv6/uiplib.h \
- ../../../../os/net/routing/routing.h \
- ../../../../os/net/ipv6/uip-ds6-nbr.h ../../../../os/net/ipv6/uip-nd6.h \
- ../../../../os/sys/stimer.h ../../../../os/net/nbr-table.h \
- ../../../../os/net/netstack.h ../../../../os/net/mac/mac.h \
- ../../../../os/dev/radio.h ../../../../os/net/mac/framer/framer.h \
- ../../../../os/net/ipv6/uip-packetqueue.h ../../../../os/sys/ctimer.h \
- ../../../../os/net/ipv6/uip-ds6-route.h ../../../../os/lib/list.h \
- ../../../../os/net/ipv6/uip-sr.h \
- ../../../../os/net/app-layer/coap/coap.h \
- ../../../../os/net/app-layer/coap/coap-constants.h \
- ../../../../os/net/app-layer/coap/coap-conf.h \
- ../../../../os/net/app-layer/coap/coap-transport.h \
- ../../../../os/net/app-layer/coap/coap-endpoint.h \
- ../../../../os/net/app-layer/coap/coap-engine.h \
- ../../../../os/net/app-layer/coap/coap-timer.h \
- ../../../../os/net/app-layer/coap/coap-transactions.h \
- ../../../../os/net/app-layer/coap/coap-observe.h \
- ../../../../os/net/app-layer/coap/coap-separate.h \
- ../../../../os/net/app-layer/coap/coap-observe-client.h \
- ../../../../os/net/app-layer/coap/coap-keystore.h \
- ../../../../os/net/app-layer/coap/coap-keystore-simple.h \
- ../../../../os/net/app-layer/coap/coap-log.h ../../../../os/sys/log.h \
- ../../../../os/sys/log-conf.h
-../../../../os/net/app-layer/coap/module-macros.h:
-../../../../os/contiki.h:
-../../../../arch/platform/cooja/./contiki-conf.h:
+build/cooja/obj/coap-uip.o: \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-uip.c \
+ /home/user/contiki-ng/os/net/app-layer/coap/module-macros.h \
+ /home/user/contiki-ng/os/contiki.h \
+ /home/user/contiki-ng/arch/platform/cooja/./contiki-conf.h \
+ project-conf.h /home/user/contiki-ng/os/contiki-default-conf.h \
+ /home/user/contiki-ng/os/sys/process.h /home/user/contiki-ng/os/sys/pt.h \
+ /home/user/contiki-ng/os/sys/lc.h \
+ /home/user/contiki-ng/os/sys/lc-switch.h \
+ /home/user/contiki-ng/os/sys/cc.h \
+ /home/user/contiki-ng/os/sys/autostart.h \
+ /home/user/contiki-ng/os/sys/process.h \
+ /home/user/contiki-ng/os/sys/timer.h \
+ /home/user/contiki-ng/os/sys/clock.h \
+ /home/user/contiki-ng/os/sys/ctimer.h \
+ /home/user/contiki-ng/os/sys/etimer.h \
+ /home/user/contiki-ng/os/sys/etimer.h \
+ /home/user/contiki-ng/os/sys/rtimer.h \
+ /home/user/contiki-ng/os/dev/watchdog.h \
+ /home/user/contiki-ng/arch/platform/cooja/./rtimer-arch.h \
+ /home/user/contiki-ng/arch/platform/cooja/./lib/simEnvChange.h \
+ /home/user/contiki-ng/arch/platform/cooja/./sys/cooja_mt.h \
+ /home/user/contiki-ng/os/sys/pt.h /home/user/contiki-ng/os/sys/clock.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-udp-packet.h \
+ /home/user/contiki-ng/os/net/ipv6/uip.h \
+ /home/user/contiki-ng/os/net/ipv6/uipopt.h \
+ /home/user/contiki-ng/os/net/ipv6/uipbuf.h \
+ /home/user/contiki-ng/os/net/linkaddr.h \
+ /home/user/contiki-ng/os/net/ipv6/tcpip.h \
+ /home/user/contiki-ng/os/net/ipv6/uiplib.h \
+ /home/user/contiki-ng/os/net/routing/routing.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-ds6-nbr.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-nd6.h \
+ /home/user/contiki-ng/os/sys/stimer.h \
+ /home/user/contiki-ng/os/net/nbr-table.h \
+ /home/user/contiki-ng/os/net/netstack.h \
+ /home/user/contiki-ng/os/net/mac/mac.h \
+ /home/user/contiki-ng/os/dev/radio.h \
+ /home/user/contiki-ng/os/net/mac/framer/framer.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-packetqueue.h \
+ /home/user/contiki-ng/os/sys/ctimer.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-ds6-route.h \
+ /home/user/contiki-ng/os/lib/list.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-sr.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-constants.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-conf.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-transport.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-endpoint.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-engine.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-timer.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-transactions.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-observe.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-separate.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-observe-client.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-keystore.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-keystore-simple.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-log.h \
+ /home/user/contiki-ng/os/sys/log.h \
+ /home/user/contiki-ng/os/sys/log-conf.h
+/home/user/contiki-ng/os/net/app-layer/coap/module-macros.h:
+/home/user/contiki-ng/os/contiki.h:
+/home/user/contiki-ng/arch/platform/cooja/./contiki-conf.h:
 project-conf.h:
-../../../../os/contiki-default-conf.h:
-../../../../os/sys/process.h:
-../../../../os/sys/pt.h:
-../../../../os/sys/lc.h:
-../../../../os/sys/lc-switch.h:
-../../../../os/sys/cc.h:
-../../../../os/sys/autostart.h:
-../../../../os/sys/process.h:
-../../../../os/sys/timer.h:
-../../../../os/sys/clock.h:
-../../../../os/sys/ctimer.h:
-../../../../os/sys/etimer.h:
-../../../../os/sys/etimer.h:
-../../../../os/sys/rtimer.h:
-../../../../os/dev/watchdog.h:
-../../../../arch/platform/cooja/./rtimer-arch.h:
-../../../../arch/platform/cooja/./lib/simEnvChange.h:
-../../../../arch/platform/cooja/./sys/cooja_mt.h:
-../../../../os/sys/pt.h:
-../../../../os/sys/clock.h:
-../../../../os/net/ipv6/uip-udp-packet.h:
-../../../../os/net/ipv6/uip.h:
-../../../../os/net/ipv6/uipopt.h:
-../../../../os/net/ipv6/uipbuf.h:
-../../../../os/net/linkaddr.h:
-../../../../os/net/ipv6/tcpip.h:
-../../../../os/net/ipv6/uiplib.h:
-../../../../os/net/routing/routing.h:
-../../../../os/net/ipv6/uip-ds6-nbr.h:
-../../../../os/net/ipv6/uip-nd6.h:
-../../../../os/sys/stimer.h:
-../../../../os/net/nbr-table.h:
-../../../../os/net/netstack.h:
-../../../../os/net/mac/mac.h:
-../../../../os/dev/radio.h:
-../../../../os/net/mac/framer/framer.h:
-../../../../os/net/ipv6/uip-packetqueue.h:
-../../../../os/sys/ctimer.h:
-../../../../os/net/ipv6/uip-ds6-route.h:
-../../../../os/lib/list.h:
-../../../../os/net/ipv6/uip-sr.h:
-../../../../os/net/app-layer/coap/coap.h:
-../../../../os/net/app-layer/coap/coap-constants.h:
-../../../../os/net/app-layer/coap/coap-conf.h:
-../../../../os/net/app-layer/coap/coap-transport.h:
-../../../../os/net/app-layer/coap/coap-endpoint.h:
-../../../../os/net/app-layer/coap/coap-engine.h:
-../../../../os/net/app-layer/coap/coap-timer.h:
-../../../../os/net/app-layer/coap/coap-transactions.h:
-../../../../os/net/app-layer/coap/coap-observe.h:
-../../../../os/net/app-layer/coap/coap-separate.h:
-../../../../os/net/app-layer/coap/coap-observe-client.h:
-../../../../os/net/app-layer/coap/coap-keystore.h:
-../../../../os/net/app-layer/coap/coap-keystore-simple.h:
-../../../../os/net/app-layer/coap/coap-log.h:
-../../../../os/sys/log.h:
-../../../../os/sys/log-conf.h:
+/home/user/contiki-ng/os/contiki-default-conf.h:
+/home/user/contiki-ng/os/sys/process.h:
+/home/user/contiki-ng/os/sys/pt.h:
+/home/user/contiki-ng/os/sys/lc.h:
+/home/user/contiki-ng/os/sys/lc-switch.h:
+/home/user/contiki-ng/os/sys/cc.h:
+/home/user/contiki-ng/os/sys/autostart.h:
+/home/user/contiki-ng/os/sys/process.h:
+/home/user/contiki-ng/os/sys/timer.h:
+/home/user/contiki-ng/os/sys/clock.h:
+/home/user/contiki-ng/os/sys/ctimer.h:
+/home/user/contiki-ng/os/sys/etimer.h:
+/home/user/contiki-ng/os/sys/etimer.h:
+/home/user/contiki-ng/os/sys/rtimer.h:
+/home/user/contiki-ng/os/dev/watchdog.h:
+/home/user/contiki-ng/arch/platform/cooja/./rtimer-arch.h:
+/home/user/contiki-ng/arch/platform/cooja/./lib/simEnvChange.h:
+/home/user/contiki-ng/arch/platform/cooja/./sys/cooja_mt.h:
+/home/user/contiki-ng/os/sys/pt.h:
+/home/user/contiki-ng/os/sys/clock.h:
+/home/user/contiki-ng/os/net/ipv6/uip-udp-packet.h:
+/home/user/contiki-ng/os/net/ipv6/uip.h:
+/home/user/contiki-ng/os/net/ipv6/uipopt.h:
+/home/user/contiki-ng/os/net/ipv6/uipbuf.h:
+/home/user/contiki-ng/os/net/linkaddr.h:
+/home/user/contiki-ng/os/net/ipv6/tcpip.h:
+/home/user/contiki-ng/os/net/ipv6/uiplib.h:
+/home/user/contiki-ng/os/net/routing/routing.h:
+/home/user/contiki-ng/os/net/ipv6/uip-ds6-nbr.h:
+/home/user/contiki-ng/os/net/ipv6/uip-nd6.h:
+/home/user/contiki-ng/os/sys/stimer.h:
+/home/user/contiki-ng/os/net/nbr-table.h:
+/home/user/contiki-ng/os/net/netstack.h:
+/home/user/contiki-ng/os/net/mac/mac.h:
+/home/user/contiki-ng/os/dev/radio.h:
+/home/user/contiki-ng/os/net/mac/framer/framer.h:
+/home/user/contiki-ng/os/net/ipv6/uip-packetqueue.h:
+/home/user/contiki-ng/os/sys/ctimer.h:
+/home/user/contiki-ng/os/net/ipv6/uip-ds6-route.h:
+/home/user/contiki-ng/os/lib/list.h:
+/home/user/contiki-ng/os/net/ipv6/uip-sr.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-constants.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-conf.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-transport.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-endpoint.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-engine.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-timer.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-transactions.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-observe.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-separate.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-observe-client.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-keystore.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-keystore-simple.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-log.h:
+/home/user/contiki-ng/os/sys/log.h:
+/home/user/contiki-ng/os/sys/log-conf.h:

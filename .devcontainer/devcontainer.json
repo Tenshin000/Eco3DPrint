@@ -7,6 +7,7 @@
 	"service": "contiki-ng",
 	"workspaceFolder": "/workspace",
 	"shutdownAction": "stopCompose",
+	"initializeCommand": "wsl -d Ubuntu bash -c 'xhost +local:docker'",
 	"customizations": {
 		"vscode": {
 			"extensions": [

@@ -1,24 +1,48 @@
 \babel@toc {english}{}\relax 
-\contentsline {chapter}{\numberline {1}Introduction}{2}{chapter.1}%
-\contentsline {chapter}{\numberline {2}Environment}{4}{chapter.2}%
-\contentsline {section}{\numberline {2.1}Simulation}{4}{section.2.1}%
-\contentsline {section}{\numberline {2.2}Contiki-NG}{4}{section.2.2}%
-\contentsline {section}{\numberline {2.3}Cooja}{4}{section.2.3}%
-\contentsline {section}{\numberline {2.4}Tunslip}{5}{section.2.4}%
-\contentsline {section}{\numberline {2.5}Nordic Dongle NRF52840}{5}{section.2.5}%
-\contentsline {chapter}{\numberline {3}Architecture}{6}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Ecosystem}{6}{section.3.1}%
-\contentsline {section}{\numberline {3.2}IoT Network}{6}{section.3.2}%
-\contentsline {subsection}{\numberline {3.2.1}Protocol Stack}{6}{subsection.3.2.1}%
-\contentsline {subsection}{\numberline {3.2.2}Nodes}{7}{subsection.3.2.2}%
-\contentsline {section}{\numberline {3.3}Cloud Application}{8}{section.3.3}%
-\contentsline {subsection}{\numberline {3.3.1}Backend}{8}{subsection.3.3.1}%
-\contentsline {subsection}{\numberline {3.3.2}Frontend}{8}{subsection.3.3.2}%
-\contentsline {section}{\numberline {3.4}Project Alignment}{9}{section.3.4}%
-\contentsline {subsection}{\numberline {3.4.1}Project Objective}{9}{subsection.3.4.1}%
-\contentsline {subsection}{\numberline {3.4.2}Application Protocol}{9}{subsection.3.4.2}%
-\contentsline {subsection}{\numberline {3.4.3}Edge Intelligence and Autonomous Decision-Making}{10}{subsection.3.4.3}%
-\contentsline {subsection}{\numberline {3.4.4}Hardware Interaction}{10}{subsection.3.4.4}%
-\contentsline {subsection}{\numberline {3.4.5}Data Encoding}{10}{subsection.3.4.5}%
-\contentsline {chapter}{\numberline {4}Implementation}{11}{chapter.4}%
-\contentsline {chapter}{\numberline {A}Appendix}{12}{appendix.A}%
+\contentsline {chapter}{\numberline {1}Introduction}{3}{chapter.1}%
+\contentsline {chapter}{\numberline {2}Environment}{5}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Simulation}{5}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Contiki-NG}{5}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Cooja}{5}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Tunslip}{6}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Nordic Dongle NRF52840}{6}{section.2.5}%
+\contentsline {chapter}{\numberline {3}Architecture}{7}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Ecosystem}{7}{section.3.1}%
+\contentsline {section}{\numberline {3.2}IoT Network}{7}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Protocol Stack}{7}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Nodes}{8}{subsection.3.2.2}%
+\contentsline {section}{\numberline {3.3}Cloud Application}{9}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Backend}{9}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Frontend}{9}{subsection.3.3.2}%
+\contentsline {section}{\numberline {3.4}Project Alignment}{10}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Project Objective}{10}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Application Protocol}{10}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}Edge Intelligence and Autonomous Decision-Making}{11}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.4}Hardware Interaction}{11}{subsection.3.4.4}%
+\contentsline {subsection}{\numberline {3.4.5}Data Encoding}{11}{subsection.3.4.5}%
+\contentsline {chapter}{\numberline {4}Implementation}{12}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Printer Node}{12}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Machine Learning Model}{15}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Backend Cloud Application}{16}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Core Executable}{16}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Database Structure}{16}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Data Persistence and Connection Pooling}{17}{subsection.4.3.3}%
+\contentsline {subsection}{\numberline {4.3.4}CoAP Control Plane}{17}{subsection.4.3.4}%
+\contentsline {subsection}{\numberline {4.3.5}MQTT Telemetry Plane}{17}{subsection.4.3.5}%
+\contentsline {subsection}{\numberline {4.3.6}Node Monitoring}{17}{subsection.4.3.6}%
+\contentsline {subsection}{\numberline {4.3.7}Job Orchestration and Binary Transfer}{17}{subsection.4.3.7}%
+\contentsline {subsection}{\numberline {4.3.8}User Interface Bridging}{17}{subsection.4.3.8}%
+\contentsline {section}{\numberline {4.4}Frontend User Application}{18}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}GUI}{18}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}State Routing}{18}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Printer Management Dashboard}{18}{subsection.4.4.3}%
+\contentsline {subsection}{\numberline {4.4.4}Analytical Reporting Modules}{18}{subsection.4.4.4}%
+\contentsline {chapter}{\numberline {5}Use Case}{19}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Overall Objective}{19}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Energy Consumption Monitoring and Sustainability Analytics}{19}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Predictive Maintenance and Automated Fault Detection}{19}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Remote Fleet Orchestration and Job Dispatching}{20}{section.5.4}%
+\contentsline {section}{\numberline {5.5}Application Working}{20}{section.5.5}%
+\contentsline {chapter}{\numberline {6}Conclusion}{25}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Ending the Report}{25}{section.6.1}%
+\contentsline {subsection}{\numberline {6.1.1}Improvements for Future Works}{25}{subsection.6.1.1}%

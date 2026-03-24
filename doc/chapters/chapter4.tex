@@ -2,8 +2,187 @@
 \section{Printer Node}
 The code related to the IoT devices has been placed inside the subfolder \textit{Eco3DPrint/src/Printer3D}.
 
+\medspace
 
+The physical edge node (nRF52840 Dongle) acts as an autonomous computing hub, collecting data directly from the physical environment (accelerometers and power monitors). The firmware is built on \textbf{Contiki-NG} and is modularly structured to separate core logic from network and sensor peripherals. 
 
 \medspace
 
-... 
+The \texttt{device.c} houses the main Contiki-NG process (\textit{PROCESS\_THREAD}) and manages the primary control loop through a strict state machine, transitioning between \texttt{STATE\_OFF}, \texttt{STATE\_INITIALIZATION}, \texttt{STATE\_ONLINE}, \texttt{STATE\_PRINTING}, and \texttt{STATE\_OFFLINE} to govern node behavior and optimize energy usage. 
+
+The state machine was supposed to work like this:
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.77\textwidth]{img/Correct_State_Diagram_IoT_Device.png}
+	\caption{How the State Machine was supposed to work}
+	\label{fig:Correct-State-Machine}
+\end{figure}
+
+\newpage
+
+For the purposes of this project, we don't care if the 3D Printer can take prints locally, so the state machine works like this:
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{img/Actual_State_Diagram_IoT_Device.png}
+	\caption{How the State Machine actually work in this project}
+	\label{fig:Actual-State-Machine}
+\end{figure}
+
+The node starts in \texttt{STATE\_OFF} and moves to \texttt{STATE\_INITIALIZATION} after a button press, triggering a CoAP registration. If registration fails, it enters \texttt{STATE\_OFFLINE} and retries periodically until successful, then transitions to \texttt{STATE\_ONLINE}. In this state, it listens for CoAP transfers and, upon receiving a complete STL file, moves to \texttt{STATE\_PRINTING}. During printing, it performs sensor sampling, MQTT telemetry, and ML inference. It returns to \texttt{STATE\_ONLINE} when printing completes or anomalies abort the process. A long button press (\textit{5+ seconds}) from any active state forces a safe disconnect and resets the system to \texttt{STATE\_OFF}.
+
+\medspace
+
+During active prints, the process handles data acquisition by utilizing a 1s timer to sample multi-axis acceleration, tension, and power, buffering these readings into a 5-sample sliding window with 1 common sample between windows. For edge AI and inference, the system extracts 35 statistical features (such as mean, standard deviation, and peak-to-peak values) from this window, normalizes the data, and executes the local neural network via the \texttt{print\_prediction\_predict()} function. If the model predicts a failure for three consecutive cycles, the node performs autonomous fault handling by instantly aborting the print process and triggering a physical RED LED warning that requires a manual reset. Concurrently, valid real-time measurements are fed into a telemetry pipeline, where they are serialized into SenML-compliant JSON strings using standard snprintf functions and continuously published to the backend over MQTT. 
+
+\medspace
+
+Once printing is complete or interrupted by the ML model, the operator can send the result by pressing the button. You can also hold it for 2–4 seconds to modify it. A completed print sends a failure, while a blocked print resumes. This design gives operators time to clean the printer and provides a simple, intuitive way to report outcomes. 
+
+\newpage
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{img/led.png}
+	\caption{LED for all the states}
+	\label{fig:LED-STATE}
+\end{figure}
+
+To keep the main application loop clean, peripheral functions are isolated:
+
+\begin{itemize}
+	\item \texttt{sensors.c}: Simulates hardware data collection (for example: ADXL345, PZEM-004T, ZMPT101B), utilizing Gaussian distributions to generate realistic operational data and error-state anomalies;
+	\item \texttt{coap\_module.c}: Manages the UDP control plane, handling the initial node registration with the cloud and responding to ongoing /health status pings;
+	\item \texttt{mqtt\_module.c}: Manages the TCP telemetry plane, handling the connection state to the broker and executing retry hooks if the connection drops;
+	\item \texttt{print\_prediction.h}: Contains the compiled structural arrays of the neural network, including layer configurations, weights, and biases;
+	\item \texttt{scaler\_params.h}: Stores the pre-calculated scaler means and scaling factors required to standardize live sensor inputs before inference.
+\end{itemize}
+
+\newpage
+
+\section{Machine Learning Model}
+The \textbf{Machine Learning model} for the IoT device originates from the \textbf{Joanna-3D-Printing-Data dataset} \cite{joanna}. Time Series were extracted from the dataset results by splitting the data in the same results file into multiple Time Series if there were at least two minutes between measurements. These were then divided into correct (successful) and erroneous (failure) Time Series. 
+\medspace
+
+Following the data extraction, the Python Notebook \texttt{ML\_Model.ipynb} documents the Machine Learning pipeline:
+\begin{itemize}
+	\item \textbf{Extrapolated Data:} The notebook loads 6 correct Time Series and 10 error Time Series, exploring statistical properties (such as mean, standard deviation, minimum, maximum and peak-to-peak) for features like the X, Y, and Z axes for both the plate and extrusion, alongside tension measurements. It calculates the global average sampling interval to confirm the $\approx 5ms$ frequency (approximately $196$Hz);
+	\item \textbf{Window Model for Fault Detection:} A sliding window approach is utilized for fault detection. This technique captures the temporal dynamics of the 3D Printer's vibrations and power draw over short periods, allowing the edge device to process small batches of data and detect anomalies in real-time without exceeding hardware memory limits. \textit{We use a 5-second window with the step size between consecutive windows as the parameter to optimize between 0, 1, 2, 3, and 4 seconds};
+	\item \textbf{Preprocessing:} For the Deep Neural Network, the raw sensor data is standardized using a \texttt{StandardScaler} to ensure all features contribute equally to the learning process. The notebook also employs \texttt{compute\_class\_weight} to handle class imbalances between the successful and failed print data.
+\end{itemize}
+
+To build the predictive models, the notebook evaluates traditional ensemble methods alongside deep learning. It implements \textbf{Random Forest} and \textbf{Extra Trees}, utilizing \texttt{GridSearchCV} and \texttt{GroupKFold} for rigorous hyperparameter tuning and cross-validation across the different Time Series groups. A \textbf{Deep Neural Network} is implemented using \texttt{TensorFlow} and \texttt{Keras}. The architecture incorporates regularizers to prevent overfitting and utilizes callbacks like \texttt{EarlyStopping} and \texttt{ReduceLROnPlateau} to dynamically optimize the learning rate and halt training when performance plateaus. Finally, the trained Neural Network is converted into a highly optimized C header file (\texttt{print\_prediction.h}) using the emlearn library, enabling direct deployment on the constrained IoT edge device. 
+
+\medspace
+
+The best model among all Random Forests, Extra Trees and the Deep Neural Networks turns out to be one of the latter: \textbf{the Deep Neural Network with 1-second step}. This final model achieves high predictive Accuracy ($\approx 85\%$) for fault detection. However, the test set was used more as a validation set as indicated in the professor's Notebooks even if it is not technically the correct practice. 
+
+\newpage
+
+\section{Backend Cloud Application}
+\subsection{Core Executable}
+The cloud processing layer of the system is implemented as a modular, multi-threaded Python architecture that bridges the device and connectivity levels with the user interface. The core executable (\texttt{server.py}) acts as the entry point, spawning dedicated threads for each major subsystem to ensure non-blocking operations. A centralized graceful shutdown mechanism binds to \textit{OS-level signals} (\texttt{SIGINT}) to safely terminate network event loops, disconnect database pools, and update physical node states to \texttt{OFFLINE} before exiting.
+
+\subsection{Database Structure}
+The system stores data in a relational MySQL database, \texttt{Eco3DPrintDB}, organized into three tables. The schema separates device metadata, print-job records, and high-frequency telemetry while preserving referential integrity through primary and foreign keys.
+
+\begin{table}[H]
+	\centering
+	\footnotesize
+	\caption{Node table}
+	\begin{tabular}{lll}
+		\toprule
+		\textbf{Field} & \textbf{Type} & \textbf{Constraints} \\
+		\midrule
+		ip & VARCHAR(255) & PRIMARY KEY, NOT NULL \\
+		name & VARCHAR(255) & NOT NULL \\
+		type & VARCHAR(255) & NOT NULL \\
+		utilization & VARCHAR(255) & NOT NULL \\
+		status & VARCHAR(255) & NOT NULL \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\footnotesize
+	\caption{Print table}
+	\begin{tabular}{lll}
+		\toprule
+		\textbf{Field} & \textbf{Type} & \textbf{Constraints} \\
+		\midrule
+		id & INT & PRIMARY KEY, AUTO\_INCREMENT, NOT NULL \\
+		ip & VARCHAR(255) & NOT NULL, FK $\rightarrow$ Node(ip) \\
+		stl\_name & VARCHAR(255) & NOT NULL \\
+		status & VARCHAR(255) & NOT NULL \\
+		activation\_time & TIMESTAMP & NOT NULL, DEFAULT CURRENT\_TIMESTAMP \\
+		energy & DOUBLE & NOT NULL \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\footnotesize
+	\caption{Measurement table}
+	\begin{tabular}{lll}
+		\toprule
+		\textbf{Field} & \textbf{Type} & \textbf{Constraints} \\
+		\midrule
+		timestamp & TIMESTAMP & PRIMARY KEY, NOT NULL, DEFAULT CURRENT\_TIMESTAMP \\
+		print\_id & INT & PRIMARY KEY, NOT NULL, FK $\rightarrow$ Print(id) \\
+		ip & VARCHAR(255) & PRIMARY KEY, NOT NULL, FK $\rightarrow$ Print(ip) \\
+		X\_Axis\_Plate & DOUBLE &  \\
+		Y\_Axis\_Plate & DOUBLE &  \\
+		Z\_Axis\_Plate & DOUBLE &  \\
+		X\_Axis\_Extrusion & DOUBLE &  \\
+		Y\_Axis\_Extrusion & DOUBLE &  \\
+		Z\_Axis\_Extrusion & DOUBLE &  \\
+		Tension & DOUBLE &  \\
+		Power & DOUBLE &  \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\noindent
+
+The \texttt{Node} table stores printer metadata and status. The \texttt{Print} table logs each print job and links it to its source node. The \texttt{Measurement} table records telemetry samples for each print job using a composite primary key \texttt{(timestamp, print\_id, ip)}.
+
+\subsection{Data Persistence and Connection Pooling}
+Data storage is managed by a custom Database Access Layer (\texttt{Database.py}) connected to a MySQL instance. To support the highly concurrent nature of incoming telemetry and state updates, this module implements connection pooling. This guarantees thread-safe read and write operations, preventing bottlenecks when multiple subsystems (such as the telemetry handler and the CoAP server) simultaneously attempt database transactions. 
+
+\subsection{CoAP Control Plane}
+Low-frequency control events and system state transitions are handled by an IPv6-enabled CoAP Server (\texttt{CoAPServer.py}). The server exposes several distinct resource endpoints. The \textbf{/registration} endpoint (\texttt{NodeRegistration.py}) processes initial handshakes from connecting hardware, storing their metadata. The \textbf{/signal/off} endpoint (\texttt{OFFSignal.py}) receives hardware interrupts, immediately updating the system to reflect a disconnected state. Finally, the \textbf{/print/finished} endpoint (\texttt{PrintFinished.py}) processes end-of-print notifications, logging total energy consumption and updating the job queue. 
+
+\subsection{MQTT Telemetry Plane}
+High-frequency sensory data is managed by a background MQTT subscriber (\texttt{MQTTHandler.py}). This component continuously ingests telemetry streams published on the \textbf{/print/measurements} topic. It natively parses the incoming JSON payloads containing multi-axis vibration and voltage data, mapping these metrics directly into the database for long-term analytical storage and for future improvement of the Machine Learning model. 
+
+\subsection{Node Monitoring}
+To maintain a real-time ledger of network health, an autonomous watchdog module (\texttt{NodeMonitor.py}) continuously tracks active devices. It operates on a scheduled interval, dispatching CoAP \textbf{/health} ping requests to nodes currently marked as active or printing. If a node fails to respond after a predefined number of retries, the monitor dynamically transitions its state to offline within the database and instantly broadcasts this state change across the system via an internal event emitter. 
+
+\subsection{Job Orchestration and Binary Transfer}
+The queueing and dispatching of 3D models is controlled by the print orchestration module (\texttt{PrintManager.py}). When a node becomes available, this component retrieves the next pending job. To overcome the memory and transmission constraints of the edge devices, it utilizes \textbf{CoAP block-wise transfer} to partition large binary \textbf{STL files} into sequential chunks, ensuring reliable, acknowledged delivery without overloading the target node's memory buffers. 
+
+\subsection{User Interface Bridging}
+An asynchronous full-duplex connection, handled by a dedicated module (\texttt{Socket.py}), links the cloud layer to the UI. Running on its own asyncio loop, it streams live node updates to the dashboard and processes analytical requests, returning aggregated daily, weekly, and monthly energy reports. 
+
+\newpage  
+
+\section{Frontend User Application}
+\subsection{GUI}
+The frontend is a desktop \textbf{Graphical User Interface} built with Python tkinter that connects operators to backend cloud services for real-time monitoring and energy analytics. To prevent orphaned network tasks and ensure system stability upon termination, the core entry point (\texttt{app.py}) securely binds to \textbf{OS-level signals}, such as \texttt{SIGINT} (\textit{CTRL+C}) and window manager events. 
+
+It ensures stability by handling OS signals and performing a graceful shutdown, stopping polling loops, closing the GUI, and terminating WebSocket threads. 
+
+\subsection{State Routing}
+To maintain a highly responsive interface without GUI freezing, the system decouples network I/O from the main rendering thread. It spawns a dedicated background daemon thread running an \texttt{asyncio} event loop that maintains a persistent, \textbf{full-duplex Web Socket} connection to the backend. Incoming JSON telemetry and status updates are buffered into a thread-safe queue. The primary Tkinter loop continuously polls this queue, parses the payloads, and utilizes an intelligent routing mechanism to distribute the data to the correct screen module based on the message's defined type.
+
+\subsection{Printer Management Dashboard}
+The primary operational view (\texttt{Printers.py}) dynamically generates a responsive grid of interactive cards representing the physical 3D Printer nodes. To provide immediate situational awareness, the module applies dynamic color-filtering overlays to the printer icons, visually distinguishing their current operational states (green for \textit{ONLINE}, red for \textit{OFFLINE}, yellow for \textit{PRINTING}). Operators can interact with these nodes through modal dialogs, which display detailed node metadata and provide the control interfaces necessary to query the backend for available STL models and dispatch them to the edge devices. 
+
+\subsection{Analytical Reporting Modules}
+Historical telemetry and operational metrics are encapsulated within three distinct reporting modules (\texttt{DailyReport.py}, \texttt{WeeklyReport.py}, and \texttt{MonthlyReport.py}).
+\begin{itemize}
+	\item \textbf{Data Request and Conversion:} These modules actively push commands to the backend to request aggregated datasets and autonomously perform unit conversions upon receipt, translating raw energy measurements from Joules into kilowatt-hours (kWh) for human readability;
+	\item \textbf{Visualization:} Metrics are rendered using high-level summary cards and categorized into scrollable tabular formats utilizing ttk.Treeview widgets, separating successfully utilized energy from energy wasted during failed prints;
+	\item \textbf{Temporal Formatting:} To guarantee structural consistency in data visualization, the weekly report implements a zero-padding algorithm that populates missing operational days with baseline metrics. Conversely, the monthly module aggregates the incoming monthly arrays to calculate and display ongoing Year-To-Date (YTD) performance totals. 
+\end{itemize}

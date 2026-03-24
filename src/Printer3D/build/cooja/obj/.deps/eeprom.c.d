@@ -1,5 +1,6 @@
-build/cooja/obj/eeprom.o: ../../../../arch/platform/cooja/dev/eeprom.c \
- ../../../../os/net/app-layer/coap/module-macros.h \
- ../../../../os/dev/eeprom.h
-../../../../os/net/app-layer/coap/module-macros.h:
-../../../../os/dev/eeprom.h:
+build/cooja/obj/eeprom.o: \
+ /home/user/contiki-ng/arch/platform/cooja/dev/eeprom.c \
+ /home/user/contiki-ng/os/net/app-layer/coap/module-macros.h \
+ /home/user/contiki-ng/os/dev/eeprom.h
+/home/user/contiki-ng/os/net/app-layer/coap/module-macros.h:
+/home/user/contiki-ng/os/dev/eeprom.h:

@@ -19,7 +19,7 @@
 #include <stdbool.h>
 
 /* Project Utility */
-#include "utility/sensors.h"
+#include "utility/printer_sensors.h"
 #include "utility/scaler_params.h"
 #include "utility/device_conf.h" 
 #include "utility/coap_module.h"

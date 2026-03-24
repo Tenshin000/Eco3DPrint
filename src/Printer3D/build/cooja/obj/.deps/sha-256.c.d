@@ -1,48 +1,58 @@
-build/cooja/obj/sha-256.o: ../../../../os/lib/sha-256.c \
- ../../../../os/net/app-layer/coap/module-macros.h \
- ../../../../os/lib/sha-256.h ../../../../os/contiki.h \
- ../../../../arch/platform/cooja/./contiki-conf.h project-conf.h \
- ../../../../os/contiki-default-conf.h ../../../../os/sys/process.h \
- ../../../../os/sys/pt.h ../../../../os/sys/lc.h \
- ../../../../os/sys/lc-switch.h ../../../../os/sys/cc.h \
- ../../../../os/sys/autostart.h ../../../../os/sys/process.h \
- ../../../../os/sys/timer.h ../../../../os/sys/clock.h \
- ../../../../os/sys/ctimer.h ../../../../os/sys/etimer.h \
- ../../../../os/sys/etimer.h ../../../../os/sys/rtimer.h \
- ../../../../os/dev/watchdog.h \
- ../../../../arch/platform/cooja/./rtimer-arch.h \
- ../../../../arch/platform/cooja/./lib/simEnvChange.h \
- ../../../../arch/platform/cooja/./sys/cooja_mt.h ../../../../os/sys/pt.h \
- ../../../../os/sys/clock.h ../../../../os/net/ipv6/uip.h \
- ../../../../os/net/ipv6/uipopt.h ../../../../os/net/ipv6/uipbuf.h \
- ../../../../os/net/linkaddr.h ../../../../os/net/ipv6/tcpip.h
-../../../../os/net/app-layer/coap/module-macros.h:
-../../../../os/lib/sha-256.h:
-../../../../os/contiki.h:
-../../../../arch/platform/cooja/./contiki-conf.h:
+build/cooja/obj/sha-256.o: /home/user/contiki-ng/os/lib/sha-256.c \
+ /home/user/contiki-ng/os/net/app-layer/coap/module-macros.h \
+ /home/user/contiki-ng/os/lib/sha-256.h \
+ /home/user/contiki-ng/os/contiki.h \
+ /home/user/contiki-ng/arch/platform/cooja/./contiki-conf.h \
+ project-conf.h /home/user/contiki-ng/os/contiki-default-conf.h \
+ /home/user/contiki-ng/os/sys/process.h /home/user/contiki-ng/os/sys/pt.h \
+ /home/user/contiki-ng/os/sys/lc.h \
+ /home/user/contiki-ng/os/sys/lc-switch.h \
+ /home/user/contiki-ng/os/sys/cc.h \
+ /home/user/contiki-ng/os/sys/autostart.h \
+ /home/user/contiki-ng/os/sys/process.h \
+ /home/user/contiki-ng/os/sys/timer.h \
+ /home/user/contiki-ng/os/sys/clock.h \
+ /home/user/contiki-ng/os/sys/ctimer.h \
+ /home/user/contiki-ng/os/sys/etimer.h \
+ /home/user/contiki-ng/os/sys/etimer.h \
+ /home/user/contiki-ng/os/sys/rtimer.h \
+ /home/user/contiki-ng/os/dev/watchdog.h \
+ /home/user/contiki-ng/arch/platform/cooja/./rtimer-arch.h \
+ /home/user/contiki-ng/arch/platform/cooja/./lib/simEnvChange.h \
+ /home/user/contiki-ng/arch/platform/cooja/./sys/cooja_mt.h \
+ /home/user/contiki-ng/os/sys/pt.h /home/user/contiki-ng/os/sys/clock.h \
+ /home/user/contiki-ng/os/net/ipv6/uip.h \
+ /home/user/contiki-ng/os/net/ipv6/uipopt.h \
+ /home/user/contiki-ng/os/net/ipv6/uipbuf.h \
+ /home/user/contiki-ng/os/net/linkaddr.h \
+ /home/user/contiki-ng/os/net/ipv6/tcpip.h
+/home/user/contiki-ng/os/net/app-layer/coap/module-macros.h:
+/home/user/contiki-ng/os/lib/sha-256.h:
+/home/user/contiki-ng/os/contiki.h:
+/home/user/contiki-ng/arch/platform/cooja/./contiki-conf.h:
 project-conf.h:
-../../../../os/contiki-default-conf.h:
-../../../../os/sys/process.h:
-../../../../os/sys/pt.h:
-../../../../os/sys/lc.h:
-../../../../os/sys/lc-switch.h:
-../../../../os/sys/cc.h:
-../../../../os/sys/autostart.h:
-../../../../os/sys/process.h:
-../../../../os/sys/timer.h:
-../../../../os/sys/clock.h:
-../../../../os/sys/ctimer.h:
-../../../../os/sys/etimer.h:
-../../../../os/sys/etimer.h:
-../../../../os/sys/rtimer.h:
-../../../../os/dev/watchdog.h:
-../../../../arch/platform/cooja/./rtimer-arch.h:
-../../../../arch/platform/cooja/./lib/simEnvChange.h:
-../../../../arch/platform/cooja/./sys/cooja_mt.h:
-../../../../os/sys/pt.h:
-../../../../os/sys/clock.h:
-../../../../os/net/ipv6/uip.h:
-../../../../os/net/ipv6/uipopt.h:
-../../../../os/net/ipv6/uipbuf.h:
-../../../../os/net/linkaddr.h:
-../../../../os/net/ipv6/tcpip.h:
+/home/user/contiki-ng/os/contiki-default-conf.h:
+/home/user/contiki-ng/os/sys/process.h:
+/home/user/contiki-ng/os/sys/pt.h:
+/home/user/contiki-ng/os/sys/lc.h:
+/home/user/contiki-ng/os/sys/lc-switch.h:
+/home/user/contiki-ng/os/sys/cc.h:
+/home/user/contiki-ng/os/sys/autostart.h:
+/home/user/contiki-ng/os/sys/process.h:
+/home/user/contiki-ng/os/sys/timer.h:
+/home/user/contiki-ng/os/sys/clock.h:
+/home/user/contiki-ng/os/sys/ctimer.h:
+/home/user/contiki-ng/os/sys/etimer.h:
+/home/user/contiki-ng/os/sys/etimer.h:
+/home/user/contiki-ng/os/sys/rtimer.h:
+/home/user/contiki-ng/os/dev/watchdog.h:
+/home/user/contiki-ng/arch/platform/cooja/./rtimer-arch.h:
+/home/user/contiki-ng/arch/platform/cooja/./lib/simEnvChange.h:
+/home/user/contiki-ng/arch/platform/cooja/./sys/cooja_mt.h:
+/home/user/contiki-ng/os/sys/pt.h:
+/home/user/contiki-ng/os/sys/clock.h:
+/home/user/contiki-ng/os/net/ipv6/uip.h:
+/home/user/contiki-ng/os/net/ipv6/uipopt.h:
+/home/user/contiki-ng/os/net/ipv6/uipbuf.h:
+/home/user/contiki-ng/os/net/linkaddr.h:
+/home/user/contiki-ng/os/net/ipv6/tcpip.h:

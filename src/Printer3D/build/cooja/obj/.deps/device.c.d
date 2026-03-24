@@ -1,142 +1,160 @@
 build/cooja/obj/device.o: device.c \
- ../../../../os/net/app-layer/coap/module-macros.h \
- ../../../../os/contiki.h \
- ../../../../arch/platform/cooja/./contiki-conf.h project-conf.h \
- ../../../../os/contiki-default-conf.h ../../../../os/sys/process.h \
- ../../../../os/sys/pt.h ../../../../os/sys/lc.h \
- ../../../../os/sys/lc-switch.h ../../../../os/sys/cc.h \
- ../../../../os/sys/autostart.h ../../../../os/sys/process.h \
- ../../../../os/sys/timer.h ../../../../os/sys/clock.h \
- ../../../../os/sys/ctimer.h ../../../../os/sys/etimer.h \
- ../../../../os/sys/etimer.h ../../../../os/sys/rtimer.h \
- ../../../../os/dev/watchdog.h \
- ../../../../arch/platform/cooja/./rtimer-arch.h \
- ../../../../arch/platform/cooja/./lib/simEnvChange.h \
- ../../../../arch/platform/cooja/./sys/cooja_mt.h ../../../../os/sys/pt.h \
- ../../../../os/sys/clock.h ../../../../os/sys/log.h \
- ../../../../os/net/linkaddr.h ../../../../os/sys/log-conf.h \
- ../../../../os/net/ipv6/uip.h ../../../../os/net/ipv6/uipopt.h \
- ../../../../os/net/ipv6/uipbuf.h ../../../../os/net/ipv6/tcpip.h \
- ../../../../os/sys/node-id.h ../../../../os/dev/button-hal.h \
- ../../../../os/dev/gpio-hal.h \
- ../../../../arch/platform/cooja/./dev/gpio-hal-arch.h \
- ../../../../os/sys/ctimer.h ../../../../os/dev/leds.h \
- ../../../../os/dev/serial-line.h ../../../../os/net/ipv6/uip-ds6.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6-engines.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6-route.h \
- ../../../../os/net/ipv6/multicast/smrf.h \
- ../../../../os/net/ipv6/multicast/esmrf.h \
- ../../../../os/net/ipv6/multicast/roll-tm.h \
- ../../../../os/net/ipv6/multicast/uip-mcast6-stats.h \
- ../../../../os/net/ipv6/multicast/mpl.h ../../../../os/sys/stimer.h \
- ../../../../os/net/ipv6/uip-nd6.h ../../../../os/net/ipv6/uip-ds6-nbr.h \
- ../../../../os/net/nbr-table.h ../../../../os/net/netstack.h \
- ../../../../os/net/mac/mac.h ../../../../os/dev/radio.h \
- ../../../../os/net/mac/framer/framer.h \
- ../../../../os/net/ipv6/uip-packetqueue.h \
- ../../../../os/net/ipv6/uip-ds6-route.h ../../../../os/lib/list.h \
- ../../../../os/net/ipv6/uiplib.h utility/sensors.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/module-macros.h \
+ /home/user/contiki-ng/os/contiki.h \
+ /home/user/contiki-ng/arch/platform/cooja/./contiki-conf.h \
+ project-conf.h /home/user/contiki-ng/os/contiki-default-conf.h \
+ /home/user/contiki-ng/os/sys/process.h /home/user/contiki-ng/os/sys/pt.h \
+ /home/user/contiki-ng/os/sys/lc.h \
+ /home/user/contiki-ng/os/sys/lc-switch.h \
+ /home/user/contiki-ng/os/sys/cc.h \
+ /home/user/contiki-ng/os/sys/autostart.h \
+ /home/user/contiki-ng/os/sys/process.h \
+ /home/user/contiki-ng/os/sys/timer.h \
+ /home/user/contiki-ng/os/sys/clock.h \
+ /home/user/contiki-ng/os/sys/ctimer.h \
+ /home/user/contiki-ng/os/sys/etimer.h \
+ /home/user/contiki-ng/os/sys/etimer.h \
+ /home/user/contiki-ng/os/sys/rtimer.h \
+ /home/user/contiki-ng/os/dev/watchdog.h \
+ /home/user/contiki-ng/arch/platform/cooja/./rtimer-arch.h \
+ /home/user/contiki-ng/arch/platform/cooja/./lib/simEnvChange.h \
+ /home/user/contiki-ng/arch/platform/cooja/./sys/cooja_mt.h \
+ /home/user/contiki-ng/os/sys/pt.h /home/user/contiki-ng/os/sys/clock.h \
+ /home/user/contiki-ng/os/sys/log.h \
+ /home/user/contiki-ng/os/net/linkaddr.h \
+ /home/user/contiki-ng/os/sys/log-conf.h \
+ /home/user/contiki-ng/os/net/ipv6/uip.h \
+ /home/user/contiki-ng/os/net/ipv6/uipopt.h \
+ /home/user/contiki-ng/os/net/ipv6/uipbuf.h \
+ /home/user/contiki-ng/os/net/ipv6/tcpip.h \
+ /home/user/contiki-ng/os/sys/node-id.h \
+ /home/user/contiki-ng/os/dev/button-hal.h \
+ /home/user/contiki-ng/os/dev/gpio-hal.h \
+ /home/user/contiki-ng/arch/platform/cooja/./dev/gpio-hal-arch.h \
+ /home/user/contiki-ng/os/sys/ctimer.h \
+ /home/user/contiki-ng/os/dev/leds.h \
+ /home/user/contiki-ng/os/dev/serial-line.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-ds6.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-engines.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-route.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/smrf.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/esmrf.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/roll-tm.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-stats.h \
+ /home/user/contiki-ng/os/net/ipv6/multicast/mpl.h \
+ /home/user/contiki-ng/os/sys/stimer.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-nd6.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-ds6-nbr.h \
+ /home/user/contiki-ng/os/net/nbr-table.h \
+ /home/user/contiki-ng/os/net/netstack.h \
+ /home/user/contiki-ng/os/net/mac/mac.h \
+ /home/user/contiki-ng/os/dev/radio.h \
+ /home/user/contiki-ng/os/net/mac/framer/framer.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-packetqueue.h \
+ /home/user/contiki-ng/os/net/ipv6/uip-ds6-route.h \
+ /home/user/contiki-ng/os/lib/list.h \
+ /home/user/contiki-ng/os/net/ipv6/uiplib.h utility/printer_sensors.h \
  utility/scaler_params.h utility/device_conf.h utility/coap_module.h \
- ../../../../os/net/app-layer/coap/coap-engine.h \
- ../../../../os/net/app-layer/coap/coap.h \
- ../../../../os/net/app-layer/coap/coap-constants.h \
- ../../../../os/net/app-layer/coap/coap-conf.h \
- ../../../../os/net/app-layer/coap/coap-transport.h \
- ../../../../os/net/app-layer/coap/coap-endpoint.h \
- ../../../../os/net/app-layer/coap/coap-timer.h \
- ../../../../os/net/app-layer/coap/coap-transactions.h \
- ../../../../os/net/app-layer/coap/coap-engine.h \
- ../../../../os/net/app-layer/coap/coap-observe.h \
- ../../../../os/net/app-layer/coap/coap-separate.h \
- ../../../../os/net/app-layer/coap/coap-observe-client.h \
- ../../../../os/net/app-layer/coap/coap-blocking-api.h \
- ../../../../os/net/app-layer/coap/coap-request-state.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-engine.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-constants.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-conf.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-transport.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-endpoint.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-timer.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-transactions.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-engine.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-observe.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-separate.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-observe-client.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-blocking-api.h \
+ /home/user/contiki-ng/os/net/app-layer/coap/coap-request-state.h \
  utility/mqtt_module.h utility/print_prediction.h \
- /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_net.h \
- /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_common.h \
- /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_log.h \
- /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_net_common.h
-../../../../os/net/app-layer/coap/module-macros.h:
-../../../../os/contiki.h:
-../../../../arch/platform/cooja/./contiki-conf.h:
+ /usr/local/lib/python3.10/dist-packages/emlearn/eml_net.h \
+ /usr/local/lib/python3.10/dist-packages/emlearn/eml_common.h \
+ /usr/local/lib/python3.10/dist-packages/emlearn/eml_log.h \
+ /usr/local/lib/python3.10/dist-packages/emlearn/eml_net_common.h
+/home/user/contiki-ng/os/net/app-layer/coap/module-macros.h:
+/home/user/contiki-ng/os/contiki.h:
+/home/user/contiki-ng/arch/platform/cooja/./contiki-conf.h:
 project-conf.h:
-../../../../os/contiki-default-conf.h:
-../../../../os/sys/process.h:
-../../../../os/sys/pt.h:
-../../../../os/sys/lc.h:
-../../../../os/sys/lc-switch.h:
-../../../../os/sys/cc.h:
-../../../../os/sys/autostart.h:
-../../../../os/sys/process.h:
-../../../../os/sys/timer.h:
-../../../../os/sys/clock.h:
-../../../../os/sys/ctimer.h:
-../../../../os/sys/etimer.h:
-../../../../os/sys/etimer.h:
-../../../../os/sys/rtimer.h:
-../../../../os/dev/watchdog.h:
-../../../../arch/platform/cooja/./rtimer-arch.h:
-../../../../arch/platform/cooja/./lib/simEnvChange.h:
-../../../../arch/platform/cooja/./sys/cooja_mt.h:
-../../../../os/sys/pt.h:
-../../../../os/sys/clock.h:
-../../../../os/sys/log.h:
-../../../../os/net/linkaddr.h:
-../../../../os/sys/log-conf.h:
-../../../../os/net/ipv6/uip.h:
-../../../../os/net/ipv6/uipopt.h:
-../../../../os/net/ipv6/uipbuf.h:
-../../../../os/net/ipv6/tcpip.h:
-../../../../os/sys/node-id.h:
-../../../../os/dev/button-hal.h:
-../../../../os/dev/gpio-hal.h:
-../../../../arch/platform/cooja/./dev/gpio-hal-arch.h:
-../../../../os/sys/ctimer.h:
-../../../../os/dev/leds.h:
-../../../../os/dev/serial-line.h:
-../../../../os/net/ipv6/uip-ds6.h:
-../../../../os/net/ipv6/multicast/uip-mcast6.h:
-../../../../os/net/ipv6/multicast/uip-mcast6-engines.h:
-../../../../os/net/ipv6/multicast/uip-mcast6-route.h:
-../../../../os/net/ipv6/multicast/smrf.h:
-../../../../os/net/ipv6/multicast/esmrf.h:
-../../../../os/net/ipv6/multicast/roll-tm.h:
-../../../../os/net/ipv6/multicast/uip-mcast6-stats.h:
-../../../../os/net/ipv6/multicast/mpl.h:
-../../../../os/sys/stimer.h:
-../../../../os/net/ipv6/uip-nd6.h:
-../../../../os/net/ipv6/uip-ds6-nbr.h:
-../../../../os/net/nbr-table.h:
-../../../../os/net/netstack.h:
-../../../../os/net/mac/mac.h:
-../../../../os/dev/radio.h:
-../../../../os/net/mac/framer/framer.h:
-../../../../os/net/ipv6/uip-packetqueue.h:
-../../../../os/net/ipv6/uip-ds6-route.h:
-../../../../os/lib/list.h:
-../../../../os/net/ipv6/uiplib.h:
-utility/sensors.h:
+/home/user/contiki-ng/os/contiki-default-conf.h:
+/home/user/contiki-ng/os/sys/process.h:
+/home/user/contiki-ng/os/sys/pt.h:
+/home/user/contiki-ng/os/sys/lc.h:
+/home/user/contiki-ng/os/sys/lc-switch.h:
+/home/user/contiki-ng/os/sys/cc.h:
+/home/user/contiki-ng/os/sys/autostart.h:
+/home/user/contiki-ng/os/sys/process.h:
+/home/user/contiki-ng/os/sys/timer.h:
+/home/user/contiki-ng/os/sys/clock.h:
+/home/user/contiki-ng/os/sys/ctimer.h:
+/home/user/contiki-ng/os/sys/etimer.h:
+/home/user/contiki-ng/os/sys/etimer.h:
+/home/user/contiki-ng/os/sys/rtimer.h:
+/home/user/contiki-ng/os/dev/watchdog.h:
+/home/user/contiki-ng/arch/platform/cooja/./rtimer-arch.h:
+/home/user/contiki-ng/arch/platform/cooja/./lib/simEnvChange.h:
+/home/user/contiki-ng/arch/platform/cooja/./sys/cooja_mt.h:
+/home/user/contiki-ng/os/sys/pt.h:
+/home/user/contiki-ng/os/sys/clock.h:
+/home/user/contiki-ng/os/sys/log.h:
+/home/user/contiki-ng/os/net/linkaddr.h:
+/home/user/contiki-ng/os/sys/log-conf.h:
+/home/user/contiki-ng/os/net/ipv6/uip.h:
+/home/user/contiki-ng/os/net/ipv6/uipopt.h:
+/home/user/contiki-ng/os/net/ipv6/uipbuf.h:
+/home/user/contiki-ng/os/net/ipv6/tcpip.h:
+/home/user/contiki-ng/os/sys/node-id.h:
+/home/user/contiki-ng/os/dev/button-hal.h:
+/home/user/contiki-ng/os/dev/gpio-hal.h:
+/home/user/contiki-ng/arch/platform/cooja/./dev/gpio-hal-arch.h:
+/home/user/contiki-ng/os/sys/ctimer.h:
+/home/user/contiki-ng/os/dev/leds.h:
+/home/user/contiki-ng/os/dev/serial-line.h:
+/home/user/contiki-ng/os/net/ipv6/uip-ds6.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-engines.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-route.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/smrf.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/esmrf.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/roll-tm.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/uip-mcast6-stats.h:
+/home/user/contiki-ng/os/net/ipv6/multicast/mpl.h:
+/home/user/contiki-ng/os/sys/stimer.h:
+/home/user/contiki-ng/os/net/ipv6/uip-nd6.h:
+/home/user/contiki-ng/os/net/ipv6/uip-ds6-nbr.h:
+/home/user/contiki-ng/os/net/nbr-table.h:
+/home/user/contiki-ng/os/net/netstack.h:
+/home/user/contiki-ng/os/net/mac/mac.h:
+/home/user/contiki-ng/os/dev/radio.h:
+/home/user/contiki-ng/os/net/mac/framer/framer.h:
+/home/user/contiki-ng/os/net/ipv6/uip-packetqueue.h:
+/home/user/contiki-ng/os/net/ipv6/uip-ds6-route.h:
+/home/user/contiki-ng/os/lib/list.h:
+/home/user/contiki-ng/os/net/ipv6/uiplib.h:
+utility/printer_sensors.h:
 utility/scaler_params.h:
 utility/device_conf.h:
 utility/coap_module.h:
-../../../../os/net/app-layer/coap/coap-engine.h:
-../../../../os/net/app-layer/coap/coap.h:
-../../../../os/net/app-layer/coap/coap-constants.h:
-../../../../os/net/app-layer/coap/coap-conf.h:
-../../../../os/net/app-layer/coap/coap-transport.h:
-../../../../os/net/app-layer/coap/coap-endpoint.h:
-../../../../os/net/app-layer/coap/coap-timer.h:
-../../../../os/net/app-layer/coap/coap-transactions.h:
-../../../../os/net/app-layer/coap/coap-engine.h:
-../../../../os/net/app-layer/coap/coap-observe.h:
-../../../../os/net/app-layer/coap/coap-separate.h:
-../../../../os/net/app-layer/coap/coap-observe-client.h:
-../../../../os/net/app-layer/coap/coap-blocking-api.h:
-../../../../os/net/app-layer/coap/coap-request-state.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-engine.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-constants.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-conf.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-transport.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-endpoint.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-timer.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-transactions.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-engine.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-observe.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-separate.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-observe-client.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-blocking-api.h:
+/home/user/contiki-ng/os/net/app-layer/coap/coap-request-state.h:
 utility/mqtt_module.h:
 utility/print_prediction.h:
-/home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_net.h:
-/home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_common.h:
-/home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_log.h:
-/home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_net_common.h:
+/usr/local/lib/python3.10/dist-packages/emlearn/eml_net.h:
+/usr/local/lib/python3.10/dist-packages/emlearn/eml_common.h:
+/usr/local/lib/python3.10/dist-packages/emlearn/eml_log.h:
+/usr/local/lib/python3.10/dist-packages/emlearn/eml_net_common.h:

@@ -1,32 +1,38 @@
+# Define the main project
 CONTIKI_PROJECT = device
 all: $(CONTIKI_PROJECT)
 upload: $(CONTIKI_PROJECT).dfu-upload
 
-CONTIKI=../../../..
+# Set Contiki-NG base directory
+CONTIKI = /home/user/contiki-ng
 
-MODULES += os/net/app-layer/coap
-
-# Add external source files (relative to project dir)
-PROJECT_SOURCEFILES += utility/coap_module.c
-PROJECT_SOURCEFILES += utility/mqtt_module.c
-PROJECT_SOURCEFILES += utility/sensors.c
-
+# Include basic directory variables
 include $(CONTIKI)/Makefile.dir-variables
 
-# Include CoAP/MQTT modules from contiki-ng dirs (remove if not needed)
+# Define custom project directories
+PROJECTDIRS += utility
+
+# Add external source files
+# IMPORTANT: Renamed to printer_sensors.c to avoid conflicts with Contiki-NG core files
+PROJECT_SOURCEFILES += coap_module.c
+PROJECT_SOURCEFILES += mqtt_module.c
+PROJECT_SOURCEFILES += printer_sensors.c
+
+# Include required Contiki-NG system modules
 MODULES += $(CONTIKI_NG_APP_LAYER_DIR)/mqtt
 MODULES += $(CONTIKI_NG_APP_LAYER_DIR)/coap
 MODULES += os/lib/json
+MODULES += os/dev
 
-
-# For ML Model
-MODULES_REL += /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn
-INC += /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn
+# Configure include paths for Machine Learning Model (emlearn)
+CFLAGS += -I/usr/local/lib/python3.10/dist-packages/emlearn
 CFLAGS += -Wno-error=unused-variable
 
+# Identify target platform
 include $(CONTIKI)/Makefile.identify-target
 
-MODULES_REL += arch/platform/$(TARGET)
+# Link the standard math library needed for specific formulas
+TARGET_LIBFILES += -lm
 
-TARGET_LIBFILES = -lm
+# Include standard compilation rules
 include $(CONTIKI)/Makefile.include
