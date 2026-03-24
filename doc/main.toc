@@ -22,20 +22,20 @@
 \contentsline {subsection}{\numberline {3.4.5}Data Encoding}{11}{subsection.3.4.5}%
 \contentsline {chapter}{\numberline {4}Implementation}{12}{chapter.4}%
 \contentsline {section}{\numberline {4.1}Printer Node}{12}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Machine Learning Model}{14}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Backend Cloud Application}{15}{section.4.3}%
-\contentsline {subsection}{\numberline {4.3.1}Core Executable}{15}{subsection.4.3.1}%
-\contentsline {subsection}{\numberline {4.3.2}Database Structure}{15}{subsection.4.3.2}%
-\contentsline {subsection}{\numberline {4.3.3}Data Persistence and Connection Pooling}{16}{subsection.4.3.3}%
-\contentsline {subsection}{\numberline {4.3.4}CoAP Control Plane}{16}{subsection.4.3.4}%
-\contentsline {subsection}{\numberline {4.3.5}MQTT Telemetry Plane}{16}{subsection.4.3.5}%
-\contentsline {subsection}{\numberline {4.3.6}Node Monitoring}{16}{subsection.4.3.6}%
+\contentsline {section}{\numberline {4.2}Machine Learning Model}{15}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Backend Cloud Application}{16}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Core Executable}{16}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Database Structure}{16}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Data Persistence and Connection Pooling}{17}{subsection.4.3.3}%
+\contentsline {subsection}{\numberline {4.3.4}CoAP Control Plane}{17}{subsection.4.3.4}%
+\contentsline {subsection}{\numberline {4.3.5}MQTT Telemetry Plane}{17}{subsection.4.3.5}%
+\contentsline {subsection}{\numberline {4.3.6}Node Monitoring}{17}{subsection.4.3.6}%
 \contentsline {subsection}{\numberline {4.3.7}Job Orchestration and Binary Transfer}{17}{subsection.4.3.7}%
 \contentsline {subsection}{\numberline {4.3.8}User Interface Bridging}{17}{subsection.4.3.8}%
-\contentsline {section}{\numberline {4.4}Frontend User Application}{17}{section.4.4}%
-\contentsline {subsection}{\numberline {4.4.1}GUI}{17}{subsection.4.4.1}%
-\contentsline {subsection}{\numberline {4.4.2}State Routing}{17}{subsection.4.4.2}%
-\contentsline {subsection}{\numberline {4.4.3}Printer Management Dashboard}{17}{subsection.4.4.3}%
+\contentsline {section}{\numberline {4.4}Frontend User Application}{18}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}GUI}{18}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}State Routing}{18}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Printer Management Dashboard}{18}{subsection.4.4.3}%
 \contentsline {subsection}{\numberline {4.4.4}Analytical Reporting Modules}{18}{subsection.4.4.4}%
 \contentsline {chapter}{\numberline {5}Use Case}{19}{chapter.5}%
 \contentsline {section}{\numberline {5.1}Overall Objective}{19}{section.5.1}%

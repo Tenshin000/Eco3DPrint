@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.10.9)  24 MAR 2026 15:24
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.10.9)  24 MAR 2026 16:39
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -695,7 +695,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.37 ...4.4.2}State Routing}{17}{subsection.4.4.2}
+l.37 ...4.4.2}State Routing}{18}{subsection.4.4.2}
                                                   % [1
 
 
@@ -850,7 +850,7 @@ File: img/Correct_State_Diagram_IoT_Device.png Graphic file (type png)
 <use img/Correct_State_Diagram_IoT_Device.png>
 Package pdftex.def Info: img/Correct_State_Diagram_IoT_Device.png  used on inpu
 t line 16.
-(pdftex.def)             Requested size: 352.31625pt x 200.51576pt.
+(pdftex.def)             Requested size: 361.71336pt x 205.86069pt.
 
 
 [12
@@ -861,49 +861,57 @@ File: img/Actual_State_Diagram_IoT_Device.png Graphic file (type png)
 <use img/Actual_State_Diagram_IoT_Device.png>
 Package pdftex.def Info: img/Actual_State_Diagram_IoT_Device.png  used on input
  line 26.
-(pdftex.def)             Requested size: 352.31625pt x 147.26106pt.
+(pdftex.def)             Requested size: 422.77664pt x 176.70775pt.
 
 
 [13 <./img/Actual_State_Diagram_IoT_Device.png>]
-Overfull \hbox (31.32916pt too wide) in paragraph at lines 51--52
+<img/led.png, id=336, 494.84875pt x 351.3125pt>
+File: img/led.png Graphic file (type png)
+<use img/led.png>
+Package pdftex.def Info: img/led.png  used on input line 45.
+(pdftex.def)             Requested size: 375.80544pt x 266.79655pt.
+
+Overfull \hbox (31.32916pt too wide) in paragraph at lines 53--54
 []\OT1/cmtt/m/n/10.95 sensors.c\OT1/cmr/m/n/10.95 : Sim-u-lates hard-ware data 
 col-lec-tion (for ex-am-ple: ADXL345, PZEM-004T, ZMPT101B),
  []
 
 
-Overfull \hbox (4.54794pt too wide) in paragraph at lines 51--52
+Overfull \hbox (4.54794pt too wide) in paragraph at lines 53--54
 \OT1/cmr/m/n/10.95 uti-liz-ing Gaus-sian dis-tri-bu-tions to gen-er-ate re-al-i
 s-tic op-er-a-tional data and error-state anoma-lies; 
  []
 
 
-Overfull \hbox (4.10805pt too wide) in paragraph at lines 54--55
+Overfull \hbox (4.10805pt too wide) in paragraph at lines 56--57
 []\OT1/cmtt/m/n/10.95 print[]-prediction.h\OT1/cmr/m/n/10.95 : Con-tains the co
 m-piled struc-tural ar-rays of the neu-ral net-work, in-clud-ing
  []
 
 
-Overfull \hbox (3.95895pt too wide) in paragraph at lines 59--61
+
+[14 <./img/led.png>]
+Overfull \hbox (3.95895pt too wide) in paragraph at lines 63--65
 \OT1/cmr/m/n/10.95 The \OT1/cmr/bx/n/10.95 Ma-chine Learn-ing model \OT1/cmr/m/
 n/10.95 for the IoT de-vice orig-i-nates from the \OT1/cmr/bx/n/10.95 Joanna-3D
 -Printing-Data
  []
 
 
-Overfull \hbox (9.91989pt too wide) in paragraph at lines 66--67
+Overfull \hbox (9.91989pt too wide) in paragraph at lines 70--71
 \OT1/cmr/m/n/10.95 note-book also em-ploys \OT1/cmtt/m/n/10.95 compute[]-class[
 ]-weight \OT1/cmr/m/n/10.95 to han-dle class im-bal-ances be-tween the suc-cess
 -ful
  []
 
 
-Overfull \hbox (4.56213pt too wide) in paragraph at lines 69--70
+Overfull \hbox (4.56213pt too wide) in paragraph at lines 73--74
 \OT1/cmr/m/n/10.95 ar-chi-tec-ture in-cor-po-rates reg-u-lar-iz-ers to pre-vent
  over-fit-ting and uti-lizes call-backs like \OT1/cmtt/m/n/10.95 EarlyStopping
  []
 
 
-Overfull \hbox (13.80865pt too wide) in paragraph at lines 69--70
+Overfull \hbox (13.80865pt too wide) in paragraph at lines 73--74
 \OT1/cmr/m/n/10.95 and \OT1/cmtt/m/n/10.95 ReduceLROnPlateau \OT1/cmr/m/n/10.95
  to dy-nam-i-cally op-ti-mize the learn-ing rate and halt train-ing when per-fo
 r-mance
@@ -911,52 +919,45 @@ r-mance
 
 
 
-[14]
-Overfull \hbox (6.17453pt too wide) in paragraph at lines 77--78
+[15]
+Overfull \hbox (6.17453pt too wide) in paragraph at lines 83--84
 \OT1/cmr/m/n/10.95 ex-e-cutable (\OT1/cmtt/m/n/10.95 server.py\OT1/cmr/m/n/10.9
 5 ) acts as the en-try point, spawn-ing ded-i-cated threads for each ma-jor sub
 -sys-tem
  []
 
 
-Overfull \hbox (66.71527pt too wide) in paragraph at lines 118--135
- [][] 
- []
 
-
-
-[15]
-Overfull \hbox (3.2121pt too wide) in paragraph at lines 144--145
+[16]
+Overfull \hbox (3.2121pt too wide) in paragraph at lines 154--155
 \OT1/cmr/m/n/10.95 Server (\OT1/cmtt/m/n/10.95 CoAPServer.py\OT1/cmr/m/n/10.95 
 ). The server ex-poses sev-eral dis-tinct re-source end-points. The \OT1/cmr/bx
 /n/10.95 /reg-is-tra-tion
  []
 
 
-Overfull \hbox (11.92159pt too wide) in paragraph at lines 144--145
+Overfull \hbox (11.92159pt too wide) in paragraph at lines 154--155
 \OT1/cmr/m/n/10.95 their meta-data. The \OT1/cmr/bx/n/10.95 /sig-nal/off \OT1/c
 mr/m/n/10.95 end-point (\OT1/cmtt/m/n/10.95 OFFSignal.py\OT1/cmr/m/n/10.95 ) re
 -ceives hard-ware in-ter-rupts, im-me-di-ately
  []
 
 
-Overfull \hbox (59.48534pt too wide) in paragraph at lines 144--145
+Overfull \hbox (59.48534pt too wide) in paragraph at lines 154--155
 \OT1/cmr/m/n/10.95 up-dat-ing the sys-tem to re-flect a dis-con-nected state. F
 i-nally, the \OT1/cmr/bx/n/10.95 /print-/fin-ished \OT1/cmr/m/n/10.95 end-point
  (\OT1/cmtt/m/n/10.95 PrintFinished.py\OT1/cmr/m/n/10.95 )
  []
 
 
-Overfull \hbox (9.27664pt too wide) in paragraph at lines 150--151
+Overfull \hbox (9.27664pt too wide) in paragraph at lines 160--161
 \OT1/cmr/m/n/10.95 To main-tain a real-time ledger of net-work health, an au-to
 nomous watch-dog mod-ule (\OT1/cmtt/m/n/10.95 NodeMonitor.py\OT1/cmr/m/n/10.95 
 )
  []
 
 
-
-[16]
-Overfull \hbox (53.47086pt too wide) in paragraph at lines 153--154
+Overfull \hbox (53.47086pt too wide) in paragraph at lines 163--164
 \OT1/cmr/m/n/10.95 The queue-ing and dis-patch-ing of 3D mod-els is con-trolled
  by the print or-ches-tra-tion mod-ule (\OT1/cmtt/m/n/10.95 PrintManager.py\OT1
 /cmr/m/n/10.95 ).
@@ -965,13 +966,13 @@ Overfull \hbox (53.47086pt too wide) in paragraph at lines 153--154
 
 
 [17]
-Overfull \hbox (4.98898pt too wide) in paragraph at lines 171--172
+Overfull \hbox (4.98898pt too wide) in paragraph at lines 183--184
 \OT1/cmr/m/n/10.95 Historical teleme-try and op-er-a-tional met-rics are en-cap
 -su-lated within three dis-tinct re-port-ing mod-ules
  []
 
 
-Overfull \hbox (4.07649pt too wide) in paragraph at lines 174--175
+Overfull \hbox (4.07649pt too wide) in paragraph at lines 186--187
 \OT1/cmr/m/n/10.95 scrol-lable tab-u-lar for-mats uti-liz-ing ttk.Treeview wid-
 gets, sep-a-rat-ing suc-cess-fully uti-lized en-ergy
  []
@@ -991,12 +992,12 @@ ate, color-coded sit-u-a-tional aware-ness re-gard-ing
 [19
 
 ]
-<img/Screenshot_1.png, id=368, 1927.2pt x 1084.05pt>
+<img/Screenshot_1.png, id=374, 1927.2pt x 1084.05pt>
 File: img/Screenshot_1.png Graphic file (type png)
 <use img/Screenshot_1.png>
 Package pdftex.def Info: img/Screenshot_1.png  used on input line 17.
 (pdftex.def)             Requested size: 317.08606pt x 178.34775pt.
-<img/Screenshot_2.png, id=369, 1927.2pt x 1084.05pt>
+<img/Screenshot_2.png, id=375, 1927.2pt x 1084.05pt>
 File: img/Screenshot_2.png Graphic file (type png)
 <use img/Screenshot_2.png>
 Package pdftex.def Info: img/Screenshot_2.png  used on input line 24.
@@ -1004,17 +1005,17 @@ Package pdftex.def Info: img/Screenshot_2.png  used on input line 24.
 
 
 [20 <./img/Screenshot_1.png> <./img/Screenshot_2.png>]
-<img/Screenshot_3.png, id=378, 1927.2pt x 1084.05pt>
+<img/Screenshot_3.png, id=384, 1927.2pt x 1084.05pt>
 File: img/Screenshot_3.png Graphic file (type png)
 <use img/Screenshot_3.png>
 Package pdftex.def Info: img/Screenshot_3.png  used on input line 33.
 (pdftex.def)             Requested size: 317.08606pt x 178.34775pt.
-<img/Screenshot_4.png, id=379, 1927.2pt x 1084.05pt>
+<img/Screenshot_4.png, id=385, 1927.2pt x 1084.05pt>
 File: img/Screenshot_4.png Graphic file (type png)
 <use img/Screenshot_4.png>
 Package pdftex.def Info: img/Screenshot_4.png  used on input line 40.
 (pdftex.def)             Requested size: 317.08606pt x 178.34775pt.
-<img/Screenshot_5.png, id=380, 1927.2pt x 1084.05pt>
+<img/Screenshot_5.png, id=386, 1927.2pt x 1084.05pt>
 File: img/Screenshot_5.png Graphic file (type png)
 <use img/Screenshot_5.png>
 Package pdftex.def Info: img/Screenshot_5.png  used on input line 47.
@@ -1022,17 +1023,17 @@ Package pdftex.def Info: img/Screenshot_5.png  used on input line 47.
 
 
 [21 <./img/Screenshot_3.png> <./img/Screenshot_4.png> <./img/Screenshot_5.png>]
-<img/Screenshot_6.png, id=391, 1927.2pt x 1084.05pt>
+<img/Screenshot_6.png, id=397, 1927.2pt x 1084.05pt>
 File: img/Screenshot_6.png Graphic file (type png)
 <use img/Screenshot_6.png>
 Package pdftex.def Info: img/Screenshot_6.png  used on input line 56.
 (pdftex.def)             Requested size: 317.08606pt x 178.34775pt.
-<img/Screenshot_7.png, id=392, 1927.2pt x 1084.05pt>
+<img/Screenshot_7.png, id=398, 1927.2pt x 1084.05pt>
 File: img/Screenshot_7.png Graphic file (type png)
 <use img/Screenshot_7.png>
 Package pdftex.def Info: img/Screenshot_7.png  used on input line 63.
 (pdftex.def)             Requested size: 317.08606pt x 178.34775pt.
-<img/Screenshot_8.png, id=393, 1927.2pt x 1084.05pt>
+<img/Screenshot_8.png, id=399, 1927.2pt x 1084.05pt>
 File: img/Screenshot_8.png Graphic file (type png)
 <use img/Screenshot_8.png>
 Package pdftex.def Info: img/Screenshot_8.png  used on input line 70.
@@ -1040,17 +1041,17 @@ Package pdftex.def Info: img/Screenshot_8.png  used on input line 70.
 
 
 [22 <./img/Screenshot_6.png> <./img/Screenshot_7.png> <./img/Screenshot_8.png>]
-<img/Screenshot_9.png, id=404, 1927.2pt x 1084.05pt>
+<img/Screenshot_9.png, id=410, 1927.2pt x 1084.05pt>
 File: img/Screenshot_9.png Graphic file (type png)
 <use img/Screenshot_9.png>
 Package pdftex.def Info: img/Screenshot_9.png  used on input line 79.
 (pdftex.def)             Requested size: 317.08606pt x 178.34775pt.
-<img/Screenshot_10.png, id=405, 1927.2pt x 1084.05pt>
+<img/Screenshot_10.png, id=411, 1927.2pt x 1084.05pt>
 File: img/Screenshot_10.png Graphic file (type png)
 <use img/Screenshot_10.png>
 Package pdftex.def Info: img/Screenshot_10.png  used on input line 86.
 (pdftex.def)             Requested size: 317.08606pt x 178.34775pt.
-<img/Screenshot_11.png, id=406, 1927.2pt x 1084.05pt>
+<img/Screenshot_11.png, id=412, 1927.2pt x 1084.05pt>
 File: img/Screenshot_11.png Graphic file (type png)
 <use img/Screenshot_11.png>
 Package pdftex.def Info: img/Screenshot_11.png  used on input line 93.
@@ -1059,7 +1060,7 @@ Package pdftex.def Info: img/Screenshot_11.png  used on input line 93.
 
 [23 <./img/Screenshot_9.png> <./img/Screenshot_10.png> <./img/Screenshot_11.png
 >]
-<img/Screenshot_12.png, id=417, 1927.2pt x 1084.05pt>
+<img/Screenshot_12.png, id=423, 1927.2pt x 1084.05pt>
 File: img/Screenshot_12.png Graphic file (type png)
 <use img/Screenshot_12.png>
 Package pdftex.def Info: img/Screenshot_12.png  used on input line 102.
@@ -1111,27 +1112,30 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 952A9A1E4D2A4FA6A397B214A34DEF7D;7392.
  ) 
 Here is how much of TeX's memory you used:
- 16563 strings out of 473579
- 266899 string characters out of 5732263
- 691353 words of memory out of 5000000
- 39108 multiletter control sequences out of 15000+600000
- 566138 words of font info for 63 fonts, out of 8000000 for 9000
+ 16583 strings out of 473579
+ 267163 string characters out of 5732263
+ 692408 words of memory out of 5000000
+ 39122 multiletter control sequences out of 15000+600000
+ 567810 words of font info for 69 fonts, out of 8000000 for 9000
  1142 hyphenation exceptions out of 8191
  75i,9n,117p,1055b,591s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/tex
 live/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2024
-/texmf-dist/fonts/type1/public/amsfonts/cm/cmbxti10.pfb><c:/texlive/2024/texmf-
-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2024/texmf-dist/font
-s/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/pu
-blic/amsfonts/cm/cmr12.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfo
-nts/cm/cmsl10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cm
-sy10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
-<c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb><c:/texli
-ve/2024/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb>
-Output written on main.pdf (28 pages, 4438366 bytes).
+/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb><c:/texlive/2024/texmf-dis
+t/fonts/type1/public/amsfonts/cm/cmbxti10.pfb><c:/texlive/2024/texmf-dist/fonts
+/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmr10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr12.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr
+9.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsl10.pfb><c:
+/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/
+2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb><c:/texlive/2024/texmf
+-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb><c:/texlive/2024/texmf-dist/fon
+ts/type1/public/amsfonts/cm/cmtt10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/
+public/cm-super/sfrm1095.pfb>
+Output written on main.pdf (28 pages, 4485512 bytes).
 PDF statistics:
- 520 PDF objects out of 1000 (max. 8388607)
- 430 compressed objects within 5 object streams
- 104 named destinations out of 1000 (max. 500000)
- 462 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 538 PDF objects out of 1000 (max. 8388607)
+ 440 compressed objects within 5 object streams
+ 105 named destinations out of 1000 (max. 500000)
+ 467 words of extra memory for PDF output out of 10000 (max. 10000000)
 

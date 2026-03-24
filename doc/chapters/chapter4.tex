@@ -13,7 +13,7 @@ The \texttt{device.c} houses the main Contiki-NG process (\textit{PROCESS\_THREA
 The state machine was supposed to work like this:
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.75\textwidth]{img/Correct_State_Diagram_IoT_Device.png}
+	\includegraphics[width=0.77\textwidth]{img/Correct_State_Diagram_IoT_Device.png}
 	\caption{How the State Machine was supposed to work}
 	\label{fig:Correct-State-Machine}
 \end{figure}
@@ -23,7 +23,7 @@ The state machine was supposed to work like this:
 For the purposes of this project, we don't care if the 3D Printer can take prints locally, so the state machine works like this:
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.75\textwidth]{img/Actual_State_Diagram_IoT_Device.png}
+	\includegraphics[width=0.9\textwidth]{img/Actual_State_Diagram_IoT_Device.png}
 	\caption{How the State Machine actually work in this project}
 	\label{fig:Actual-State-Machine}
 \end{figure}
@@ -38,12 +38,14 @@ During active prints, the process handles data acquisition by utilizing a 1s tim
 
 Once printing is complete or interrupted by the ML model, the operator can send the result by pressing the button. You can also hold it for 2–4 seconds to modify it. A completed print sends a failure, while a blocked print resumes. This design gives operators time to clean the printer and provides a simple, intuitive way to report outcomes. 
 
-
-\medspace
-
-\textit{(IMAGE FOR LED OF COOJA AND THE DONGLE)} 
-
 \newpage
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{img/led.png}
+	\caption{LED for all the states}
+	\label{fig:LED-STATE}
+\end{figure}
 
 To keep the main application loop clean, peripheral functions are isolated:
 
@@ -54,6 +56,8 @@ To keep the main application loop clean, peripheral functions are isolated:
 	\item \texttt{print\_prediction.h}: Contains the compiled structural arrays of the neural network, including layer configurations, weights, and biases;
 	\item \texttt{scaler\_params.h}: Stores the pre-calculated scaler means and scaling factors required to standardize live sensor inputs before inference.
 \end{itemize}
+
+\newpage
 
 \section{Machine Learning Model}
 The \textbf{Machine Learning model} for the IoT device originates from the \textbf{Joanna-3D-Printing-Data dataset} \cite{joanna}. Time Series were extracted from the dataset results by splitting the data in the same results file into multiple Time Series if there were at least two minutes between measurements. These were then divided into correct (successful) and erroneous (failure) Time Series. 
@@ -72,6 +76,8 @@ To build the predictive models, the notebook evaluates traditional ensemble meth
 
 The best model among all Random Forests, Extra Trees and the Deep Neural Networks turns out to be one of the latter: \textbf{the Deep Neural Network with 1-second step}. This final model achieves high predictive Accuracy ($\approx 85\%$) for fault detection. However, the test set was used more as a validation set as indicated in the professor's Notebooks even if it is not technically the correct practice. 
 
+\newpage
+
 \section{Backend Cloud Application}
 \subsection{Core Executable}
 The cloud processing layer of the system is implemented as a modular, multi-threaded Python architecture that bridges the device and connectivity levels with the user interface. The core executable (\texttt{server.py}) acts as the entry point, spawning dedicated threads for each major subsystem to ensure non-blocking operations. A centralized graceful shutdown mechanism binds to \textit{OS-level signals} (\texttt{SIGINT}) to safely terminate network event loops, disconnect database pools, and update physical node states to \texttt{OFFLINE} before exiting.
@@ -81,6 +87,7 @@ The system stores data in a relational MySQL database, \texttt{Eco3DPrintDB}, or
 
 \begin{table}[H]
 	\centering
+	\footnotesize
 	\caption{Node table}
 	\begin{tabular}{lll}
 		\toprule
@@ -97,6 +104,7 @@ The system stores data in a relational MySQL database, \texttt{Eco3DPrintDB}, or
 
 \begin{table}[H]
 	\centering
+	\footnotesize
 	\caption{Print table}
 	\begin{tabular}{lll}
 		\toprule
@@ -114,6 +122,7 @@ The system stores data in a relational MySQL database, \texttt{Eco3DPrintDB}, or
 
 \begin{table}[H]
 	\centering
+	\footnotesize
 	\caption{Measurement table}
 	\begin{tabular}{lll}
 		\toprule
@@ -135,6 +144,7 @@ The system stores data in a relational MySQL database, \texttt{Eco3DPrintDB}, or
 \end{table}
 
 \noindent
+
 The \texttt{Node} table stores printer metadata and status. The \texttt{Print} table logs each print job and links it to its source node. The \texttt{Measurement} table records telemetry samples for each print job using a composite primary key \texttt{(timestamp, print\_id, ip)}.
 
 \subsection{Data Persistence and Connection Pooling}
@@ -153,7 +163,9 @@ To maintain a real-time ledger of network health, an autonomous watchdog module 
 The queueing and dispatching of 3D models is controlled by the print orchestration module (\texttt{PrintManager.py}). When a node becomes available, this component retrieves the next pending job. To overcome the memory and transmission constraints of the edge devices, it utilizes \textbf{CoAP block-wise transfer} to partition large binary \textbf{STL files} into sequential chunks, ensuring reliable, acknowledged delivery without overloading the target node's memory buffers. 
 
 \subsection{User Interface Bridging}
-To extend the cloud processing layer to the user interface, an asynchronous full-duplex connection is maintained via a dedicated module (\texttt{Socket.py}). Running on its own asyncio event loop, this server pushes live node status updates directly to the connected frontend dashboard. It simultaneously processes complex analytical requests from the UI, executing database queries to aggregate and return daily, weekly, and monthly energy consumption reports.  
+An asynchronous full-duplex connection, handled by a dedicated module (\texttt{Socket.py}), links the cloud layer to the UI. Running on its own asyncio loop, it streams live node updates to the dashboard and processes analytical requests, returning aggregated daily, weekly, and monthly energy reports. 
+
+\newpage  
 
 \section{Frontend User Application}
 \subsection{GUI}
