@@ -7,6 +7,30 @@
 
 *Project by Francesco Panattoni*
 
+## Initial Recommendation
+The ***main*** branch contains a containerized setup that allows the project to be run locally. The ***cooja*** branch, instead, includes the version of the project designed to run on the Virtual Machine provided during the Internet of Things course.
+
+*If you are not enrolled in the course or prefer to run the project in a containerized environment, refer to the main branch. Otherwise, if you are a student at the University of Pisa looking for reference material or inspiration, the cooja branch may be useful.*
+
+## Prerequisites
+Prerequisites (Windows):
+- wsl (Windows Subsystem for Linux)
+- Docker
+- Visual Studio Code
+- vcxsrv (XLaunch)
+
+Prerequisites (Linux):
+- Docker
+- Visual Studio Code
+- Change in ./.devcontainer/devcontainer.json
+```bash
+"initializeCommand": "wsl -d Ubuntu bash -c 'xhost +local:docker'",
+```
+with:
+```bash
+"initializeCommand": "xhost +local:docker",
+```
+
 ## Introduction
 The advent of **3D Printing** has revolutionized manufacturing, prototyping, and personal fabrication by allowing digital models to be transformed into physical objects layer by layer. However, the additive **manufacturing process is inherently susceptible to physical anomalies**. A slight deviation in temperature, extrusion rate, or mechanical calibration can lead to catastrophic print failures. When a printer operates unmonitored for extended periods, these undetected failures result in a significant waste of filament materials, excessive energy consumption, and lost time.
 
