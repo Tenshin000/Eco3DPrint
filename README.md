@@ -75,14 +75,14 @@ The IoT Network consists of a variable number of Printer nodes connected to the 
 #### Backend
 The **Cloud Application backend** is built on a multi-threaded Python architecture, and it bridges the resource-constrained IoT network with the graphical User Application (the frontend). The backend is strictly **modular**, separating network communication, business logic, and data persistence into dedicated functional components.
 - **Database Access Layer:** Manages persistent data storage in a MySQL database, utilizing Connection Pooling to safely handle concurrent, thread-safe read and write operations;
-- **CoAP Server:** Runs over UDP/IPv6 to handle low-frequency control events, including node registration, end-of-print notifications, and shutdown signals. It is implemented using **CoAPthon** ;
-- **MQTT Handler:** Runs as a background subscriber to continuously ingest high-frequency JSON telemetry (vibration and voltage data) during active prints, mapping the data directly to the database. It is implemented using **Paho** ;
+- **CoAP Server:** Runs over UDP/IPv6 to handle low-frequency control events, including node registration, end-of-print notifications, and shutdown signals. It is implemented using **CoAPthon** [3](#ref3);
+- **MQTT Handler:** Runs as a background subscriber to continuously ingest high-frequency JSON telemetry (vibration and voltage data) during active prints, mapping the data directly to the database. It is implemented using **Paho** [4](#ref4);
 - **Node Monitor:** Maintains real-time fleet health by concurrently pinging active nodes via CoAP /health requests every 60 seconds. It utilizes an Observer pattern to instantly broadcast state changes (*OFFLINE*, *ONLINE*, *PRINTING*) across the system;
 - **Print Manager:** Orchestrates the print job queue and handles the reliable transmission of 3D models. It utilizes CoAP Block-wise transfer to partition and sequentially send large binary STL files to available nodes;
 - **WebSocket Manager:** It pushes live node status updates to the User App’s dashboard and processes complex analytical requests to generate daily, weekly, and monthly energy reports.
 
 #### Frontend
-The **Frontend Application** (**User App**) is a desktop-based graphical interface built using the Python **tkinter framework** . A background daemon thread runs an asyncio event loop for a persistent, non-blocking WebSocket. Messages move through a thread-safe queue to the main GUI, which polls and routes them to the appropriate screen based on their type:
+The **Frontend Application** (**User App**) is a desktop-based graphical interface built using the Python **tkinter framework** [5](#ref5). A background daemon thread runs an asyncio event loop for a persistent, non-blocking WebSocket. Messages move through a thread-safe queue to the main GUI, which polls and routes them to the appropriate screen based on their type:
 - **3D Printers Dashboard:** Displays a responsive grid of interactive cards for real-time fleet management. It dynamically applies color filters to printer icons to reflect current operational states (*OFFLINE*, *ONLINE*, *PRINTING*) and includes modal dialogs for viewing node details and queueing STL files;
 - **Daily Report:** Visualizes the current day’s energy metrics, automatically converting raw Joules to kWh. It features high-level global summary cards and scrollable tables (ttk.Treeview) that break down well-used versus wasted energy by individual printer and STL file;
 - **Weekly Report:** Aggregates telemetry over the week. It implements a zero-padded data structure to ensure consistent daily rendering and utilizes multiple centered tables to highlight energy consumption trends throughout the week;
@@ -117,7 +117,7 @@ A **physical button** is used for manual overrides, system resets, and confirmin
 At the same time, **LEDs** provide essential visual feedback through color coding, yellow for initialization, green for online status, and red for failure, allowing an on-site operator to quickly assess device status without a display.
 
 #### Data Encoding
-**JSON** (JavaScript Object Notation), structured via the **SenML** (Sensor Measurement Lists ) data model, is the optimal encoding choice because its minimalist key-value structure drastically reduces packet overhead compared to the verbose tagging required by XML. This standardized approach facilitates a seamless data pipeline between the C-based firmware and the Python backend without the heavy memory or CPU requirements of an XML DOM parser.
+**JSON** (JavaScript Object Notation), structured via the **SenML** (Sensor Measurement Lists [6](#ref6)) data model, is the optimal encoding choice because its minimalist key-value structure drastically reduces packet overhead compared to the verbose tagging required by XML. This standardized approach facilitates a seamless data pipeline between the C-based firmware and the Python backend without the heavy memory or CPU requirements of an XML DOM parser.
 
 For the transmission of STL models, the system implements **CoAP Block-wise transfer** to overcome hardware link limitations by partitioning binary data into sequential 64-byte chunks. This mechanism ensures reliable delivery through application-layer acknowledgments and prevents RAM exhaustion on the constrained nRF52840 nodes by processing only one fragment at a time.
 
@@ -163,7 +163,7 @@ To keep the main application loop clean, peripheral functions are isolated:
 - `scaler_params.h`: Stores the pre-calculated scaler means and scaling factors required to standardize live sensor inputs before inference.
 
 ### Machine Learning Model
-The **Machine Learning model** for the IoT device originates from the **Joanna-3D-Printing-Data dataset** . Time Series were extracted from the dataset results by splitting the data in the same results file into multiple Time Series if there were at least two minutes between measurements. These were then divided into correct (successful) and erroneous (failure) Time Series.
+The **Machine Learning model** for the IoT device originates from the **Joanna-3D-Printing-Data dataset** [7](#ref7). Time Series were extracted from the dataset results by splitting the data in the same results file into multiple Time Series if there were at least two minutes between measurements. These were then divided into correct (successful) and erroneous (failure) Time Series.
 
 Following the data extraction, the Python Notebook `ML_Model.ipynb` documents the Machine Learning pipeline:
 - **Extrapolated Data:** The notebook loads 6 correct Time Series and 10 error Time Series, exploring statistical properties (such as mean, standard deviation, minimum, maximum and peak-to-peak) for features like the X, Y, and Z axes for both the plate and extrusion, alongside tension measurements. It calculates the global average sampling interval to confirm the  ≈ 5*m**s* frequency (approximately 196Hz);
