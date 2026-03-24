@@ -1,5 +1,11 @@
 # Eco3DPrint
-Project for the exam of Internet of Things at the University of Pisa for the Master's Degree in Artificial Intelligence and Data Engineering. 
+*Internet of Things, a.y. 2025/2026*
+
+*Univeristy of Pisa,*
+*Department of Information Engineering,*
+*m.sc. Artificial Intelligence and Data Engineering*
+
+*Project by Francesco Panattoni*
 
 ## Introduction
 The advent of **3D Printing** has revolutionized manufacturing, prototyping, and personal fabrication by allowing digital models to be transformed into physical objects layer by layer. However, the additive **manufacturing process is inherently susceptible to physical anomalies**. A slight deviation in temperature, extrusion rate, or mechanical calibration can lead to catastrophic print failures. When a printer operates unmonitored for extended periods, these undetected failures result in a significant waste of filament materials, excessive energy consumption, and lost time.
