@@ -12,6 +12,44 @@ The ***cooja*** branch contains the version of the project designed to run on th
 
 *If you are a student at the University of Pisa looking for reference material or inspiration, the cooja branch may be useful. Otherwise, if you are not enrolled in the course or prefer to run the project in a containerized environment, refer to the main branch.*
 
+## Installation
+Put the Eco3DPrint folder project in /home/"user"/contiki-ng/examples (for the students of Unipi /home/iot_ubuntu_intel/contiki-ng/examples). Then open the terminal and type:
+```bash
+./setup.sh -setup
+```
+
+To make the LED work correctly on Cooja go to *contiki-ng/arch/platform/cooja/contiki-conf.h* and on the bottom modify this:
+```bash
+/* Virtual LED colors */
+
+#define LEDS_CONF_COUNT                  3
+
+#define LEDS_CONF_GREEN                  1
+
+#define LEDS_CONF_RED                    2
+
+#define LEDS_CONF_YELLOW                 4
+```
+into this:
+```bash
+/* Virtual LED colors */
+
+#define LEDS_CONF_COUNT                  3
+
+#define LEDS_CONF_GREEN                  0
+
+#define LEDS_CONF_RED                    1
+
+#define LEDS_CONF_YELLOW                 2
+```
+
+To start the Application open the terminal in the project folder and type:
+```bash
+./setup.sh -sim
+```
+It will open Cooja on a new terminal. Load the *cooja/Cooja-Simulation.csc*. It should open correctly. 
+Then return on the *main terminal* (where you previously typed "*./setup.sh -sim*") and type any key to start the Border Router. Then return to the *main terminal* and type any key to start the Mosquitto Server. Lastly return to the *main terminal* and type any key to start the Cloud Application Server and User App. 
+
 ## Introduction
 The advent of **3D Printing** has revolutionized manufacturing, prototyping, and personal fabrication by allowing digital models to be transformed into physical objects layer by layer. However, the additive **manufacturing process is inherently susceptible to physical anomalies**. A slight deviation in temperature, extrusion rate, or mechanical calibration can lead to catastrophic print failures. When a printer operates unmonitored for extended periods, these undetected failures result in a significant waste of filament materials, excessive energy consumption, and lost time.
 
