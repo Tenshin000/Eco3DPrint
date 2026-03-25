@@ -1,0 +1,13 @@
+
+src/CloudApp/backend/__pycache__/*
+
+src/CloudApp/frontend/__pycache__/*
+
+src/CloudApp/utility/__pycache__/*
+
+src/Printer3D/build/cooja/mtype*.cooja
+
+src/Gateway/build/cooja/mtype*.cooja
+
+mio_token.txt
+
