@@ -1,7 +1,7 @@
 \chapter{Introduction}
 The advent of \textbf{3D Printing} has revolutionized manufacturing, prototyping, and personal fabrication by allowing digital models to be transformed into physical objects layer by layer. However, the additive \textbf{manufacturing process is inherently susceptible to physical anomalies}. A slight deviation in temperature, extrusion rate, or mechanical calibration can lead to catastrophic print failures. When a printer operates unmonitored for extended periods, these undetected failures result in a significant waste of filament materials, excessive energy consumption, and lost time.
 
-To mitigate this inefficiency, we must look toward modern networking paradigms. The \textbf{Internet of Things} (IoT) represents the evolution of the network that extends connectivity to physical objects of daily life. By transforming standalone, "dumb" 3D printers into smart, interconnected assets, we can actively monitor their health and intervene dynamically before resources are wasted.
+To mitigate this inefficiencies, we must look toward modern networking paradigms. The \textbf{Internet of Things} (IoT) represents the evolution of the network that extends connectivity to physical objects of daily life. By transforming standalone, "dumb" 3D printers into smart, interconnected assets, we can actively monitor their health and intervene dynamically before resources are wasted.
 
 \medspace
 
@@ -17,4 +17,4 @@ From a technical standpoint, deploying \textbf{constrained embedded devices} at 
 
 Using constrained devices enables cost-effective retrofitting, allowing existing 3D printers without built-in monitoring to be integrated into an IoT ecosystem through inexpensive embedded dongles, avoiding costly hardware replacement. It also improves network efficiency by processing high-frequency telemetry locally thereby reducing bandwidth usage while relying on lightweight protocols such as \textit{CoAP} and \textit{MQTT} instead of heavier alternatives like \textit{HTTP}.
 
-Finally, constrained devices support net-positive energy savings. Since they consume far less power than traditional computing systems, they ensure that the energy required for monitoring does not outweigh the savings gained from preventing failed prints, maintaining both economic and environmental viability. 
+Finally, constrained devices support net-positive energy savings. Since they consume far less power than traditional computing systems, they ensure that the energy required for monitoring does not outweigh the savings gained from preventing failed prints, maintaining both economic and environmental viability. We use .STL files instead of .gcode or .pws, as they are more readily available online and generally smaller to transfer. Although this bypasses the initial slicing step, it does not affect simulation and requires minimal code adaptation.  
