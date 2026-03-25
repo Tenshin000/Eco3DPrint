@@ -1,5 +1,5 @@
-build/cooja/obj/resources/sensors.o: resources/sensors.c \
- ../../../../os/net/app-layer/coap/module-macros.h resources/sensors.h \
+build/cooja/obj/utility/sensors.o: utility/sensors.c \
+ ../../../../os/net/app-layer/coap/module-macros.h utility/sensors.h \
  ../../../../os/contiki.h \
  ../../../../arch/platform/cooja/./contiki-conf.h project-conf.h \
  ../../../../os/contiki-default-conf.h ../../../../os/sys/process.h \
@@ -19,7 +19,7 @@ build/cooja/obj/resources/sensors.o: resources/sensors.c \
  ../../../../os/net/ipv6/uipopt.h ../../../../os/net/ipv6/uipbuf.h \
  ../../../../os/net/ipv6/tcpip.h
 ../../../../os/net/app-layer/coap/module-macros.h:
-resources/sensors.h:
+utility/sensors.h:
 ../../../../os/contiki.h:
 ../../../../arch/platform/cooja/./contiki-conf.h:
 project-conf.h:

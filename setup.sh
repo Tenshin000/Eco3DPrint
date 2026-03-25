@@ -111,7 +111,7 @@ create_db() {
 install_dependencies(){
     echo "Installing Tkinter..."
     sudo apt update
-    sudo apt install -y python3-tk
+    sudo apt install -y python3-tk python3-pil.imagetk
 
     if [ -f "requirements.txt" ]; then
         echo "Installing Python dependencies from requirements.txt..."
@@ -166,11 +166,11 @@ build_border_router(){
 }
 
 start_server(){
-    gnome-terminal -- bash -c 'cd ./'${SRC_DIR}'/CloudApp; python server.py; exec bash'
+    gnome-terminal -- bash -c 'cd ./'${SRC_DIR}'/CloudApp; python3 server.py; exec bash'
 }
 
 start_app(){
-    gnome-terminal -- bash -c 'cd ./'${SRC_DIR}'/CloudApp; python app.py; exec bash'
+    gnome-terminal -- bash -c 'cd ./'${SRC_DIR}'/CloudApp; python3 app.py; exec bash'
 }
 
 start_mosquitto(){
