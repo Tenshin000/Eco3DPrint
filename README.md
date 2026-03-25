@@ -43,12 +43,22 @@ into this:
 #define LEDS_CONF_YELLOW                 2
 ```
 
-To start the Application open the terminal in the project folder and type:
-```bash
-./setup.sh -sim
-```
-It will open Cooja on a new terminal. Load the *cooja/Cooja-Simulation.csc*. It should open correctly. 
-Then return on the *main terminal* (where you previously typed "*./setup.sh -sim*") and type any key to start the Border Router. Then return to the *main terminal* and type any key to start the Mosquitto Server. Lastly return to the *main terminal* and type any key to start the Cloud Application Server and User App. 
+## Starting the Application
+To start the Application:
+- Open a terminal in the project folder and run:
+  ```bash
+  ./setup.sh -sim
+  ```
+- A new terminal will open with Cooja. In Cooja:
+  - Load the file `cooja/Cooja-Simulation.csc`
+  - Verify that the simulation opens correctly
+- Return to the **main terminal** (where you ran `./setup.sh -sim`) and:
+  - Press any key to start the Border Router
+- Return again to the **main terminal** and:
+  - Press any key to start the Mosquitto Server
+- Finally, return to the **main terminal** and:
+  - Press any key to start the Cloud Application Server and User App
+- Remember to click the button on all the motes to put start the initialization. 
 
 ## Introduction
 The advent of **3D Printing** has revolutionized manufacturing, prototyping, and personal fabrication by allowing digital models to be transformed into physical objects layer by layer. However, the additive **manufacturing process is inherently susceptible to physical anomalies**. A slight deviation in temperature, extrusion rate, or mechanical calibration can lead to catastrophic print failures. When a printer operates unmonitored for extended periods, these undetected failures result in a significant waste of filament materials, excessive energy consumption, and lost time.
