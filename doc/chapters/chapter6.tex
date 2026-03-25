@@ -1,0 +1,19 @@
+\chapter{Conclusion}
+\section{Ending the Report}
+In conclusion, the \textbf{\textit{\underline{Eco3DPrint}}} architecture successfully realizes a comprehensive Industrial Internet of Things (IIoT) ecosystem by seamlessly integrating the four essential functional layers of modern connected systems. Starting at the edge, constrained physical devices and sensors autonomously collect high-frequency environmental data and execute local Machine Learning inferences to proactively detect mechanical anomalies. This edge intelligence is linked via robust connectivity protocols, utilizing CoAP for lightweight control and MQTT for continuous telemetryl, ensuring reliable data transmission even under network constraints. 
+
+\medspace
+
+At the higher levels, the multi-threaded cloud processing layer efficiently orchestrates concurrent data streams, persistent storage, and fleet management. Finally, the asynchronous user interface transforms raw telemetry into actionable, real-time analytics and energy consumption reports. By bridging predictive maintenance with granular energy tracking, this system provides a highly scalable, responsive, and resource-efficient solution for remote 3D Printer fleet management. 
+
+\section{Improvements for Future Works}
+Several improvements can be introduced to enhance the system's usage:
+\begin{itemize}
+	\item \textbf{Advanced Diagnostic AI:} The current neural network performs binary classification, identifying only normal operation versus failure. Future versions could enable multi-class classification by training on specific failure signatures (e.g., layer shifting, bed detachment, nozzle clogs, filament runout), allowing more precise diagnostics alongside fault alerts;
+	\item \textbf{Machine Learning with Camera:} Combine the existing vibration and tension based model with another ML Model on a real-time videocamera model to detect print issues and decide when to stop, improving fault detection and saving resources; 
+	\item \textbf{End-to-End Security Implementation:} As an Industrial IoT system managing proprietary STL files and operational data, securing communications is critical. Future development should implement TLS for MQTT telemetry and DTLS for the CoAP control plane, ensuring all sensor data and file transfers are encrypted against interception and tampering;
+	\newpage
+	\item \textbf{Cloud Scalability and Time-Series Optimization:} The current Python backend and MySQL database work very well for small to medium fleets, but scaling to thousands of nodes requires architectural changes. A containerized microservices setup (Kubernetes) would enable independent scaling of components, while replacing MySQL with a time-series database like InfluxDB would improve handling of high-frequency sensor data; 
+	\item \textbf{Utilization Parameter:} Currently the Utilization parameter in the MySQL Node table is not used and has been put aside for future use;
+	\item \textbf{Improving STL Transmission:} Some STLs are very large and are not convenient to send via CoAP. In the future, a more suitable protocol will be needed for sending STLs.
+\end{itemize}

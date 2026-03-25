@@ -4,7 +4,7 @@ The code related to the IoT devices has been placed inside the subfolder \textit
 
 \medspace
 
-The physical edge node (nRF52840 Dongle) acts as an autonomous computing hub, collecting data directly from the physical environment (accelerometers and power monitors). The firmware is built on \textbf{Contiki-NG} and is modularly structured to separate core logic from network and sensor peripherals. 
+The physical edge node (nRF52840 Dongle) acts as an autonomous computing hub, collecting data directly from the physical environment (accelerometers, tension and power monitors). The firmware is built on \textbf{Contiki-NG} and is modularly structured to separate core logic from network and sensor peripherals.  
 
 \medspace
 
@@ -28,11 +28,11 @@ For the purposes of this project, we don't care if the 3D Printer can take print
 	\label{fig:Actual-State-Machine}
 \end{figure}
 
-The node starts in \texttt{STATE\_OFF} and moves to \texttt{STATE\_INITIALIZATION} after a button press, triggering a CoAP registration. If registration fails, it enters \texttt{STATE\_OFFLINE} and retries periodically until successful, then transitions to \texttt{STATE\_ONLINE}. In this state, it listens for CoAP transfers and, upon receiving a complete STL file, moves to \texttt{STATE\_PRINTING}. During printing, it performs sensor sampling, MQTT telemetry, and ML inference. It returns to \texttt{STATE\_ONLINE} when printing completes or anomalies abort the process. A long button press (\textit{5+ seconds}) from any active state forces a safe disconnect and resets the system to \texttt{STATE\_OFF}.
+The node starts in \texttt{STATE\_OFF} and moves to \texttt{STATE\_INITIALIZATION} after a button press, triggering a CoAP registration. If registration fails, it enters \texttt{STATE\_OFFLINE} and retries periodically until successful, then transitions to \texttt{STATE\_ONLINE}. In this state, it listens for CoAP transfers and, upon receiving a complete STL file, moves to \texttt{STATE\_PRINTING}. During printing, it performs sensor sampling, MQTT telemetry, and ML inference. It returns to \texttt{STATE\_ONLINE} when printing completes or anomalies abort the process. A long button press (\textbf{5+ seconds}) from any active state forces a safe disconnect and resets the system to \texttt{STATE\_OFF}.
 
 \medspace
 
-During active prints, the process handles data acquisition by utilizing a 1s timer to sample multi-axis acceleration, tension, and power, buffering these readings into a 5-sample sliding window with 1 common sample between windows. For edge AI and inference, the system extracts 35 statistical features (such as mean, standard deviation, and peak-to-peak values) from this window, normalizes the data, and executes the local neural network via the \texttt{print\_prediction\_predict()} function. If the model predicts a failure for three consecutive cycles, the node performs autonomous fault handling by instantly aborting the print process and triggering a physical RED LED warning that requires a manual reset. Concurrently, valid real-time measurements are fed into a telemetry pipeline, where they are serialized into SenML-compliant JSON strings using standard snprintf functions and continuously published to the backend over MQTT. 
+During active prints, the process handles data acquisition by utilizing a 1-second timer to sample multi-axis acceleration, tension, and power, \textbf{buffering these readings into a 5-sample sliding window with 1 common sample between windows}. For edge AI and inference, the system extracts 35 statistical features (mean, standard deviation, minimun, maximum, and peak-to-peak values) from this window, normalizes the data, and executes the local neural network via the \texttt{print\_prediction\_predict()} function. If the model predicts a failure for three consecutive cycles, the node performs autonomous fault handling by instantly aborting the print process and triggering a physical RED LED warning that requires a manual reset. Concurrently, valid real-time measurements are fed into a telemetry pipeline, where they are serialized into SenML-compliant JSON strings using standard \texttt{snprintf} functions and continuously published to the backend over MQTT. 
 
 \medspace
 
@@ -60,6 +60,10 @@ To keep the main application loop clean, peripheral functions are isolated:
 \newpage
 
 \section{Machine Learning Model}
+The code related to the Machine Learning has been placed inside the subfolder \textit{Eco3DPrint/ml}.
+
+\medspace
+
 The \textbf{Machine Learning model} for the IoT device originates from the \textbf{Joanna-3D-Printing-Data dataset} \cite{joanna}. Time Series were extracted from the dataset results by splitting the data in the same results file into multiple Time Series if there were at least two minutes between measurements. These were then divided into correct (successful) and erroneous (failure) Time Series. 
 \medspace
 
@@ -80,7 +84,7 @@ The best model among all Random Forests, Extra Trees and the Deep Neural Network
 
 \section{Backend Cloud Application}
 \subsection{Core Executable}
-The cloud processing layer of the system is implemented as a modular, multi-threaded Python architecture that bridges the device and connectivity levels with the user interface. The core executable (\texttt{server.py}) acts as the entry point, spawning dedicated threads for each major subsystem to ensure non-blocking operations. A centralized graceful shutdown mechanism binds to \textit{OS-level signals} (\texttt{SIGINT}) to safely terminate network event loops, disconnect database pools, and update physical node states to \texttt{OFFLINE} before exiting.
+The code related to the backend of the Cloud App has been placed inside the subfolder \linebreak \textit{Eco3DPrint/src/CloudApp/backend}. The core executable (\texttt{server.py}) acts as the entry point, spawning dedicated threads for each major subsystem to ensure non-blocking operations. A centralized graceful shutdown mechanism binds to \textit{OS-level signals} (\texttt{SIGINT}) to safely terminate network event loops, disconnect database pools, and update physical node states to \texttt{OFFLINE} before exiting.
 
 \subsection{Database Structure}
 The system stores data in a relational MySQL database, \texttt{Eco3DPrintDB}, organized into three tables. The schema separates device metadata, print-job records, and high-frequency telemetry while preserving referential integrity through primary and foreign keys.
@@ -145,10 +149,10 @@ The system stores data in a relational MySQL database, \texttt{Eco3DPrintDB}, or
 
 \noindent
 
-The \texttt{Node} table stores printer metadata and status. The \texttt{Print} table logs each print job and links it to its source node. The \texttt{Measurement} table records telemetry samples for each print job using a composite primary key \texttt{(timestamp, print\_id, ip)}.
+The \texttt{Node} table stores printer metadata and status (\textit{OFFLINE}, \textit{ONLINE}, \textit{PRINTING}). The \texttt{Print} table logs each print job and links it to its source node, with status that represents the outcome of the print. The \texttt{Measurement} table records telemetry samples for each print job using a composite primary key \texttt{(timestamp, print\_id, ip)}. 
 
 \subsection{Data Persistence and Connection Pooling}
-Data storage is managed by a custom Database Access Layer (\texttt{Database.py}) connected to a MySQL instance. To support the highly concurrent nature of incoming telemetry and state updates, this module implements connection pooling. This guarantees thread-safe read and write operations, preventing bottlenecks when multiple subsystems (such as the telemetry handler and the CoAP server) simultaneously attempt database transactions. 
+Data storage is handled by a custom Database Access Layer (\texttt{Database.py}) connected to MySQL. It uses connection pooling to ensure thread-safe operations and prevent bottlenecks during concurrent access by multiple subsystems.
 
 \subsection{CoAP Control Plane}
 Low-frequency control events and system state transitions are handled by an IPv6-enabled CoAP Server (\texttt{CoAPServer.py}). The server exposes several distinct resource endpoints. The \textbf{/registration} endpoint (\texttt{NodeRegistration.py}) processes initial handshakes from connecting hardware, storing their metadata. The \textbf{/signal/off} endpoint (\texttt{OFFSignal.py}) receives hardware interrupts, immediately updating the system to reflect a disconnected state. Finally, the \textbf{/print/finished} endpoint (\texttt{PrintFinished.py}) processes end-of-print notifications, logging total energy consumption and updating the job queue. 
@@ -169,12 +173,12 @@ An asynchronous full-duplex connection, handled by a dedicated module (\texttt{S
 
 \section{Frontend User Application}
 \subsection{GUI}
-The frontend is a desktop \textbf{Graphical User Interface} built with Python tkinter that connects operators to backend cloud services for real-time monitoring and energy analytics. To prevent orphaned network tasks and ensure system stability upon termination, the core entry point (\texttt{app.py}) securely binds to \textbf{OS-level signals}, such as \texttt{SIGINT} (\textit{CTRL+C}) and window manager events. 
+The code related to the frontend of the Cloud App has been placed inside the subfolder \linebreak \textit{Eco3DPrint/src/CloudApp/frontend}. The application is a desktop \textbf{Graphical User Interface} built with Python tkinter that connects operators to backend cloud services for real-time monitoring and energy analytics. To prevent orphaned network tasks and ensure system stability upon termination, the core entry point (\texttt{app.py}) securely binds to \textbf{OS-level signals}, such as \texttt{SIGINT} (\textit{CTRL+C}) and window manager events. 
 
 It ensures stability by handling OS signals and performing a graceful shutdown, stopping polling loops, closing the GUI, and terminating WebSocket threads. 
 
 \subsection{State Routing}
-To maintain a highly responsive interface without GUI freezing, the system decouples network I/O from the main rendering thread. It spawns a dedicated background daemon thread running an \texttt{asyncio} event loop that maintains a persistent, \textbf{full-duplex Web Socket} connection to the backend. Incoming JSON telemetry and status updates are buffered into a thread-safe queue. The primary Tkinter loop continuously polls this queue, parses the payloads, and utilizes an intelligent routing mechanism to distribute the data to the correct screen module based on the message's defined type.
+To maintain a highly responsive interface without GUI freezing, the system decouples network I/O from the main rendering thread. It spawns a dedicated background daemon thread running an \texttt{asyncio} event loop that maintains a persistent, \textbf{full-duplex Web Socket} connection to the backend. Incoming JSON telemetry and status updates are buffered into a thread-safe queue. The primary tkinter loop continuously polls this queue, parses the payloads, and utilizes an intelligent routing mechanism to distribute the data to the correct screen module based on the message's defined type.
 
 \subsection{Printer Management Dashboard}
 The primary operational view (\texttt{Printers.py}) dynamically generates a responsive grid of interactive cards representing the physical 3D Printer nodes. To provide immediate situational awareness, the module applies dynamic color-filtering overlays to the printer icons, visually distinguishing their current operational states (green for \textit{ONLINE}, red for \textit{OFFLINE}, yellow for \textit{PRINTING}). Operators can interact with these nodes through modal dialogs, which display detailed node metadata and provide the control interfaces necessary to query the backend for available STL models and dispatch them to the edge devices. 

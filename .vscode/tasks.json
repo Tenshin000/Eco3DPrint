@@ -1,0 +1,60 @@
+{
+    "version": "2.0.0",
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+    },
+    "tasks": [
+        {
+            "label": "Start Cooja",
+            "type": "shell",
+            "command": "cd ~/contiki-ng/tools/cooja && ./gradlew run",
+            "presentation": {
+                "group": "simulation",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Start Border Router (Cooja)",
+            "type": "shell",
+            "command": "cd ./src/Gateway && make TARGET=cooja connect-router-cooja",
+            "presentation": {
+                "group": "simulation",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Start Cloud Server",
+            "type": "shell",
+            "command": "cd ./src/CloudApp && python3 server.py",
+            "presentation": {
+                "group": "simulation",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Start Cloud App",
+            "type": "shell",
+            "command": "cd ./src/CloudApp && python3 app.py",
+            "presentation": {
+                "group": "simulation",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Launch Full Simulation Workflow",
+            "dependsOn": [
+                "Start Cooja",
+                "Start Mosquitto Broker",
+                "Start Cloud Server",
+                "Start Cloud App"
+            ],
+            "dependsOrder": "parallel",
+            "problemMatcher": []
+        }
+    ]
+}

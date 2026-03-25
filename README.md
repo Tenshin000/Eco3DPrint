@@ -109,7 +109,7 @@ To make the LED work correctly on Cooja go to *contiki-ng/arch/platform/cooja/co
 ## Introduction
 The advent of **3D Printing** has revolutionized manufacturing, prototyping, and personal fabrication by allowing digital models to be transformed into physical objects layer by layer. However, the additive **manufacturing process is inherently susceptible to physical anomalies**. A slight deviation in temperature, extrusion rate, or mechanical calibration can lead to catastrophic print failures. When a printer operates unmonitored for extended periods, these undetected failures result in a significant waste of filament materials, excessive energy consumption, and lost time.
 
-To mitigate this inefficiency, we must look toward modern networking paradigms. The **Internet of Things** (IoT) represents the evolution of the network that extends connectivity to physical objects of daily life. By transforming standalone, "dumb" 3D printers into smart, interconnected assets, we can actively monitor their health and intervene dynamically before resources are wasted.
+To mitigate this inefficiencies, we must look toward modern networking paradigms. The **Internet of Things** (IoT) represents the evolution of the network that extends connectivity to physical objects of daily life. By transforming standalone, "dumb" 3D printers into smart, interconnected assets, we can actively monitor their health and intervene dynamically before resources are wasted.
 
 This report presents ***<u>Eco3DPrint</u>***, *an intelligent monitoring application designed to safeguard the 3D printing process*. An IoT system is composed of four functional levels: devices and sensors that collect data, connectivity that allows data to travel, data processing on the cloud, and a user interface. The architecture is inspired to the "*Comprehensive Review on Internet of Things Applications in Power Systems*" [1](#ref1).
 
@@ -119,11 +119,13 @@ Upon detecting an anomaly, the system automatically halts the printing process t
 
 From a technical standpoint, deploying **constrained embedded devices** at the edge of the network is a deliberate and crucial architectural choice. While a high-powered, general-purpose computer could theoretically monitor a printer, this application aligns with the principles of the *Industrial Internet of Things (IIoT)*, where efficiency and scalability are paramount.
 
-Using constrained devices enables cost-effective retrofitting, allowing existing 3D printers without built-in monitoring to be integrated into an IoT ecosystem through inexpensive embedded dongles, avoiding costly hardware replacement. It also improves network efficiency by processing high-frequency telemetry locally thereby reducing bandwidth usage while relying on lightweight protocols such as *CoAP* and *MQTT* instead of heavier alternatives like *HTTP*.
+Using constrained devices enables cost-effective retrofitting, allowing existing 3D printers without built-in monitoring to be integrated into an IoT ecosystem through inexpensive embedded dongles, avoiding costly hardware replacement. It also improves network efficiency by processing high-frequency telemetry locally thereby reducing bandwidth usage while relying on lightweight protocols such as *CoAP* and *MQTT* instead of heavier alternatives like *HTTP*. 
+
+We use .STL files instead of .gcode or .pws, as they are more readily available online and generally smaller to transfer. Although this bypasses the initial slicing step, it does not affect simulation and requires minimal code adaptation.  
 
 ## Environment
 ### Simulation
-This project is developed as part of an academic simulation within the Internet of Things course, and is therefore designed to operate within the controlled environment and assumptions defined by the professors, which are outlined briefly below.
+This project is developed as part of an academic simulation within the Internet of Things course, and is therefore designed to operate within the controlled environment and assumptions defined by the professors, which are outlined briefly below. A Docker container has been provided to make it work even for those who do not have a virtual machine, but this does not detract from the simulation purpose.
 
 ### Contiki-NG
 **Contiki-NG** [2](#ref2) represents a sophisticated, open-source operating system explicitly architected for resource-constrained embedded devices within the Internet of Things ecosystem.
@@ -133,7 +135,7 @@ At the foundation of its architecture lies a highly modular, event-driven kernel
 ### Cooja
 **Cooja** is an advanced, Java-based open-source network simulator inherently integrated within the Contiki and Contiki-NG ecosystems, specifically engineered to emulate the intricate dynamics of IoT and wireless sensor networks. It supports cross-level simulation, allowing analysis from network topology down to operating system behavior and machine code execution. It can emulate hardware using tools like MSPSim, enabling real embedded code to run as it would on devices such as MSP430-based nodes.
 
-Cooja offers different mote types for testing: fast "Cooja motes" for high-level simulation and emulated motes for detailed hardware-level validation, including drivers and power management. With a graphical interface for visualizing networks, timelines, and serial output, it helps developers analyze radio interactions, debug protocols, and optimize systems before deploying on real hardware.
+Cooja offers different mote types for testing, but fast "Cooja motes" are used for high-level simulation and are emulated for detailed hardware-level validation, including drivers and power management. With a graphical interface for visualizing networks, timelines, and serial output, it helps developers analyze radio interactions, debug protocols, and optimize systems before deploying on real hardware.
 
 ### Tunslip
 **Tunslip** is a utility included in Contiki-NG that establishes a virtual SLIP (Serial Line Internet Protocol) link between a border router and a host computer. It is primarily used to bridge an IoT network with the host’s networking stack by creating a tunnel interface.
@@ -159,7 +161,7 @@ The *Cloud Application* serves as the central orchestration hub of the ***Eco3DP
 #### Protocol Stack
 The communication architecture implements a specialized multi-layered stack to bridge physical sensors with the cloud. At the base, **IEEE 802.15.4** provides the low-power radio foundation, while the **6LoWPAN** adaptation layer compresses headers to allow **IPv6** traffic over constrained links. Networking is maintained by **RPL** (Routing Protocol for Low-Power and Lossy Networks), which constructs dynamic routing paths to ensure data reaches the gateway even in lossy wireless environments.
 
-The application layer is split according to functional requirements. **CoAP** (Constrained Application Protocol) is used for control-plane operations, including node registration, health monitoring, and reliable block-wise transfer of **STL files**, following a lightweight request–response model. It runs over **UDP** (User Datagram Protocol), a connectionless transport protocol that minimizes overhead and latency but does not guarantee delivery or ordering. In contrast, **MQTT** (Message Queuing Telemetry Transport) provides a dedicated telemetry channel based on a publish–subscribe architecture to stream high-frequency vibration and voltage data for real-time machine learning inference. It operates over **TCP** (Transmission Control Protocol), a connection-oriented transport protocol that ensures reliable, ordered, and error-checked delivery of data streams.
+The application layer is split according to functional requirements. **CoAP** (Constrained Application Protocol) is used for control-plane operations, including node registration, health monitoring, and reliable block-wise transfer of **STL files**, following a lightweight request–response model. It runs over **UDP** (User Datagram Protocol), a connectionless transport protocol that minimizes overhead and latency but does not guarantee delivery or ordering. In contrast, **MQTT** (Message Queuing Telemetry Transport) provides a dedicated telemetry channel based on a publish–subscribe architecture to stream high-frequency vibration and voltage data for real-time Machine Learning inference. It operates over **TCP** (Transmission Control Protocol), a connection-oriented transport protocol that ensures reliable, ordered, and error-checked delivery of data streams.
 
 The system utilizes **JSON** (JavaScript Object Notation) as the primary data encoding format for control and telemetry messages. For the transmission of 3D models, the application implements a **CoAP Block-wise (Block1) transfer mechanism**.
 
@@ -222,7 +224,7 @@ A **physical button** is used for manual overrides, system resets, and confirmin
 At the same time, **LEDs** provide essential visual feedback through color coding, yellow for initialization, green for online status, and red for failure, allowing an on-site operator to quickly assess device status without a display.
 
 #### Data Encoding
-**JSON** (JavaScript Object Notation), structured via the **SenML** (Sensor Measurement Lists [6](#ref6)) data model, is the optimal encoding choice because its minimalist key-value structure drastically reduces packet overhead compared to the verbose tagging required by XML. This standardized approach facilitates a seamless data pipeline between the C-based firmware and the Python backend without the heavy memory or CPU requirements of an XML DOM parser.
+**JSON**, structured via the **SenML** (Sensor Measurement Lists [6](#ref6)) data model, is the optimal encoding choice because its minimalist key-value structure drastically reduces packet overhead compared to the verbose tagging required by XML. This standardized approach facilitates a seamless data pipeline between the C-based firmware and the Python backend without the heavy memory or CPU requirements of an XML DOM parser.
 
 For the transmission of STL models, the system implements **CoAP Block-wise transfer** to overcome hardware link limitations by partitioning binary data into sequential 64-byte chunks. This mechanism ensures reliable delivery through application-layer acknowledgments and prevents RAM exhaustion on the constrained nRF52840 nodes by processing only one fragment at a time.
 
@@ -230,7 +232,7 @@ For the transmission of STL models, the system implements **CoAP Block-wise tran
 ### Printer Node
 The code related to the IoT devices has been placed inside the subfolder *Eco3DPrint/src/Printer3D*.
 
-The physical edge node (nRF52840 Dongle) acts as an autonomous computing hub, collecting data directly from the physical environment (accelerometers and power monitors). The firmware is built on **Contiki-NG** and is modularly structured to separate core logic from network and sensor peripherals.
+The physical edge node (nRF52840 Dongle) acts as an autonomous computing hub, collecting data directly from the physical environment (accelerometers, tension and power monitors). The firmware is built on **Contiki-NG** and is modularly structured to separate core logic from network and sensor peripherals.
 
 The `device.c` houses the main Contiki-NG process (*PROCESS_THREAD*) and manages the primary control loop through a strict state machine, transitioning between `STATE_OFF`, `STATE_INITIALIZATION`, `STATE_ONLINE`, `STATE_PRINTING`, and `STATE_OFFLINE` to govern node behavior and optimize energy usage.
 
@@ -250,7 +252,7 @@ For the purposes of this project, we don’t care if the 3D Printer can take pri
 
 The node starts in `STATE_OFF` and moves to `STATE_INITIALIZATION` after a button press, triggering a CoAP registration. If registration fails, it enters `STATE_OFFLINE` and retries periodically until successful, then transitions to `STATE_ONLINE`. In this state, it listens for CoAP transfers and, upon receiving a complete STL file, moves to `STATE_PRINTING`. During printing, it performs sensor sampling, MQTT telemetry, and ML inference. It returns to `STATE_ONLINE` when printing completes or anomalies abort the process. A long button press (*5+ seconds*) from any active state forces a safe disconnect and resets the system to `STATE_OFF`.
 
-During active prints, the process handles data acquisition by utilizing a 1s timer to sample multi-axis acceleration, tension, and power, buffering these readings into a 5-sample sliding window with 1 common sample between windows. For edge AI and inference, the system extracts 35 statistical features (such as mean, standard deviation, and peak-to-peak values) from this window, normalizes the data, and executes the local neural network via the `print_prediction_predict()` function. If the model predicts a failure for three consecutive cycles, the node performs autonomous fault handling by instantly aborting the print process and triggering a physical RED LED warning that requires a manual reset. Concurrently, valid real-time measurements are fed into a telemetry pipeline, where they are serialized into SenML-compliant JSON strings using standard snprintf functions and continuously published to the backend over MQTT.
+During active prints, the process handles data acquisition by utilizing a 1-second timer to sample multi-axis acceleration, tension, and power, **buffering these readings into a 5-sample sliding window with 1 common sample between windows**. For edge AI and inference, the system extracts 35 statistical features (mean, standard deviation, minimun, maximum, and peak-to-peak values) from this window, normalizes the data, and executes the local neural network via the `print_prediction_predict()` function. If the model predicts a failure for three consecutive cycles, the node performs autonomous fault handling by instantly aborting the print process and triggering a physical RED LED warning that requires a manual reset. Concurrently, valid real-time measurements are fed into a telemetry pipeline, where they are serialized into SenML-compliant JSON strings using standard `snprintf` functions and continuously published to the backend over MQTT.
 
 Once printing is complete or interrupted by the ML model, the operator can send the result by pressing the button. You can also hold it for 2–4 seconds to modify it. A completed print sends a failure, while a blocked print resumes. This design gives operators time to clean the printer and provides a simple, intuitive way to report outcomes.
 
@@ -268,6 +270,8 @@ To keep the main application loop clean, peripheral functions are isolated:
 - `scaler_params.h`: Stores the pre-calculated scaler means and scaling factors required to standardize live sensor inputs before inference.
 
 ### Machine Learning Model
+The code related to the Machine Learning has been placed inside the subfolder *Eco3DPrint/ml*.
+
 The **Machine Learning model** for the IoT device originates from the **Joanna-3D-Printing-Data dataset** [7](#ref7). Time Series were extracted from the dataset results by splitting the data in the same results file into multiple Time Series if there were at least two minutes between measurements. These were then divided into correct (successful) and erroneous (failure) Time Series.
 
 Following the data extraction, the Python Notebook `ML_Model.ipynb` documents the Machine Learning pipeline:
@@ -281,7 +285,7 @@ The best model among all Random Forests, Extra Trees and the Deep Neural Network
 
 ### Backend Cloud Application
 #### Core Executable
-The cloud processing layer of the system is implemented as a modular, multi-threaded Python architecture that bridges the device and connectivity levels with the user interface. The core executable (`server.py`) acts as the entry point, spawning dedicated threads for each major subsystem to ensure non-blocking operations. A centralized graceful shutdown mechanism binds to *OS-level signals* (`SIGINT`) to safely terminate network event loops, disconnect database pools, and update physical node states to `OFFLINE` before exiting.
+The code related to the backend of the Cloud App has been placed inside the subfolder *Eco3DPrint/src/CloudApp/backend*. The core executable (`server.py`) acts as the entry point, spawning dedicated threads for each major subsystem to ensure non-blocking operations. A centralized graceful shutdown mechanism binds to *OS-level signals* (`SIGINT`) to safely terminate network event loops, disconnect database pools, and update physical node states to `OFFLINE` before exiting.
 
 #### Database Structure
 The system stores data in a relational MySQL database, `Eco3DPrintDB`, organized into three tables. The schema separates device metadata, print-job records, and high-frequency telemetry while preserving referential integrity through primary and foreign keys.
@@ -320,10 +324,10 @@ The system stores data in a relational MySQL database, `Eco3DPrintDB`, organized
 | Tension | DOUBLE |  |
 | Power | DOUBLE |  |
 
-The `Node` table stores printer metadata and status. The `Print` table logs each print job and links it to its source node. The `Measurement` table records telemetry samples for each print job using a composite primary key `(timestamp, print_id, ip)`.
+The `Node` table stores printer metadata and status (*OFFLINE*, *ONLINE*, *PRINTING*). The `Print` table logs each print job and links it to its source node, with status that represents the outcome of the print.. The `Measurement` table records telemetry samples for each print job using a composite primary key `(timestamp, print_id, ip)`.
 
 #### Data Persistence and Connection Pooling
-Data storage is managed by a custom Database Access Layer (`Database.py`) connected to a MySQL instance. To support the highly concurrent nature of incoming telemetry and state updates, this module implements connection pooling. This guarantees thread-safe read and write operations, preventing bottlenecks when multiple subsystems (such as the telemetry handler and the CoAP server) simultaneously attempt database transactions.
+Data storage is handled by a custom Database Access Layer (`Database.py`) connected to MySQL. It uses connection pooling to ensure thread-safe operations and prevent bottlenecks during concurrent access by multiple subsystems.
 
 #### CoAP Control Plane
 Low-frequency control events and system state transitions are handled by an IPv6-enabled CoAP Server (`CoAPServer.py`). The server exposes several distinct resource endpoints. The **/registration** endpoint (`NodeRegistration.py`) processes initial handshakes from connecting hardware, storing their metadata. The **/signal/off** endpoint (`OFFSignal.py`) receives hardware interrupts, immediately updating the system to reflect a disconnected state. Finally, the **/print/finished** endpoint (`PrintFinished.py`) processes end-of-print notifications, logging total energy consumption and updating the job queue.
@@ -342,12 +346,12 @@ An asynchronous full-duplex connection, handled by a dedicated module (`Socket.p
 
 ### Frontend User Application
 #### GUI
-The frontend is a desktop **Graphical User Interface** built with Python tkinter that connects operators to backend cloud services for real-time monitoring and energy analytics. To prevent orphaned network tasks and ensure system stability upon termination, the core entry point (`app.py`) securely binds to **OS-level signals**, such as `SIGINT` (*CTRL+C*) and window manager events.
+The code related to the frontend of the Cloud App has been placed inside the subfolder *Eco3DPrint/src/CloudApp/frontend*. The application is a desktop **Graphical User Interface** built with Python tkinter that connects operators to backend cloud services for real-time monitoring and energy analytics. To prevent orphaned network tasks and ensure system stability upon termination, the core entry point (`app.py`) securely binds to **OS-level signals**, such as `SIGINT` (*CTRL+C*) and window manager events.
 
 It ensures stability by handling OS signals and performing a graceful shutdown, stopping polling loops, closing the GUI, and terminating WebSocket threads.
 
 #### State Routing
-To maintain a highly responsive interface without GUI freezing, the system decouples network I/O from the main rendering thread. It spawns a dedicated background daemon thread running an `asyncio` event loop that maintains a persistent, **full-duplex Web Socket** connection to the backend. Incoming JSON telemetry and status updates are buffered into a thread-safe queue. The primary Tkinter loop continuously polls this queue, parses the payloads, and utilizes an intelligent routing mechanism to distribute the data to the correct screen module based on the message’s defined type.
+To maintain a highly responsive interface without GUI freezing, the system decouples network I/O from the main rendering thread. It spawns a dedicated background daemon thread running an `asyncio` event loop that maintains a persistent, **full-duplex Web Socket** connection to the backend. Incoming JSON telemetry and status updates are buffered into a thread-safe queue. The primary tkinter loop continuously polls this queue, parses the payloads, and utilizes an intelligent routing mechanism to distribute the data to the correct screen module based on the message’s defined type.
 
 #### Printer Management Dashboard
 The primary operational view (`Printers.py`) dynamically generates a responsive grid of interactive cards representing the physical 3D Printer nodes. To provide immediate situational awareness, the module applies dynamic color-filtering overlays to the printer icons, visually distinguishing their current operational states (green for *ONLINE*, red for *OFFLINE*, yellow for *PRINTING*). Operators can interact with these nodes through modal dialogs, which display detailed node metadata and provide the control interfaces necessary to query the backend for available STL models and dispatch them to the edge devices.
@@ -400,7 +404,7 @@ Managing a distributed array of additive manufacturing nodes requires a centrali
 
 <figure id="fig:Screenshot-6" data-latex-placement="H">
 <img src="doc/img/Screenshot_6.png" style="width:75%" />
-<figcaption>STL Transfered and Start Printing</figcaption>
+<figcaption>STL Transferred and Start Printing</figcaption>
 </figure>
 
 <figure id="fig:Screenshot-7" data-latex-placement="H">

@@ -5,6 +5,7 @@ RUN git clone --recurse-submodules https://github.com/contiki-ng/contiki-ng.git 
 RUN apt update && apt install -y \
     python3 \
     python3-tk \
+    python3-pil.imagetk \
     curl
 
 COPY requirements.txt /home/user/requirements.txt
