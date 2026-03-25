@@ -45,26 +45,26 @@ This are the step for the installation and to start the application:
 <figure id="fig:Instructions" data-latex-placement="H">
 <img src="doc/img/Instructions_3.png" style="width:70%" />
 </figure>
-4. Open **devcontainter/devcontainer.json** in **VS Code** and click on the two arrows at the bottom left (><) of VS Code:
+4. Open "devcontainter/devcontainer.json" in VS Code and click on the two arrows at the bottom left (><) of VS Code:
 <figure id="fig:Instructions" data-latex-placement="H">
 <img src="doc/img/Instructions_4.png" style="width:70%" />
 </figure>
-5. Click **Reopen in Container**:
+5. Click "Reopen in Container":
 <figure id="fig:Instructions" data-latex-placement="H">
 <img src="doc/img/Instructions_5.png" style="width:70%" />
 </figure>
 <figure id="fig:Instructions" data-latex-placement="H">
 <img src="doc/img/Instructions_6.png" style="width:70%" />
 </figure>
-6. Click **CTRL+SHIFT+P** to open the upper tab and choose the Task to Run with **Run: Task**
+6. Click "CTRL+SHIFT+P" to open the upper tab and choose the Task to Run with "Run: Task"
 <figure id="fig:Instructions" data-latex-placement="H">
 <img src="doc/img/Instructions_7.png" style="width:70%" />
 </figure>
-7. Click **Start Cooja**
+7. Click "Start Cooja"
 <figure id="fig:Instructions" data-latex-placement="H">
 <img src="doc/img/Instructions_8.png" style="width:70%" />
 </figure>
-8. Open the **cooja/Cooja-Simulation.csc**
+8. Open the "cooja/Cooja-Simulation.csc"
 <figure id="fig:Instructions" data-latex-placement="H">
 <img src="doc/img/Instructions_9.png" style="width:70%" />
 </figure>
@@ -74,15 +74,15 @@ This are the step for the installation and to start the application:
 <figure id="fig:Instructions" data-latex-placement="H">
 <img src="doc/img/Instructions_11.png" style="width:70%" />
 </figure>
-9. Click **CTRL+SHIFT+P**, **Run: Task** and **Start Border Router (Cooja)**
+9. Click "CTRL+SHIFT+P", "Run: Task" and "Start Border Router (Cooja)"
 <figure id="fig:Instructions" data-latex-placement="H">
 <img src="doc/img/Instructions_12.png" style="width:70%" />
 </figure> 
-10. Click **CTRL+SHIFT+P**, **Run: Task** and **Start Cloud Server**
+10. Click "CTRL+SHIFT+P", "Run: Task" and "Start Cloud Server"
 <figure id="fig:Instructions" data-latex-placement="H">
 <img src="doc/img/Instructions_13.png" style="width:70%" />
 </figure>
-11. Click **CTRL+SHIFT+P**, **Run: Task** and **Start Cloud Server**
+11. Click "CTRL+SHIFT+P", "Run: Task" and "Start Cloud Server"
 <figure id="fig:Instructions" data-latex-placement="H">
 <img src="doc/img/Instructions_14.png" style="width:70%" />
 </figure>
