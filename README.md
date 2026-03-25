@@ -31,6 +31,81 @@ with:
 "initializeCommand": "xhost +local:docker",
 ```
 
+## Installation and Starting Application
+This are the step for the installation and to start the application:
+1. Install the prerequisites;
+2. Start Docker;
+3. Start XLaunch;
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_1.png" style="width:70%" />
+</figure>
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_2.png" style="width:70%" />
+</figure>
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_3.png" style="width:70%" />
+</figure>
+4. Open **devcontainter/devcontainer.json** in **VS Code** and click on the two arrows at the bottom left (><) of VS Code:
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_4.png" style="width:70%" />
+</figure>
+5. Click **Reopen in Container**:
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_5.png" style="width:70%" />
+</figure>
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_6.png" style="width:70%" />
+</figure>
+6. Click **CTRL+SHIFT+P** to open the upper tab and choose the Task to Run with **Run: Task**
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_7.png" style="width:70%" />
+</figure>
+7. Click **Start Cooja**
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_8.png" style="width:70%" />
+</figure>
+8. Open the **cooja/Cooja-Simulation.csc**
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_9.png" style="width:70%" />
+</figure>
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_10.png" style="width:70%" />
+</figure>
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_11.png" style="width:70%" />
+</figure>
+9. Click **CTRL+SHIFT+P**, **Run: Task** and **Start Border Router (Cooja)**
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_12.png" style="width:70%" />
+</figure> 
+10. Click **CTRL+SHIFT+P**, **Run: Task** and **Start Cloud Server**
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_13.png" style="width:70%" />
+</figure>
+11. Click **CTRL+SHIFT+P**, **Run: Task** and **Start Cloud Server**
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_14.png" style="width:70%" />
+</figure>
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_15.png" style="width:70%" />
+</figure>
+12. Remember to click the button of all motes to start the initialization
+
+## Cooja LED Problem
+To make the LED work correctly on Cooja go to *contiki-ng/arch/platform/cooja/contiki-conf.h* and on the bottom modify the colors in this way:
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_16.png" style="width:70%" />
+</figure>
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_17.png" style="width:70%" />
+</figure>
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_18.png" style="width:70%" />
+</figure>
+<figure id="fig:Instructions" data-latex-placement="H">
+<img src="doc/img/Instructions_19.png" style="width:70%" />
+</figure>
+
 ## Introduction
 The advent of **3D Printing** has revolutionized manufacturing, prototyping, and personal fabrication by allowing digital models to be transformed into physical objects layer by layer. However, the additive **manufacturing process is inherently susceptible to physical anomalies**. A slight deviation in temperature, extrusion rate, or mechanical calibration can lead to catastrophic print failures. When a printer operates unmonitored for extended periods, these undetected failures result in a significant waste of filament materials, excessive energy consumption, and lost time.
 
