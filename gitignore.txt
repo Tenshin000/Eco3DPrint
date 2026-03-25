@@ -1,12 +1,12 @@
 # Mosquitto data and logs
-.devcontainer/mosquitto/data/*
-.devcontainer/mosquitto/log/*
-.devcontainer/mysql/data/*
+.devcontainer/mosquitto/data/
+.devcontainer/mosquitto/log/
+.devcontainer/mysql/data/
 
 *.sock
 *.log
 
 # Python
-src/CloudApp/backend/__pycache__/*
-src/CloudApp/frontend/__pycache__/*
-src/CloudApp/utility/__pycache__/*
+src/CloudApp/backend/__pycache__/
+src/CloudApp/frontend/__pycache__/
+src/CloudApp/utility/__pycache__/
