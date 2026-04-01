@@ -46,15 +46,40 @@
             }
         },
         {
-            "label": "Launch Full Simulation Workflow",
-            "dependsOn": [
-                "Start Cooja",
-                "Start Mosquitto Broker",
-                "Start Cloud Server",
-                "Start Cloud App"
-            ],
-            "dependsOrder": "parallel",
-            "problemMatcher": []
+            "label": "Flash Border Router (Dongle)",
+            "type": "shell",
+            "command": "cd ./src/Gateway && make TARGET=nrf52840 BOARD=dongle PORT=/dev/ttyACM0 border-router.dfu-upload",
+            "presentation": {
+                "group": "hardware",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Start Border Router (Dongle Tunslip)",
+            "type": "shell",
+            "command": "cd ./src/Gateway && make TARGET=nrf52840 BOARD=dongle connect-router PORT=/dev/ttyACM0",
+            "presentation": {
+                "group": "hardware",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Flash Printer Node (Dongle)",
+            "type": "shell",
+            "command": "cd ./src/Printer3D && make TARGET=nrf52840 BOARD=dongle device.dfu-upload PORT=/dev/ttyACM1",
+            "presentation": {
+                "group": "hardware",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Login Printer Node (Dongle)",
+            "type": "shell",
+            "command": "cd ./src/Printer3D && make login TARGET=nrf52840 BOARD=dongle PORT=/dev/ttyACM1",
+            "presentation": {
+                "group": "hardware",
+                "panel": "new"
+            }
         }
     ]
 }

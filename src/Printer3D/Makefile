@@ -31,6 +31,14 @@ CFLAGS += -Wno-error=unused-variable
 # Identify target platform
 include $(CONTIKI)/Makefile.identify-target
 
+# AUTOMATIC PLATFORM DETECTION
+# Set CFLAGS based on the identified TARGET
+ifeq ($(TARGET),cooja)
+  CFLAGS += -DDEV_COOJA=1
+else ifeq ($(TARGET),nrf52840)
+  CFLAGS += -DDEV_DONGLE=1
+endif
+
 # Link the standard math library needed for specific formulas
 TARGET_LIBFILES += -lm
 

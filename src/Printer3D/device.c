@@ -8,6 +8,10 @@
 #include "os/dev/leds.h"
 #include "os/dev/serial-line.h"
 
+#ifdef DEV_DONGLE
+#include "usb/usb-serial.h" 
+#endif
+
 /* Networking (IPv6 / uIP) */
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uiplib.h"
@@ -99,21 +103,21 @@ static void set_state(device_state_t new_state){
   else if(current_state == STATE_ONLINE) leds_on(LEDS_NUM_TO_MASK(LEDS_GREEN));
   
   // Manage MQTT connection/disconnection based on state transitions
-  if(current_state == STATE_PRINTING) {
+  if(current_state == STATE_PRINTING){
     // Stop the disconnect timer if we re-entered PRINTING quickly
     etimer_stop(&mqtt_disconnect_timer);
     
     // Trigger MQTT connection if not connected
-    if(!mqtt_module_is_connected()) {
+    if(!mqtt_module_is_connected()){
       device_trigger_mqtt_retry();
     }
   } 
-  else if(current_state == STATE_ONLINE && last_state == STATE_PRINTING) {
+  else if(current_state == STATE_ONLINE && last_state == STATE_PRINTING){
     // Delay disconnection to wait for potential incoming QUEUE jobs
     LOG_INFO("Print finished. Starting MQTT disconnect timer (15s)...\n");
     etimer_set(&mqtt_disconnect_timer, 15 * CLOCK_SECOND);
   }
-  else if(current_state == STATE_OFF || current_state == STATE_OFFLINE) {
+  else if(current_state == STATE_OFF || current_state == STATE_OFFLINE){
     // Immediate disconnect on critical states
     etimer_stop(&mqtt_disconnect_timer);
     mqtt_module_disconnect();
@@ -123,13 +127,13 @@ static void set_state(device_state_t new_state){
 }
 
 // Hook Implementations requested by external modules
-device_state_t device_get_state(void) { return current_state; }
-const char* device_get_state_string(device_state_t state) { return state_to_string(state); }
-void device_set_state(device_state_t new_state) { set_state(new_state); }
-void device_trigger_mqtt_retry(void) { process_post(&smart_printer_process, event_mqtt_retry, NULL); }
-void device_add_stl_length(int len) { stl_length += len; }
-void device_trigger_print_simulation(void) { process_poll(&smart_printer_process); }
-void device_reset_waiting_confirmation(void) { waiting_for_confirmation = false; }
+device_state_t device_get_state(void){ return current_state; }
+const char* device_get_state_string(device_state_t state){ return state_to_string(state); }
+void device_set_state(device_state_t new_state){ set_state(new_state); }
+void device_trigger_mqtt_retry(void){ process_post(&smart_printer_process, event_mqtt_retry, NULL); }
+void device_add_stl_length(int len){ stl_length += len; }
+void device_trigger_print_simulation(void){ process_poll(&smart_printer_process); }
+void device_reset_waiting_confirmation(void){ waiting_for_confirmation = false; }
 
 static uint32_t calculate_print_duration(size_t stl_size){
   uint32_t duration_seconds = (stl_size * 5) / 32;
@@ -145,6 +149,11 @@ PROCESS_THREAD(setup_process, ev, data){
   static bool smart_printer_active = false;
 
   PROCESS_BEGIN();
+  
+#ifdef DEV_DONGLE
+  /* Initialize the USB serial input for the nRF52840 dongle */
+  usb_serial_set_input(serial_line_input_byte); 
+#endif
 
   LOG_INFO("Smart Printer SETUP process starting...\n");
 
@@ -168,7 +177,8 @@ PROCESS_THREAD(setup_process, ev, data){
   if(btn){
     LOG_WARN("Setup: button initialized: %s on pin %u\n", BUTTON_HAL_GET_DESCRIPTION(btn), btn->pin);
     LOG_WARN("Short press to start SmartPrinter. Hold 5s to reset when active.\n");
-  } else {
+  } 
+  else{
     LOG_WARN("Setup: no button available\n");
   }
 
@@ -182,7 +192,8 @@ PROCESS_THREAD(setup_process, ev, data){
         process_start(&smart_printer_process, NULL);
         smart_printer_active = true;
         process_poll(&smart_printer_process);
-      } else {
+      } 
+      else{
         LOG_WARN("Smart Printer already active. Hold button 5 seconds to perform hard reset.\n");
         LOG_INFO("STATE: %s\n", state_to_string(current_state));
       }
@@ -190,15 +201,16 @@ PROCESS_THREAD(setup_process, ev, data){
 
     if(ev == button_hal_periodic_event && btn && data){
       button_hal_button_t *b = (button_hal_button_t *)data;
-      if(b == btn) {
+      if(b == btn){
         LOG_DBG("Setup: Button hold duration: %u s\n", b->press_duration_seconds);
-        if(b->press_duration_seconds == 1) {
+        if(b->press_duration_seconds == 1){
           char ipaddr_str[UIPLIB_IPV6_MAX_STR_LEN];
           uip_ds6_addr_t *addr = uip_ds6_get_global(ADDR_PREFERRED);
-          if(addr != NULL) {
+          if(addr != NULL){
             uiplib_ipaddr_snprint(ipaddr_str, sizeof(ipaddr_str), &addr->ipaddr);
             LOG_INFO("Current IPv6 address: %s\n", ipaddr_str);
-          } else {
+          } 
+          else{
             LOG_INFO("No global IPv6 address assigned yet\n");
           }
         }
@@ -213,7 +225,8 @@ PROCESS_THREAD(setup_process, ev, data){
         sensor_deactivate();
         set_state(STATE_OFF);
         LOG_INFO("Device reset to STATE: OFF - await short press to start again\n");
-      } else {
+      } 
+      else{
         LOG_ERR("Some other process exited: %s\n", exited->name);
       }
     }
@@ -332,7 +345,8 @@ PROCESS_THREAD(smart_printer_process, ev, data){
               transaction->message_len = coap_serialize_message(request, transaction->message);
               coap_send_transaction(transaction);
             }
-          } else {
+          } 
+          else{
             uint16_t mid = coap_module_prepare_request(NULL, COAP_TYPE_NON, COAP_POST, OFF_SIGNAL_URI_PATH);
             coap_transaction_t* off_transaction = coap_new_transaction(mid, &server_ep);
             if(off_transaction){
@@ -413,28 +427,39 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         
         total_power_consumed += power;
 
+#ifdef DEV_COOJA
         LOG_INFO("Measurements: Plate(%.3f, %.3f, %.3f), Extruder(%.3f, %.3f, %.3f), Tension(%.3fV), Power(%.3fW)\n", 
                  plate.x, plate.y, plate.z, extruder.x, extruder.y, extruder.z, tension, power);
+#endif
+
+        // Extract integer and decimal values globally since MQTT and DEV_DONGLE both need them
+        int px_i = (int)plate.x; int px_d = (int)(fabs(plate.x - px_i) * 1000);
+        int py_i = (int)plate.y; int py_d = (int)(fabs(plate.y - py_i) * 1000);
+        int pz_i = (int)plate.z; int pz_d = (int)(fabs(plate.z - pz_i) * 1000);
+        int ex_i = (int)extruder.x; int ex_d = (int)(fabs(extruder.x - ex_i) * 1000);
+        int ey_i = (int)extruder.y; int ey_d = (int)(fabs(extruder.y - ey_i) * 1000);
+        int ez_i = (int)extruder.z; int ez_d = (int)(fabs(extruder.z - ez_i) * 1000);
+        int ten_i = (int)tension; int ten_d = (int)(fabs(tension - ten_i) * 1000);
+        int pow_i = (int)power;   int pow_d = (int)(fabs(power - pow_i) * 1000);
+
+        const char* px_sign = (plate.x < 0 && px_i == 0) ? "-" : "";
+        const char* py_sign = (plate.y < 0 && py_i == 0) ? "-" : "";
+        const char* pz_sign = (plate.z < 0 && pz_i == 0) ? "-" : "";
+        const char* ex_sign = (extruder.x < 0 && ex_i == 0) ? "-" : "";
+        const char* ey_sign = (extruder.y < 0 && ey_i == 0) ? "-" : "";
+        const char* ez_sign = (extruder.z < 0 && ez_i == 0) ? "-" : "";
+        const char* ten_sign = (tension < 0 && ten_i == 0) ? "-" : "";
+        const char* pow_sign = (power < 0 && pow_i == 0) ? "-" : "";
+
+#ifdef DEV_DONGLE
+        // Printf equivalent for platforms without float support 
+        LOG_INFO("Measurements: Plate(%s%d.%03d, %s%d.%03d, %s%d.%03d), Extruder(%s%d.%03d, %s%d.%03d, %s%d.%03d), Tension(%s%d.%03d V), Power(%s%d.%03d W)\n", 
+                 px_sign, px_i, px_d, py_sign, py_i, py_d, pz_sign, pz_i, pz_d, 
+                 ex_sign, ex_i, ex_d, ey_sign, ey_i, ey_d, ez_sign, ez_i, ez_d, 
+                 ten_sign, ten_i, ten_d, pow_sign, pow_i, pow_d);
+#endif
 
         if(mqtt_module_is_connected()){
-          int px_i = (int)plate.x; int px_d = (int)(fabs(plate.x - px_i) * 1000);
-          int py_i = (int)plate.y; int py_d = (int)(fabs(plate.y - py_i) * 1000);
-          int pz_i = (int)plate.z; int pz_d = (int)(fabs(plate.z - pz_i) * 1000);
-          int ex_i = (int)extruder.x; int ex_d = (int)(fabs(extruder.x - ex_i) * 1000);
-          int ey_i = (int)extruder.y; int ey_d = (int)(fabs(extruder.y - ey_i) * 1000);
-          int ez_i = (int)extruder.z; int ez_d = (int)(fabs(extruder.z - ez_i) * 1000);
-          int ten_i = (int)tension; int ten_d = (int)(fabs(tension - ten_i) * 1000);
-          int pow_i = (int)power;   int pow_d = (int)(fabs(power - pow_i) * 1000);
-
-          const char* px_sign = (plate.x < 0 && px_i == 0) ? "-" : "";
-          const char* py_sign = (plate.y < 0 && py_i == 0) ? "-" : "";
-          const char* pz_sign = (plate.z < 0 && pz_i == 0) ? "-" : "";
-          const char* ex_sign = (extruder.x < 0 && ex_i == 0) ? "-" : "";
-          const char* ey_sign = (extruder.y < 0 && ey_i == 0) ? "-" : "";
-          const char* ez_sign = (extruder.z < 0 && ez_i == 0) ? "-" : "";
-          const char* ten_sign = (tension < 0 && ten_i == 0) ? "-" : "";
-          const char* pow_sign = (power < 0 && pow_i == 0) ? "-" : "";
-
           // Format MQTT message using SenML JSON standard array
           snprintf(mqtt_payload, sizeof(mqtt_payload),
             "["
@@ -501,7 +526,8 @@ PROCESS_THREAD(smart_printer_process, ev, data){
           if(prediction == 1){
             error_count++;
             LOG_WARN("Anomaly Detected! (Alarm %d/3)\n", error_count);
-          } else {
+          } 
+          else{
             LOG_INFO("Machine Learning Model: Regular print...\n");
             error_count = 0; 
           }
@@ -521,7 +547,8 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             waiting_for_confirmation = true;
             strncpy(print_result, "FAILED", sizeof(print_result));
             LOG_INFO("Print aborted. Press the button to confirm and notify the server.\n");            
-          } else {
+          } 
+          else{
             for(uint8_t var = 0; var < 8; var++)
               sensor_buffer[var][0] = sensor_buffer[var][4];
             sample_count = 1;

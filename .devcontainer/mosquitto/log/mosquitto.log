@@ -230,3 +230,91 @@
 1774454713: Saving in-memory database to /mosquitto/data//mosquitto.db.
 1774455122: mosquitto version 2.1.2 terminating
 1774455122: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1775052381: mosquitto version 2.1.2 starting
+1775052381: Config loaded from /mosquitto/config/mosquitto.conf.
+1775052381: Bridge support available.
+1775052381: Persistence support available.
+1775052381: TLS support available.
+1775052381: TLS-PSK support available.
+1775052381: Websockets support available.
+1775052381: Opening ipv4 listen socket on port 1883.
+1775052381: Opening ipv6 listen socket on port 1883.
+1775052381: mosquitto version 2.1.2 running
+1775052632: mosquitto version 2.1.2 terminating
+1775052632: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1775052657: mosquitto version 2.1.2 starting
+1775052657: Config loaded from /mosquitto/config/mosquitto.conf.
+1775052657: Bridge support available.
+1775052657: Persistence support available.
+1775052657: TLS support available.
+1775052657: TLS-PSK support available.
+1775052657: Websockets support available.
+1775052657: Opening ipv4 listen socket on port 1883.
+1775052657: Opening ipv6 listen socket on port 1883.
+1775052657: mosquitto version 2.1.2 running
+1775053465: New connection from fd00::1:49625 on port 1883.
+1775053465: New client connected from fd00::1:49625 as auto-A0AC62EF-7FB1-436F-85F5-3CA08CEE8B88 (p4, c1, k60).
+1775053503: New connection from fd00::202:2:2:2:1026 on port 1883.
+1775053503: New client connected from fd00::202:2:2:2:1026 as printer_01 (p3, c1, k180).
+1775053543: Client printer_01 [fd00::202:2:2:2:1026] disconnected.
+1775053544: New connection from fd00::202:2:2:2:1027 on port 1883.
+1775053555: New connection from fd00::202:2:2:2:1028 on port 1883.
+1775053555: New client connected from fd00::202:2:2:2:1028 as printer_01 (p3, c1, k180).
+1775053572: Client fd00::202:2:2:2 [fd00::202:2:2:2:1027] disconnected: exceeded timeout.
+1775053702: Client printer_01 [fd00::202:2:2:2:1028] disconnected.
+1775053742: Client auto-A0AC62EF-7FB1-436F-85F5-3CA08CEE8B88 [fd00::1:49625] disconnected: connection closed by client.
+1775053833: New connection from fd00::1:56555 on port 1883.
+1775053833: New client connected from fd00::1:56555 as auto-5B30C0E3-1A8A-7FD7-D3E4-31B9A05BA203 (p4, c1, k60).
+1775053873: New connection from fd00::205:5:5:5:1026 on port 1883.
+1775053873: New client connected from fd00::205:5:5:5:1026 as printer_04 (p3, c1, k180).
+1775053925: Client printer_04 [fd00::205:5:5:5:1026] disconnected.
+1775053936: Client auto-5B30C0E3-1A8A-7FD7-D3E4-31B9A05BA203 [fd00::1:56555] disconnected: connection closed by client.
+1775054319: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1775055832: mosquitto version 2.1.2 terminating
+1775055832: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1775055847: mosquitto version 2.1.2 starting
+1775055847: Config loaded from /mosquitto/config/mosquitto.conf.
+1775055847: Bridge support available.
+1775055847: Persistence support available.
+1775055847: TLS support available.
+1775055847: TLS-PSK support available.
+1775055847: Websockets support available.
+1775055847: Opening ipv4 listen socket on port 1883.
+1775055847: Opening ipv6 listen socket on port 1883.
+1775055847: mosquitto version 2.1.2 running
+1775056652: mosquitto version 2.1.2 terminating
+1775056652: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1775056665: mosquitto version 2.1.2 starting
+1775056665: Config loaded from /mosquitto/config/mosquitto.conf.
+1775056665: Bridge support available.
+1775056665: Persistence support available.
+1775056665: TLS support available.
+1775056665: TLS-PSK support available.
+1775056665: Websockets support available.
+1775056665: Opening ipv4 listen socket on port 1883.
+1775056665: Opening ipv6 listen socket on port 1883.
+1775056665: mosquitto version 2.1.2 running
+1775056671: mosquitto version 2.1.2 terminating
+1775056671: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1775056675: mosquitto version 2.1.2 starting
+1775056675: Config loaded from /mosquitto/config/mosquitto.conf.
+1775056675: Bridge support available.
+1775056675: Persistence support available.
+1775056675: TLS support available.
+1775056675: TLS-PSK support available.
+1775056675: Websockets support available.
+1775056675: Opening ipv4 listen socket on port 1883.
+1775056675: Opening ipv6 listen socket on port 1883.
+1775056675: mosquitto version 2.1.2 running
+1775057859: mosquitto version 2.1.2 terminating
+1775057859: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1775058022: mosquitto version 2.1.2 starting
+1775058022: Config loaded from /mosquitto/config/mosquitto.conf.
+1775058022: Bridge support available.
+1775058022: Persistence support available.
+1775058022: TLS support available.
+1775058022: TLS-PSK support available.
+1775058022: Websockets support available.
+1775058022: Opening ipv4 listen socket on port 1883.
+1775058022: Opening ipv6 listen socket on port 1883.
+1775058022: mosquitto version 2.1.2 running
