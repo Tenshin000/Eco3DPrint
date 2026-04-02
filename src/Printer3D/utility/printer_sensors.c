@@ -1,4 +1,4 @@
-#include "sensors.h"
+#include "printer_sensors.h"
 
 #include "contiki.h"
 #include "lib/random.h"

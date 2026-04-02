@@ -9,7 +9,7 @@ DB_NAME="Eco3DPrintDB"
 SRC_DIR="src"
 
 #---------------------------------------------#
-#                  FUNCTIONS                  #
+#                 FUNCTIONS                   #
 #---------------------------------------------#
 check_mysql_install(){
     if ! command -v mysql >/dev/null 2>&1; then
@@ -154,11 +154,30 @@ launch_cooja(){
     gnome-terminal -- bash -c "cd; cd contiki-ng/tools/cooja; ./gradlew run; exec bash"
 }
 
+flash_border_router(){
+    local port=${1:-/dev/ttyACM0}
+    echo "Flashing Border Router on ${port}..."
+    gnome-terminal --wait -- bash -c "cd ./${SRC_DIR}/Gateway && make TARGET=nrf52840 BOARD=dongle PORT=${port} border-router.dfu-upload; echo 'Flash complete. Press any key to close.'; read -n 1 -s"
+}
+
+flash_device(){
+    local port=${1:-/dev/ttyACM1}
+    echo "Flashing Device/Node on ${port}..."
+    gnome-terminal --wait -- bash -c "cd ./${SRC_DIR}/Printer3D && make TARGET=nrf52840 BOARD=dongle PORT=${port} device.dfu-upload; echo 'Flash complete. Press any key to close.'; read -n 1 -s"
+}
+
+login_node(){
+    local port=${1:-/dev/ttyACM1}
+    echo "Opening serial monitor for Device/Node on ${port}..."
+    gnome-terminal -- bash -c "cd ./${SRC_DIR}/Printer3D && make login TARGET=nrf52840 BOARD=dongle PORT=${port}; exec bash"
+}
+
 build_border_router(){
     local mode=$1
+    local port=${2:-/dev/ttyACM0}
     if [ "$mode" != "cooja" ]; then
-        gnome-terminal -- bash -c "cd ./'${SRC_DIR}'/Gateway; make TARGET=nrf52840 BOARD=dongle PORT=/dev/ttyACM0 connect-router; exec bash"
-        echo "Border router connecting to dongle"
+        gnome-terminal -- bash -c "cd ./'${SRC_DIR}'/Gateway; make TARGET=nrf52840 BOARD=dongle PORT=${port} connect-router; exec bash"
+        echo "Border router connecting to dongle on ${port}"
     else
         gnome-terminal -- bash -c "cd ./'${SRC_DIR}'/Gateway; make TARGET=cooja connect-router-cooja; exec bash"
         echo "Border router connecting to Cooja"
@@ -166,11 +185,11 @@ build_border_router(){
 }
 
 start_server(){
-    gnome-terminal -- bash -c 'cd ./'${SRC_DIR}'/CloudApp; python3 server.py; exec bash'
+    gnome-terminal -- bash -c "cd ./${SRC_DIR}/CloudApp; python3 server.py; exec bash"
 }
 
 start_app(){
-    gnome-terminal -- bash -c 'cd ./'${SRC_DIR}'/CloudApp; python3 app.py; exec bash'
+    gnome-terminal -- bash -c "cd ./${SRC_DIR}/CloudApp; python3 app.py; exec bash"
 }
 
 start_mosquitto(){
@@ -178,8 +197,51 @@ start_mosquitto(){
     gnome-terminal -- bash -c "cd ./${SRC_DIR}/CloudApp; mosquitto -c local_broker.conf -v; exec bash"
 }
 
+start_hardware_sim(){
+    echo "===================================================================="
+    echo "=                Starting Hardware Simulation Workflow             ="
+    echo "===================================================================="
+    echo
+    echo "Do you want to flash the Border Router Dongle on /dev/ttyACM0 first? (y/n)"
+    read -n 1 -s answer_br
+    echo
+    if [[ "$answer_br" =~ ^[Yy]$ ]]; then
+        echo "-> Please ensure the Border Router dongle is pulsing RED."
+        flash_border_router "/dev/ttyACM0"
+    fi
+
+    echo "Do you want to flash the Device/Node Dongle on /dev/ttyACM1 first? (y/n)"
+    read -n 1 -s answer_node
+    echo
+    if [[ "$answer_node" =~ ^[Yy]$ ]]; then
+        echo "-> Please ensure the Device/Node dongle is pulsing RED."
+        flash_device "/dev/ttyACM1"
+    fi
+
+    echo "--------------------------------------------------------------------"
+    echo "Press any key to connect the border-router to the Gateway Dongle (/dev/ttyACM0)..."
+    read -n 1 -s
+    build_border_router "hardware" "/dev/ttyACM0"
+    
+    echo "Press any key to open the serial monitor (login) for the Node (/dev/ttyACM1)..."
+    read -n 1 -s
+    login_node "/dev/ttyACM1"
+    
+    echo "Press any key to start the Mosquitto MQTT server..."
+    read -n 1 -s
+    start_mosquitto
+    
+    echo "Press any key to start the Cloud Server and the App..."
+    read -n 1 -s
+    start_server
+    start_app
+    
+    echo "Hardware simulation environment successfully launched!"
+    echo "===================================================================="
+}
+
 #---------------------------------------------#
-#                    CLI                      #
+#                  CLI                        #
 #---------------------------------------------#
 case $1 in
     -setup)
@@ -206,8 +268,17 @@ case $1 in
      -table)
         show_table "$2"
         ;;
+    -flash-br)
+        flash_border_router "$2"
+        ;;
+    -flash-node)
+        flash_device "$2"
+        ;;
+    -login-node)
+        login_node "$2"
+        ;;
     -br)
-        build_border_router $2
+        build_border_router "$2" "$3"
         ;;
     -mosquitto)
         start_mosquitto
@@ -226,9 +297,12 @@ case $1 in
         start_server
         start_app
         ;;
+    -dongle)
+        start_hardware_sim
+        ;;
     *)
     echo "===================================================================="
-    echo "=                        Eco3DPrint CLI                            ="
+    echo "=                      Eco3DPrint CLI                              ="
     echo "===================================================================="
     echo
     echo "USAGE:"
@@ -241,6 +315,21 @@ case $1 in
     echo "      Full environment setup: Database, Tkinter, and Pip requirements."
     echo
     echo "--------------------------------------------------------------------"
+    echo "                        HARDWARE COMMANDS"
+    echo "--------------------------------------------------------------------"
+    echo "  -dongle"
+    echo "      Start the full hardware workflow (flashing + server step-by-step)."
+    echo
+    echo "  -flash-br [port]"
+    echo "      Flash the Border Router code into the nRF52840 Dongle (default: /dev/ttyACM0)."
+    echo
+    echo "  -flash-node [port]"
+    echo "      Flash the Device (Node) code into the nRF52840 Dongle (default: /dev/ttyACM1)."
+    echo
+    echo "  -login-node [port]"
+    echo "      Open the serial monitor (login) for the Node (default: /dev/ttyACM1)."
+    echo
+    echo "--------------------------------------------------------------------"
     echo "                        SIMULATION COMMANDS"
     echo "--------------------------------------------------------------------"
     echo "  -cooja"
@@ -249,8 +338,8 @@ case $1 in
     echo "  -sim | -simulation"
     echo "      Start the full simulation workflow (step-by-step)."
     echo
-    echo "  -br <target>"
-    echo "      Start the RPL border router (cooja|hardware)."
+    echo "  -br <target> [port]"
+    echo "      Start the RPL border router (cooja | hardware) [optional: port]."
     echo
     echo "  -mosquitto"
     echo "      Start the local Mosquitto MQTT broker."

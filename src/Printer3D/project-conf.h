@@ -60,5 +60,16 @@
 #define IEEE802154_CONF_DEFAULT_CHANNEL 26
 
 /*---------------------------------------------------------------------------*/
+/* USB Serial Configuration (nRF52840 Dongle)                                */
+/*---------------------------------------------------------------------------*/
+/*
+ * Enable the USB serial interface and route standard UART output to it.
+ * This is strictly required to read LOG_INFO and printf outputs on the 
+ * PC terminal (e.g., /dev/ttyACM*) rather than on the physical GPIO pins.
+ */
+#define NRF_USB_SERIAL_ENABLE 1
+#define UART_DEFAULT_TO_USB 1
+
+/*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */
 /*---------------------------------------------------------------------------*/
