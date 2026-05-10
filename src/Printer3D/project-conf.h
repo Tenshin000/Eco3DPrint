@@ -70,6 +70,13 @@
 #define NRF_USB_SERIAL_ENABLE 1
 #define UART_DEFAULT_TO_USB 1
 
+/*
+ * Increase the number of USB serial transmit buffers.
+ * This helps prevent buffer overflows and interleaved log outputs
+ * when sending long, fast bursts of data (like sensor measurements).
+ */
+#define USB_SERIAL_CONF_TX_BUFFERS 4
+
 /*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */
 /*---------------------------------------------------------------------------*/

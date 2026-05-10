@@ -36,7 +36,7 @@ build/cooja/obj/device.o: device.c \
  ../../../../os/net/mac/framer/framer.h \
  ../../../../os/net/ipv6/uip-packetqueue.h \
  ../../../../os/net/ipv6/uip-ds6-route.h ../../../../os/lib/list.h \
- ../../../../os/net/ipv6/uiplib.h utility/sensors.h \
+ ../../../../os/net/ipv6/uiplib.h utility/printer_sensors.h \
  utility/scaler_params.h utility/device_conf.h utility/coap_module.h \
  ../../../../os/net/app-layer/coap/coap-engine.h \
  ../../../../os/net/app-layer/coap/coap.h \
@@ -116,7 +116,7 @@ project-conf.h:
 ../../../../os/net/ipv6/uip-ds6-route.h:
 ../../../../os/lib/list.h:
 ../../../../os/net/ipv6/uiplib.h:
-utility/sensors.h:
+utility/printer_sensors.h:
 utility/scaler_params.h:
 utility/device_conf.h:
 utility/coap_module.h:

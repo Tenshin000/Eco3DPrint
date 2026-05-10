@@ -29,7 +29,7 @@ static void res_health_get_handler(coap_message_t *req, coap_message_t *response
     return;
   }
 
-  LOG_INFO("Health check ping received! Responding with state: %s\n", msg);
+  // LOG_INFO("Health check ping received! Responding with state: %s\n", msg);
 
   coap_set_status_code(response, CONTENT_2_05);
   coap_set_header_content_format(response, TEXT_PLAIN);
@@ -56,14 +56,14 @@ static void res_print_post_handler(coap_message_t *req, coap_message_t *response
     int len = coap_get_payload(req, &payload_ptr);
 
     device_add_stl_length(len);
-    LOG_INFO("Received Block %lu (Size: %d bytes)\n", (unsigned long)block_num, len);
+    // LOG_INFO("Received Block %lu (Size: %d bytes)\n", (unsigned long)block_num, len);
 
     if(more){
       coap_set_status_code(response, CONTINUE_2_31);
       coap_set_header_block1(response, block_num, more, block_size);
     } 
     else{
-      LOG_INFO("Final STL block received!\n");
+      // LOG_INFO("Final STL block received!\n");
       
       coap_set_status_code(response, CHANGED_2_04);
       coap_set_header_block1(response, block_num, more, block_size);
@@ -140,7 +140,7 @@ void registration_handler(coap_message_t* response){
   } 
 
   if(response->code == 65 || response->code == 67){ 
-      LOG_INFO("%s Successful\n", (response->code == 65) ? "Registration" : "Login");
+      // LOG_INFO("%s Successful\n", (response->code == 65) ? "Registration" : "Login");
       device_set_state(STATE_ONLINE);
 
       // Trigger potential MQTT connection
@@ -174,7 +174,7 @@ void print_finished_handler(coap_message_t* response){
   } 
 
   if(response->code == 68){
-      LOG_INFO("Print Memorized in the Database\n");
+      // LOG_INFO("Print Memorized in the Database\n");
   }
   else{
       LOG_ERR("Memorization of the print failed with code: %d\n", response->code);

@@ -1,4 +1,4 @@
-build/cooja/obj/utility/coap_module.o: utility/coap_module.c \
+build/cooja/obj/coap_module.o: utility/coap_module.c \
  ../../../../os/net/app-layer/coap/module-macros.h utility/coap_module.h \
  ../../../../os/contiki.h \
  ../../../../arch/platform/cooja/./contiki-conf.h project-conf.h \

@@ -217,11 +217,23 @@ start_hardware_sim(){
         echo "-> Please ensure the Device/Node dongle is pulsing RED."
         flash_device "/dev/ttyACM1"
     fi
+    
+    echo "Do you want to flash the Device/Node Dongle on /dev/ttyACM2 first? (y/n)"
+    read -n 1 -s answer_node
+    echo
+    if [[ "$answer_node" =~ ^[Yy]$ ]]; then
+        echo "-> Please ensure the Device/Node dongle is pulsing RED."
+        flash_device "/dev/ttyACM2"
+    fi
 
     echo "--------------------------------------------------------------------"
     echo "Press any key to connect the border-router to the Gateway Dongle (/dev/ttyACM0)..."
     read -n 1 -s
     build_border_router "hardware" "/dev/ttyACM0"
+    
+    echo "Press any key to open the serial monitor (login) for the Node (/dev/ttyACM1)..."
+    read -n 1 -s
+    login_node "/dev/ttyACM1"
     
     echo "Press any key to open the serial monitor (login) for the Node (/dev/ttyACM1)..."
     read -n 1 -s

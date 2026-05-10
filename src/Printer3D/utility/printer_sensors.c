@@ -69,14 +69,14 @@ static float get_uniform_probability(void){
 
 /* Public Functions */
 void sensors_init(void){
-    LOG_INFO("Initializing 3D Printer Sensors ...\n");
+    // LOG_INFO("Initializing 3D Printer Sensors ...\n");
     random_init((unsigned short)clock_time());
 }
 
 void sensor_activate(void){
     float roll = get_uniform_probability();
 
-    LOG_INFO("Sensors Activated\n");
+    // LOG_INFO("Sensors Activated\n");
 
     if(current_state == PRINTER_STATE_NORMAL){
         // Enter error state occasionally
@@ -99,11 +99,11 @@ void sensor_activate(void){
 }
 
 void sensor_sleep(void){
-    LOG_INFO("Sensors in Sleep Mode\n");
+    // LOG_INFO("Sensors in Sleep Mode\n");
 }
 
 void sensor_deactivate(void){
-    LOG_INFO("Sensors Deactivated\n");
+    // LOG_INFO("Sensors Deactivated\n");
 }
 
 /* Sensor Reading Functions */

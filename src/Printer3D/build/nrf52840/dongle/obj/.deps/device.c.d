@@ -101,7 +101,11 @@ build/nrf52840/dongle/obj/device.o: device.c \
  ../../../../os/net/app-layer/coap/coap-observe-client.h \
  ../../../../os/net/app-layer/coap/coap-blocking-api.h \
  ../../../../os/net/app-layer/coap/coap-request-state.h \
- utility/mqtt_module.h
+ utility/mqtt_module.h utility/print_prediction.h \
+ /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_net.h \
+ /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_common.h \
+ /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_log.h \
+ /home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_net_common.h
 
 ../../../../os/net/app-layer/coap/module-macros.h:
 
@@ -354,3 +358,13 @@ utility/coap_module.h:
 ../../../../os/net/app-layer/coap/coap-request-state.h:
 
 utility/mqtt_module.h:
+
+utility/print_prediction.h:
+
+/home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_net.h:
+
+/home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_common.h:
+
+/home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_log.h:
+
+/home/iot_ubuntu_intel/.local/lib/python3.10/site-packages/emlearn/eml_net_common.h:

@@ -1,4 +1,4 @@
-build/cooja/obj/utility/mqtt_module.o: utility/mqtt_module.c \
+build/cooja/obj/mqtt_module.o: utility/mqtt_module.c \
  ../../../../os/net/app-layer/coap/module-macros.h utility/mqtt_module.h \
  ../../../../os/contiki.h \
  ../../../../arch/platform/cooja/./contiki-conf.h project-conf.h \

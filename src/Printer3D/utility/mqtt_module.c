@@ -20,7 +20,7 @@ process_event_t event_mqtt_retry;
 static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data) {
   switch(event){
     case MQTT_EVENT_CONNECTED:
-      LOG_INFO("MQTT Connected to broker\n");
+      // LOG_INFO("MQTT Connected to broker\n");
       mqtt_connected = true;
       break;
     case MQTT_EVENT_DISCONNECTED:
@@ -53,7 +53,7 @@ void mqtt_module_init(struct process *main_proc, const char* device_name){
 }
 
 void mqtt_module_connect(void){
-  LOG_INFO("Attempting MQTT connection to %s:%d\n", MQTT_BROKER_IP, MQTT_BROKER_PORT);
+  // LOG_INFO("Attempting MQTT connection to %s:%d\n", MQTT_BROKER_IP, MQTT_BROKER_PORT);
   mqtt_connect(&conn, MQTT_BROKER_IP, MQTT_BROKER_PORT, 60 * 3, MQTT_CLEAN_SESSION_ON);
 }
 

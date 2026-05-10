@@ -100,7 +100,7 @@ static void set_state(device_state_t new_state){
 
   leds_off(LEDS_ALL);
   if(current_state == STATE_INITIALIZATION) leds_on(LEDS_NUM_TO_MASK(LEDS_YELLOW));
-  else if(current_state == STATE_ONLINE) leds_on(LEDS_NUM_TO_MASK(LEDS_GREEN));
+  else if(current_state == STATE_ONLINE) leds_on(LEDS_GREEN);
   
   // Manage MQTT connection/disconnection based on state transitions
   if(current_state == STATE_PRINTING){
@@ -124,6 +124,9 @@ static void set_state(device_state_t new_state){
   }
   
   LOG_INFO("STATE: %s\n", state_to_string(current_state));
+  #ifdef DEV_DONGLE
+  usb_serial_flush(); 
+  #endif
 }
 
 // Hook Implementations requested by external modules
@@ -150,12 +153,11 @@ PROCESS_THREAD(setup_process, ev, data){
 
   PROCESS_BEGIN();
   
-#ifdef DEV_DONGLE
-  /* Initialize the USB serial input for the nRF52840 dongle */
-  usb_serial_set_input(serial_line_input_byte); 
-#endif
-
   LOG_INFO("Smart Printer SETUP process starting...\n");
+  #ifdef DEV_DONGLE
+  // Initialize the USB serial input for the nRF52840 dongle
+  usb_serial_set_input(serial_line_input_byte); 
+  #endif
 
   uint16_t safe_id = (node_id > 0) ? (node_id - 1) : 0;
   snprintf(device_name, sizeof(device_name), "printer_%02u", safe_id);
@@ -187,6 +189,9 @@ PROCESS_THREAD(setup_process, ev, data){
 
     if(ev == button_hal_press_event){
       LOG_INFO("Setup: 'Button Pressed' Event\n");
+      #ifdef DEV_DONGLE
+      usb_serial_flush(); 
+      #endif
       if(!smart_printer_active){
         set_state(STATE_INITIALIZATION);
         process_start(&smart_printer_process, NULL);
@@ -196,6 +201,9 @@ PROCESS_THREAD(setup_process, ev, data){
       else{
         LOG_WARN("Smart Printer already active. Hold button 5 seconds to perform hard reset.\n");
         LOG_INFO("STATE: %s\n", state_to_string(current_state));
+        #ifdef DEV_DONGLE
+        usb_serial_flush(); 
+        #endif
       }
     }
 
@@ -230,6 +238,10 @@ PROCESS_THREAD(setup_process, ev, data){
         LOG_ERR("Some other process exited: %s\n", exited->name);
       }
     }
+
+    #ifdef DEV_DONGLE
+    usb_serial_flush();
+    #endif
   }
 
   PROCESS_END();
@@ -270,7 +282,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
     else if(ev == PROCESS_EVENT_TIMER && data == &mqtt_disconnect_timer){
       // If the timer expires and we are NOT printing, disconnect MQTT
       if(current_state != STATE_PRINTING){
-        LOG_INFO("No new print jobs received. Disconnecting MQTT to save resources.\n");
+        LOG_WARN("No new print jobs received. Disconnecting MQTT to save resources.\n");
         mqtt_module_disconnect();
       }
     }
@@ -427,10 +439,10 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         
         total_power_consumed += power;
 
-#ifdef DEV_COOJA
+        #ifdef DEV_COOJA
         LOG_INFO("Measurements: Plate(%.3f, %.3f, %.3f), Extruder(%.3f, %.3f, %.3f), Tension(%.3fV), Power(%.3fW)\n", 
                  plate.x, plate.y, plate.z, extruder.x, extruder.y, extruder.z, tension, power);
-#endif
+        #endif
 
         // Extract integer and decimal values globally since MQTT and DEV_DONGLE both need them
         int px_i = (int)plate.x; int px_d = (int)(fabs(plate.x - px_i) * 1000);
@@ -451,13 +463,18 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         const char* ten_sign = (tension < 0 && ten_i == 0) ? "-" : "";
         const char* pow_sign = (power < 0 && pow_i == 0) ? "-" : "";
 
-#ifdef DEV_DONGLE
-        // Printf equivalent for platforms without float support 
-        LOG_INFO("Measurements: Plate(%s%d.%03d, %s%d.%03d, %s%d.%03d), Extruder(%s%d.%03d, %s%d.%03d, %s%d.%03d), Tension(%s%d.%03d V), Power(%s%d.%03d W)\n", 
-                 px_sign, px_i, px_d, py_sign, py_i, py_d, pz_sign, pz_i, pz_d, 
-                 ex_sign, ex_i, ex_d, ey_sign, ey_i, ey_d, ez_sign, ez_i, ez_d, 
+        #ifdef DEV_DONGLE
+        // Printf equivalent broken down to avoid buffer overflow
+        LOG_INFO("Measurements: \nPlate(%s%d.%03d, %s%d.%03d, %s%d.%03d), \n", 
+                 px_sign, px_i, px_d, py_sign, py_i, py_d, pz_sign, pz_i, pz_d);
+        usb_serial_flush();
+        LOG_INFO_("Extruder(%s%d.%03d, %s%d.%03d, %s%d.%03d), \n", 
+                 ex_sign, ex_i, ex_d, ey_sign, ey_i, ey_d, ez_sign, ez_i, ez_d);
+        usb_serial_flush();
+        LOG_INFO_("Tension(%s%d.%03d V), Power(%s%d.%03d W)\n", 
                  ten_sign, ten_i, ten_d, pow_sign, pow_i, pow_d);
-#endif
+        usb_serial_flush();
+        #endif
 
         if(mqtt_module_is_connected()){
           // Format MQTT message using SenML JSON standard array
@@ -488,7 +505,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         sample_count++;
         
         if(sample_count == 5){
-          leds_off(LEDS_NUM_TO_MASK(LEDS_YELLOW)); 
+          leds_off(LEDS_NUM_TO_MASK(LEDS_YELLOW));
           LOG_INFO("Window full. Extracting features and running prediction...\n");
           
           uint8_t feature_idx = 0;
@@ -532,10 +549,14 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             error_count = 0; 
           }
 
+          #ifdef DEV_DONGLE
+          usb_serial_flush(); 
+          #endif
+
           if(error_count >= 3){
             LOG_ERR("EARLY STOPPING: Three consecutive anomalies detected. Printing stopped preemptively!\n");
             leds_off(LEDS_ALL);
-            leds_on(LEDS_NUM_TO_MASK(LEDS_RED));
+            leds_on(LEDS_RED);
 
             remaining_print_time = etimer_expiration_time(&print_timer) - clock_time();
 
@@ -565,7 +586,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         stl_length = 0; 
         
         leds_off(LEDS_ALL);
-        leds_on(LEDS_NUM_TO_MASK(LEDS_GREEN) | LEDS_NUM_TO_MASK(LEDS_YELLOW));
+        leds_on(LEDS_GREEN | LEDS_NUM_TO_MASK(LEDS_YELLOW));
         
         etimer_stop(&sample_timer);
         sample_count = 0; error_count = 0;
@@ -576,6 +597,10 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         LOG_INFO("Print finished successfully. Press the button to confirm and notify the server.\n");
       }
     }
+
+    #ifdef DEV_DONGLE
+    usb_serial_flush();
+    #endif
   }
 
   PROCESS_END();
