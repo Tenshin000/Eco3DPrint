@@ -65,7 +65,7 @@ static clock_time_t remaining_print_time = 0;
 static uint32_t current_print_duration = 0;
 static bool print_pending = false;
 
-// FIX: Track if the print timer is actively managing a job to prevent mid-print overwrites
+// Track if the print timer is actively managing a job to prevent mid-print overwrites
 static bool print_timer_started = false; 
 
 // Sensing & ML Variables
@@ -232,7 +232,7 @@ PROCESS_THREAD(setup_process, ev, data){
         sensor_discovery_attempted = false; 
         print_pending = false;
         has_active_subscription = false; 
-        print_timer_started = false; // Reset the shield flag
+        print_timer_started = false; 
         
         memset(paired_sensor_ip_str, 0, sizeof(paired_sensor_ip_str));
         set_state(STATE_OFF);
@@ -290,6 +290,11 @@ PROCESS_THREAD(smart_printer_process, ev, data){
     if(ev == event_sensor_unpaired) {
         LOG_WARN("Sensor sent OFF signal or timed out! Continuing print alone & Re-registering with Cloud...\n");
         sensor_is_paired = false;
+        
+        // FIX: Use static! Local variables are lost when COAP_BLOCKING_REQUEST yields the protothread.
+        static bool was_printing_unpaired;
+        was_printing_unpaired = (current_state == STATE_PRINTING);
+
         snprintf(registration_msg, sizeof(registration_msg),
             "[{\"bn\":\"%s\",\"n\":\"type\",\"vs\":\"%s\"},{\"n\":\"utilization\",\"vs\":\"%s\"},{\"n\":\"sensor_ip\",\"vs\":\"NULL\"}]",
             device_name, device_type, device_utilization);
@@ -300,9 +305,14 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         mqtt_module_disconnect();
         has_active_subscription = false; 
         
-        // FIX: If we lose the sensor during a print, gracefully degrade to standalone printing.
-        // We do NOT stop print_timer here. The job will just finish naturally.
-        if(current_state == STATE_PRINTING && !waiting_for_confirmation) {
+        // Resume standalone printing if we were interrupted mid-print
+        if(was_printing_unpaired && !waiting_for_confirmation) {
+            
+            // If the CoAP handler accidentally changed our state to ONLINE, force it back silently.
+            if(current_state != STATE_PRINTING) {
+                current_state = STATE_PRINTING; 
+            }
+            
             sample_count = 0;
             error_count = 0;
             etimer_stop(&subscribe_timer);
@@ -318,6 +328,10 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         sensor_is_paired = true;
         init_pairing_phase = false;
         
+        // FIX: Use static! Local variables are lost when COAP_BLOCKING_REQUEST yields the protothread.
+        static bool was_printing_paired;
+        was_printing_paired = (current_state == STATE_PRINTING);
+
         snprintf(registration_msg, sizeof(registration_msg),
             "[{\"bn\":\"%s\",\"n\":\"type\",\"vs\":\"%s\"},{\"n\":\"utilization\",\"vs\":\"%s\"},{\"n\":\"sensor_ip\",\"vs\":\"%s\"}]",
             device_name, device_type, device_utilization, paired_sensor_ip_str);
@@ -325,9 +339,17 @@ PROCESS_THREAD(smart_printer_process, ev, data){
         coap_module_prepare_request(registration_msg, COAP_TYPE_CON, COAP_POST, REG_URI_PATH);
         COAP_BLOCKING_REQUEST(&server_ep, request, registration_handler);
         
-        // FIX: If we gain a sensor during a standalone print, automatically hook it up without resetting the print_timer!
-        if(current_state == STATE_PRINTING && !waiting_for_confirmation) {
+        // Smoothly re-integrate the sensor into the active print job without resetting the job!
+        if(was_printing_paired && !waiting_for_confirmation) {
+            
+            if(current_state != STATE_PRINTING) {
+                current_state = STATE_PRINTING;
+            }
+            
             snprintf(target_topic, sizeof(target_topic), "%s/print/measurements", paired_sensor_ip_str);
+            
+            // Force MQTT re-subscription and START signal logic
+            has_active_subscription = false; 
             etimer_set(&subscribe_timer, 1 * CLOCK_SECOND);
             
             leds_off(LEDS_ALL);
@@ -475,7 +497,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
               etimer_set(&print_timer, remaining_print_time); 
               print_timer_started = true; // Shield the timer
               
-              // FIX: If we override the anomaly while paired, we must cleanly re-initialize the MQTT flow
+              // If we override the anomaly while paired, we must cleanly re-initialize the MQTT flow
               if(sensor_is_paired) {
                   snprintf(target_topic, sizeof(target_topic), "%s/print/measurements", paired_sensor_ip_str);
                   has_active_subscription = false; 
@@ -611,7 +633,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
                 LOG_INFO("MQTT Ready! Awakening Sensor...\n");
                 coap_module_send_sensor_command_non_blocking("START");
                 
-                // FIX: Only set the print_timer if it hasn't been started yet.
+                // Only set the print_timer if it hasn't been started yet.
                 // This allows mid-print pairing to resume ML without restarting the total print time!
                 if(!print_timer_started) {
                     etimer_set(&print_timer, current_print_duration * CLOCK_SECOND);

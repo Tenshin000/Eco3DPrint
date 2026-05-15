@@ -235,7 +235,10 @@ void registration_handler(coap_message_t* response){
   } 
 
   if(response->code == 65 || response->code == 67){ 
-      device_set_state(STATE_ONLINE);
+      // FIX: Don't forcefully override the state if a print is currently active!
+      if(device_get_state() != STATE_PRINTING) {
+          device_set_state(STATE_ONLINE);
+      }
   } else {
       LOG_ERR("Registration Failed with code: %d\n", response->code);
       device_set_state(STATE_OFFLINE);

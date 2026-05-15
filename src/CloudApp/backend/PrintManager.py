@@ -243,7 +243,7 @@ class PrintManager:
         else:
             self._monitor.set_node_offline(ip)
         
-        if status_changed and self._monitor.on_change_callback:
+        if status_changed and hasattr(self._monitor, 'on_change_callback') and self._monitor.on_change_callback:
              self._monitor.on_change_callback(self._monitor.get_all_nodes())
         
         # Check if there are more jobs waiting in the queue
