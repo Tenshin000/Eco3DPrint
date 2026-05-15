@@ -79,7 +79,7 @@ def main():
         broker_host=mqtt_host, 
         broker_port=mqtt_port, 
         database=database,
-        topic="/print/measurements"
+        topic="+/print/measurements" 
     )
     mqtt_handler.start()
 

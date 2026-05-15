@@ -62,6 +62,7 @@ create_tables(){
         name VARCHAR(255) NOT NULL,
         type VARCHAR(255) NOT NULL,
         utilization VARCHAR(255) NOT NULL,
+        sensor_ip VARCHAR(255) DEFAULT NULL,
         status VARCHAR(255) NOT NULL,
         PRIMARY KEY (ip)
     );"

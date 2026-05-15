@@ -54,7 +54,8 @@ class NodeMonitor:
         #       "name": "...",
         #       "type": "...",
         #       "utilization": "...",
-        #       "status": "ONLINE"
+        #       "status": "ONLINE",
+        #       "sensor_ip": "..."
         #   }
         # }
         self._nodes = {}
@@ -107,8 +108,8 @@ class NodeMonitor:
         self._logger.info("Loading existing nodes from database...")
         if self._db:
             try:
-                # Retrieve all nodes from DB
-                query = "SELECT ip, name, type, utilization, status FROM Node"
+                # Retrieve all nodes from DB, including sensor_ip
+                query = "SELECT ip, name, type, utilization, status, sensor_ip FROM Node"
                 records = self._db.execute(query) 
 
                 if records:
@@ -121,7 +122,8 @@ class NodeMonitor:
                                     "name": row.get('name', 'Unknown'),
                                     "type": row.get('type', 'Unknown'),
                                     "utilization": row.get('utilization', 'Idle'),
-                                    "status": row.get('status', 'OFFLINE')
+                                    "status": row.get('status', 'OFFLINE'),
+                                    "sensor_ip": row.get('sensor_ip', None)
                                 }
                             else:
                                 ip = row[0]
@@ -129,7 +131,8 @@ class NodeMonitor:
                                     "name": row[1],
                                     "type": row[2],
                                     "utilization": row[3],
-                                    "status": row[4]
+                                    "status": row[4],
+                                    "sensor_ip": row[5]
                                 }
                     self._logger.info(f"Loaded {len(self._nodes)} nodes from database.")
                     
@@ -139,7 +142,7 @@ class NodeMonitor:
             except Exception as e:
                 self._logger.error(f"Failed to load initial nodes from DB: {e}")
 
-    def register_node(self, ip, name, node_type, node_utilization):
+    def register_node(self, ip, name, node_type, node_utilization, sensor_ip=None):
         """
         Register or update a node when it connects to the system.
 
@@ -151,6 +154,7 @@ class NodeMonitor:
         :param name: Node alias/name
         :param node_type: Node type (e.g., printer model)
         :param node_utilization: Current usage state of the node
+        :param sensor_ip: IPv6 address of the paired sensor
         """
         # Protect shared structure from concurrent access
         old_status = "OFFLINE"
@@ -162,10 +166,12 @@ class NodeMonitor:
                 "name": name,
                 "type": node_type,
                 "utilization": node_utilization,
-                "status": "ONLINE"
+                "status": "ONLINE",
+                "sensor_ip": sensor_ip
             }
         
-        self._logger.info(f"Node {ip} ({name}) registered and marked ONLINE.")
+        sensor_log = sensor_ip if sensor_ip else "None"
+        self._logger.info(f"Node {ip} ({name}) registered. Sensor IP: {sensor_log}. Marked ONLINE.")
         self._update_db_status(ip, "ONLINE")
         
         # Emit events to all subscribers
@@ -232,15 +238,14 @@ class NodeMonitor:
                     old_status_val = old_status
 
         if status_changed:
-            self._logger.info(f"Node {ip} explicitly reported shutdown. State changed from {old_status_val} to OFFLINE.")
+            self._logger.info(f"Node {ip} explicitly reported shutdown. State changed to OFFLINE.")
+            
             # Update the database
             self._update_db_status(ip, "OFFLINE")
             
             # Emit events to all subscribers
             self._emit('node_status_changed', ip, old_status_val, "OFFLINE")
             self._emit('nodes_updated', self.get_all_nodes())
-        else:
-            self._logger.debug(f"Received explicit offline signal for node {ip}, but it was already OFFLINE or unknown.")
 
     def get_all_nodes(self):
         """
