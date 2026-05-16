@@ -74,7 +74,7 @@ class NodeRegistration(Resource):
         node_data = {
             "name": "Unknown",
             "type": "Unknown",
-            "utilization": "Unknown",
+            "utilization": "Printing",
             "sensor_ip": "NULL"
         }
 
@@ -86,7 +86,7 @@ class NodeRegistration(Resource):
                 if entry["n"] == "type":
                     node_data["type"] = entry.get("vs", "Unknown")
                 elif entry["n"] == "utilization":
-                    node_data["utilization"] = entry.get("vs", "Unknown")
+                    node_data["utilization"] = entry.get("vs", "Printing")
                 elif entry["n"] == "sensor_ip":
                     node_data["sensor_ip"] = entry.get("vs", "NULL")
 

@@ -23,6 +23,7 @@
 #include "utility/coap_module.h"
 #include "utility/mqtt_module.h"
 
+// Smart Sensor Log
 #define LOG_MODULE "Smart Sensor"
 #define LOG_LEVEL LOG_LEVEL_APP
 
@@ -30,20 +31,33 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+// Cross-platform LED compatibility macros to ensure correct behavior across simulation and hardware
+#ifdef DEV_COOJA
+  #define PLATFORM_LED_GREEN LEDS_NUM_TO_MASK(LEDS_GREEN)
+  #define PLATFORM_LED_RED   LEDS_NUM_TO_MASK(LEDS_RED)
+#else
+  #define PLATFORM_LED_GREEN LEDS_GREEN
+  #define PLATFORM_LED_RED   LEDS_RED
+#endif
+
 /* ==================================================== */ 
 /* =            SENSOR SIMULATION STRUCTURES          = */ 
 /* ==================================================== */ 
+
+// Structure to hold 3-axis accelerometer data
 typedef struct {
     float x;
     float y;
     float z;
 } accel_data_t;
 
+// Printer operating state simulation
 typedef enum {
     PRINTER_STATE_NORMAL,
     PRINTER_STATE_ERROR
 } printer_state_t;
 
+// Sensor state machine definition
 typedef enum {
     SENSOR_STATE_OFF = 0,
     SENSOR_STATE_INIT = 1,
@@ -54,15 +68,18 @@ typedef enum {
 /* ==================================================== */ 
 /* =                  CONFIGURATION                   = */ 
 /* ==================================================== */ 
+
+// Simulated environment variables
 static printer_state_t simulated_printer_state = PRINTER_STATE_NORMAL; 
 static float current_power_draw_watts = 150.0; 
 
+// Device and MQTT configuration variables
 static sensor_state_t current_state = SENSOR_STATE_OFF;
 static char device_name[32];
 static char mqtt_payload[512];
 static char pub_topic[128]; 
 
-// Timers
+// Timers for sampling, networking, and pairing
 static struct etimer sampling_timer;
 static struct etimer mqtt_retry_timer;      
 static struct etimer pairing_timer;         
@@ -73,11 +90,14 @@ static uint8_t samples_sent_in_batch = 0;
 static uint8_t target_batch_size = 5;
 static uint8_t health_fail_count = 0;
 
+// Process events for external triggers
 process_event_t event_start_smart_sensor;
 
 /* ==================================================== */
 /* =             SENSOR HARDWARE SIMULATION           = */
 /* ==================================================== */
+
+// Generate a normally distributed random float
 static float get_gaussian_float(float mean, float std_dev){
     float u1 = (float)random_rand() / RANDOM_RAND_MAX;
     float u2 = (float)random_rand() / RANDOM_RAND_MAX;
@@ -90,6 +110,7 @@ static float get_gaussian_float(float mean, float std_dev){
     return final_value;
 }
 
+// Generate a bounded normally distributed random float
 float get_bounded_gaussian(float mean, float std_dev, float limit_val){
     float generated_val = get_gaussian_float(mean, std_dev);
     float max_val = mean + limit_val;
@@ -100,14 +121,17 @@ float get_bounded_gaussian(float mean, float std_dev, float limit_val){
     return generated_val;
 }
 
+// Generate a uniform probability between 0 and 1
 static float get_uniform_probability(void){
     return (float)random_rand() / (float)RANDOM_RAND_MAX;
 }
 
+// Initialize the random seed for the simulated sensors
 void sensors_init(void){
     random_init((unsigned short)clock_time());
 }
 
+// Randomly trigger natural transitions between normal and error states during active simulation
 void sensor_activate(void){
     float roll = get_uniform_probability();
 
@@ -130,6 +154,7 @@ void sensor_activate(void){
 void sensor_sleep(void){}
 void sensor_deactivate(void){}
 
+// Read simulated plate acceleration data
 accel_data_t read_plate_acceleration(void){
     accel_data_t data_value;
     if(simulated_printer_state == PRINTER_STATE_NORMAL){
@@ -145,6 +170,7 @@ accel_data_t read_plate_acceleration(void){
     return data_value;
 }
 
+// Read simulated extruder acceleration data
 accel_data_t read_extruder_acceleration(void){
     accel_data_t data_value;
     if(simulated_printer_state == PRINTER_STATE_NORMAL){
@@ -160,11 +186,13 @@ accel_data_t read_extruder_acceleration(void){
     return data_value;
 }
 
+// Read simulated voltage tension
 float read_tension(void){
     if(simulated_printer_state == PRINTER_STATE_NORMAL) return get_gaussian_float(331.0, 15.0);
     else return get_gaussian_float(312.0, 50.0); 
 }
 
+// Read simulated power consumption
 float read_power(void){
     float delta;
     if(simulated_printer_state == PRINTER_STATE_NORMAL) delta = get_gaussian_float(0.0, 2.5); 
@@ -184,10 +212,12 @@ PROCESS(smart_sensor_process, "Smart Sensor Process");
 PROCESS(health_check_process, "Health Check Process");
 AUTOSTART_PROCESSES(&setup_process);
 
+// Trigger an MQTT reconnection attempt
 void sensor_trigger_mqtt_retry(void){ 
     process_post(&smart_sensor_process, event_mqtt_retry, NULL); 
 }
 
+// Update the sensor state and handle LED/hardware transitions
 static void set_sensor_state(sensor_state_t new_state){
     if(current_state == new_state) return;
     current_state = new_state;
@@ -212,28 +242,30 @@ static void set_sensor_state(sensor_state_t new_state){
             break;
         case SENSOR_STATE_ACTIVE:
             LOG_INFO("STATE: ACTIVE\n");
-            leds_on(LEDS_GREEN);
+            leds_on(PLATFORM_LED_GREEN);
             sensor_activate();
             if(!sensor_mqtt_is_connected()) sensor_trigger_mqtt_retry();
             break;
     }
 }
 
-uint8_t get_sensor_state(void) {
+// Return the current sensor state
+uint8_t get_sensor_state(void){
     return (uint8_t)current_state;
 }
 
 // Callback for the Parallel Health Check Process
-void health_response_handler(coap_message_t* response) {
-    if(response == NULL) {
+void health_response_handler(coap_message_t* response){
+    if(response == NULL){
         health_fail_count++;
         LOG_WARN("Health check failed (%d/3)\n", health_fail_count);
-        if(health_fail_count >= 3) {
+        if(health_fail_count >= 3){
             LOG_ERR("Actuator dead or unresponsive! Unpairing...\n");
             process_post(&smart_sensor_process, event_unpaired, NULL);
             health_fail_count = 0; 
         }
-    } else {
+    } 
+    else{
         health_fail_count = 0; 
     }
 }
@@ -241,20 +273,24 @@ void health_response_handler(coap_message_t* response) {
 /* ==================================================== */
 /* =                  SETUP PROCESS                   = */
 /* ==================================================== */ 
-PROCESS_THREAD(setup_process, ev, data) {
+PROCESS_THREAD(setup_process, ev, data){
     static button_hal_button_t *btn;
     static bool smart_sensor_active = false;
 
     PROCESS_BEGIN();
     
+    // Allocate core application events
     event_start_smart_sensor = process_alloc_event();
 
     LOG_INFO("Smart Sensor SETUP process starting...\n");
     
+    // Generate a safe device name based on the node ID
     uint16_t safe_id = (node_id > 0) ? (node_id - 1) : 0;
     snprintf(device_name, sizeof(device_name), "sensor_%02u", safe_id);
 
     current_state = SENSOR_STATE_OFF;
+    
+    // Initialize hardware button
     button_hal_init();
     btn = button_hal_get_by_index(0);
 
@@ -263,30 +299,34 @@ PROCESS_THREAD(setup_process, ev, data) {
         LOG_WARN("Short press to start Smart Sensor. Hold 5s to reset when active.\n");
     }
 
-    while(1) {
+    while(1){
         PROCESS_YIELD();
 
-        if(ev == button_hal_press_event) {
-            if(!smart_sensor_active) {
+        // Handle primary button presses to start the device
+        if(ev == button_hal_press_event){
+            if(!smart_sensor_active){
                 smart_sensor_active = true;
                 process_start(&smart_sensor_process, NULL);
                 process_start(&health_check_process, NULL);
                 process_post(&smart_sensor_process, event_start_smart_sensor, NULL);
-            } else {
+            } 
+            else{
                 LOG_WARN("Smart Sensor already active. Hold button 5 seconds to perform hard reset.\n");
             }
         }
 
-        if(ev == button_hal_periodic_event && btn && data) {
+        // Monitor button holds
+        if(ev == button_hal_periodic_event && btn && data){
             button_hal_button_t *b = (button_hal_button_t *)data;
-            if(b == btn) {
+            if(b == btn){
                 LOG_DBG("Setup: Button hold duration: %u s\n", b->press_duration_seconds);
             }
         }
 
-        if(ev == PROCESS_EVENT_EXITED) {
+        // Handles the graceful shutdown logic when smart_sensor_process yields PROCESS_EXIT()
+        if(ev == PROCESS_EVENT_EXITED){
             struct process *exited = (struct process *)data;
-            if(exited == &smart_sensor_process) {
+            if(exited == &smart_sensor_process){
                 LOG_WARN("Smart Sensor thread exited\n");
                 smart_sensor_active = false;
                 
@@ -309,15 +349,16 @@ PROCESS_THREAD(setup_process, ev, data) {
 /* ==================================================== */
 /* =              HEALTH CHECK PROCESS                = */
 /* ==================================================== */ 
-PROCESS_THREAD(health_check_process, ev, data) {
+PROCESS_THREAD(health_check_process, ev, data){
     static coap_message_t health_req[1];
     PROCESS_BEGIN();
     
+    // Periodically ping the actuator to ensure it is still reachable
     etimer_set(&health_check_timer, 60 * CLOCK_SECOND);
     
-    while(1) {
+    while(1){
         PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_TIMER && data == &health_check_timer);
-        if(is_paired && current_state != SENSOR_STATE_OFF) {
+        if(is_paired && current_state != SENSOR_STATE_OFF){
             coap_init_message(health_req, COAP_TYPE_CON, COAP_GET, coap_get_mid());
             coap_set_header_uri_path(health_req, "health");
             COAP_BLOCKING_REQUEST(&printer_ep, health_req, health_response_handler);
@@ -335,6 +376,7 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
 
     LOG_INFO("Smart Sensor Booting up...\n");
 
+    // Initialize Network Modules
     sensor_coap_init();
     sensor_mqtt_init(&smart_sensor_process, device_name);
     
@@ -343,23 +385,26 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
     while(1){
         PROCESS_WAIT_EVENT();
 
-        if (ev == event_start_smart_sensor) {
+        /* GLOBAL / CROSS-STATE EVENTS */
+        // Handle initial pairing request
+        if (ev == event_start_smart_sensor){
             set_sensor_state(SENSOR_STATE_INIT);
             LOG_INFO("Attempting initial pairing with Printer...\n");
-            // FIX: Fire and forget async discovery
             sensor_coap_send_discovery_async();
             etimer_set(&pairing_timer, 5 * CLOCK_SECOND);
         }
 
-        if(ev == event_discovery_received) {
+        // Handle successful pairing
+        if(ev == event_discovery_received){
             is_paired = true;
             health_fail_count = 0;
-            if(current_state == SENSOR_STATE_INIT) {
+            if(current_state == SENSOR_STATE_INIT){
                 set_sensor_state(SENSOR_STATE_SLEEP);
             }
         }
         
-        if(ev == event_unpaired) {
+        // Handle unpairing or disconnection
+        if(ev == event_unpaired){
             LOG_INFO("Printer disconnected or unpair signal received! Restarting discovery.\n");
             is_paired = false;
             health_fail_count = 0;
@@ -370,21 +415,8 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
             etimer_set(&pairing_timer, 5 * CLOCK_SECOND);
         }
 
-        if(ev == PROCESS_EVENT_TIMER && data == &pairing_timer) {
-            if(current_state == SENSOR_STATE_INIT) {
-                LOG_INFO("Initial pairing timeout. Going to SLEEP.\n");
-                is_paired = false;
-                set_sensor_state(SENSOR_STATE_SLEEP);
-                
-                etimer_set(&pairing_timer, 10 * CLOCK_SECOND);
-            } else if (current_state == SENSOR_STATE_SLEEP && !is_paired) {
-                // FIX: Continuous Async Scanning
-                sensor_coap_send_discovery_async();
-                etimer_set(&pairing_timer, 10 * CLOCK_SECOND);
-            }
-        }
-
-        if(ev == event_start_sampling) {
+        // Handle sampling control signals (START, PAUSE, STOP)
+        if(ev == event_start_sampling){
             samples_sent_in_batch = 0;
             target_batch_size = 5; 
             set_sensor_state(SENSOR_STATE_ACTIVE);
@@ -392,32 +424,24 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
             etimer_set(&sampling_timer, 1 * CLOCK_SECOND);
         }
         
-        if(ev == event_continue_sampling) {
-            if(current_state == SENSOR_STATE_ACTIVE) {
-                LOG_INFO("ML Verdict received: CONTINUE. Resuming sampling.\n");
-                samples_sent_in_batch = 0;
-                target_batch_size = 4; 
-                
-                etimer_set(&sampling_timer, 1 * CLOCK_SECOND);
-            }
-        }
-        
-        if(ev == event_pause_sampling || ev == event_stop_sampling) {
+        if(ev == event_pause_sampling || ev == event_stop_sampling){
             LOG_INFO("Sampling session ended. Returning to SLEEP.\n");
             etimer_stop(&sampling_timer);
             set_sensor_state(SENSOR_STATE_SLEEP);
         }
 
+        // Ensure MQTT remains connected while the device is active
         if(ev == event_mqtt_retry || (ev == PROCESS_EVENT_TIMER && data == &mqtt_retry_timer)){
             if(!sensor_mqtt_is_connected() && current_state != SENSOR_STATE_OFF){
                 sensor_mqtt_connect();
             }
-            if(current_state != SENSOR_STATE_OFF) {
+            if(current_state != SENSOR_STATE_OFF){
                 etimer_set(&mqtt_retry_timer, 10 * CLOCK_SECOND);
             }
         }
 
-        if(ev == button_hal_periodic_event && data) {
+        // Handling Hard Reset Trigger
+        if(ev == button_hal_periodic_event && data){
             button_hal_button_t *b = (button_hal_button_t *)data;
             if(b->press_duration_seconds >= 5 && current_state != SENSOR_STATE_OFF){
                 LOG_WARN("Hard Reset Triggered. Breaking pair and returning to OFF.\n");
@@ -433,13 +457,44 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
             }
         }
 
-        if(current_state == SENSOR_STATE_ACTIVE){
+        /* STATE MACHINE */
+        if(current_state == SENSOR_STATE_INIT){
+            // Handle pairing timeouts
+            if(ev == PROCESS_EVENT_TIMER && data == &pairing_timer){
+                LOG_INFO("Initial pairing timeout. Going to SLEEP.\n");
+                is_paired = false;
+                set_sensor_state(SENSOR_STATE_SLEEP);
+                
+                etimer_set(&pairing_timer, 10 * CLOCK_SECOND);
+            }
+        }
+        else if(current_state == SENSOR_STATE_SLEEP){
+            // Retry discovery periodically if not paired
+            if(ev == PROCESS_EVENT_TIMER && data == &pairing_timer){
+                if(!is_paired){
+                    sensor_coap_send_discovery_async();
+                    etimer_set(&pairing_timer, 10 * CLOCK_SECOND);
+                }
+            }
+        }
+        else if(current_state == SENSOR_STATE_ACTIVE){
+            // Handle ML continuation signal
+            if(ev == event_continue_sampling){
+                LOG_INFO("ML Verdict received: CONTINUE. Resuming sampling.\n");
+                samples_sent_in_batch = 0;
+                target_batch_size = 4; 
+                
+                etimer_set(&sampling_timer, 1 * CLOCK_SECOND);
+            }
+
+            // Process active sampling and MQTT publishing
             if(ev == PROCESS_EVENT_TIMER && data == &sampling_timer){
                 accel_data_t plate = read_plate_acceleration();
                 accel_data_t extruder = read_extruder_acceleration();
                 float tension = read_tension();
                 float power = read_power(); 
 
+                // Extract integer and decimal components manually for formatted output
                 int px_i = (int)plate.x; int px_d = (int)(fabs(plate.x - px_i) * 1000);
                 int py_i = (int)plate.y; int py_d = (int)(fabs(plate.y - py_i) * 1000);
                 int pz_i = (int)plate.z; int pz_d = (int)(fabs(plate.z - pz_i) * 1000);
@@ -459,6 +514,7 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
                 const char* pow_sign = (power < 0 && pow_i == 0) ? "-" : "";
 
                 if(sensor_mqtt_is_connected()){
+                    // Format MQTT message using SenML JSON standard array
                     snprintf(mqtt_payload, sizeof(mqtt_payload),
                         "["
                         "{\"bn\":\"%s\",\"n\":\"X_Axis_Plate\",\"u\":\"m/s2\",\"v\":%s%d.%03d},"
@@ -489,10 +545,11 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
                 }
 
                 samples_sent_in_batch++;
-                if(samples_sent_in_batch >= target_batch_size) {
+                if(samples_sent_in_batch >= target_batch_size){
                     LOG_INFO("Batch complete. Awaiting ML verdict... (Fallback timeout active)\n");
                     etimer_set(&sampling_timer, 10 * CLOCK_SECOND);
-                } else {
+                } 
+                else{
                     etimer_reset(&sampling_timer);
                 }
             }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simconf version="2023090101">
   <simulation>
-    <title>Cooja Simulation</title>
-    <speedlimit>1.0</speedlimit>
+    <title>Eco3DPrint Simulation</title>
+    <speedlimit>2.0</speedlimit>
     <randomseed>123456</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
@@ -17,7 +17,7 @@
     </events>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <description>Border Router</description>
+      <description>Border-Router</description>
       <source>[CONFIG_DIR]/../src/Gateway/border-router.c</source>
       <commands>$(MAKE) -j$(CPUS) border-router.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
@@ -39,7 +39,7 @@
       <mote>
         <interface_config>
           org.contikios.cooja.interfaces.Position
-          <pos x="-0.017029954098827724" y="99.97703786939587" />
+          <pos x="0.014003612402953891" y="100.03858902741099" />
         </interface_config>
         <interface_config>
           org.contikios.cooja.contikimote.interfaces.ContikiMoteID
@@ -49,8 +49,8 @@
     </motetype>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <description>Printer</description>
-      <source>[CONFIG_DIR]/../src/Printer3D/device.c</source>
+      <description>Printer-3D</description>
+      <source>[CONFIG_DIR]/../src/Printer3D/Actuator/device.c</source>
       <commands>$(MAKE) -j$(CPUS) device.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
@@ -71,7 +71,7 @@
       <mote>
         <interface_config>
           org.contikios.cooja.interfaces.Position
-          <pos x="53.524079828462405" y="74.98106543165149" />
+          <pos x="29.956377258353328" y="79.98735895881873" />
         </interface_config>
         <interface_config>
           org.contikios.cooja.contikimote.interfaces.ContikiMoteID
@@ -81,7 +81,39 @@
       <mote>
         <interface_config>
           org.contikios.cooja.interfaces.Position
-          <pos x="14.794432523100056" y="75.76231644943152" />
+          <pos x="-30.033292240217243" y="80.00037542055696" />
+        </interface_config>
+        <interface_config>
+          org.contikios.cooja.contikimote.interfaces.ContikiMoteID
+          <id>4</id>
+        </interface_config>
+      </mote>
+    </motetype>
+    <motetype>
+      org.contikios.cooja.contikimote.ContikiMoteType
+      <description>Sensors</description>
+      <source>[CONFIG_DIR]/../src/Printer3D/Sensor/sensors_main.c</source>
+      <commands>$(MAKE) -j$(CPUS) sensors_main.cooja TARGET=cooja</commands>
+      <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
+      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
+      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiMoteID</moteinterface>
+      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiRS232</moteinterface>
+      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiBeeper</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiRadio</moteinterface>
+      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiButton</moteinterface>
+      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiPIR</moteinterface>
+      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiClock</moteinterface>
+      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiLED</moteinterface>
+      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiCFS</moteinterface>
+      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
+      <mote>
+        <interface_config>
+          org.contikios.cooja.interfaces.Position
+          <pos x="30.02835252546508" y="60.03666848917146" />
         </interface_config>
         <interface_config>
           org.contikios.cooja.contikimote.interfaces.ContikiMoteID
@@ -91,17 +123,7 @@
       <mote>
         <interface_config>
           org.contikios.cooja.interfaces.Position
-          <pos x="-16.82436259720944" y="75.30100586034636" />
-        </interface_config>
-        <interface_config>
-          org.contikios.cooja.contikimote.interfaces.ContikiMoteID
-          <id>4</id>
-        </interface_config>
-      </mote>
-      <mote>
-        <interface_config>
-          org.contikios.cooja.interfaces.Position
-          <pos x="-55.12992855329881" y="74.91354998175089" />
+          <pos x="-30.01161296923385" y="60.080334594593126" />
         </interface_config>
         <interface_config>
           org.contikios.cooja.contikimote.interfaces.ContikiMoteID
@@ -118,9 +140,9 @@
       <skin>org.contikios.cooja.plugins.skins.GridVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.TrafficVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
-      <viewport>1.9463672081072791 0.0 0.0 1.9463672081072791 200.48337191654457 72.37135576569207</viewport>
+      <viewport>1.6305868624742825 0.0 0.0 1.6305868624742825 259.1830905364074 39.21496950744035</viewport>
     </plugin_config>
-    <bounds x="1" y="1" height="400" width="400" z="1" />
+    <bounds x="1" y="-1" height="400" width="398" z="1" />
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.LogListener
@@ -144,7 +166,7 @@
       <showLEDs />
       <zoomfactor>500.0</zoomfactor>
     </plugin_config>
-    <bounds x="0" y="800" height="166" width="1850" z="5" />
+    <bounds x="0" y="800" height="166" width="1850" z="4" />
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.Notes
@@ -152,7 +174,7 @@
       <notes>Enter notes here</notes>
       <decorations>true</decorations>
     </plugin_config>
-    <bounds x="400" y="0" height="160" width="1450" z="4" />
+    <bounds x="400" y="0" height="160" width="1450" z="3" />
   </plugin>
   <plugin>
     org.contikios.cooja.serialsocket.SerialSocketServer
@@ -161,6 +183,6 @@
       <port>60001</port>
       <bound>true</bound>
     </plugin_config>
-    <bounds x="0" y="0" height="116" width="362" z="3" />
+    <bounds x="0" y="0" height="116" width="362" z="-1" minimized="true" />
   </plugin>
 </simconf>

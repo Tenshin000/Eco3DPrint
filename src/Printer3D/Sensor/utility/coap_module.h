@@ -20,7 +20,6 @@ extern process_event_t event_unpaired;
 void sensor_coap_init(void);
 void sensor_coap_send_off_signal(void);
 void sensor_coap_prepare_discovery(void);
-void discovery_response_handler(coap_message_t* response);
 void sensor_coap_send_discovery_async(void);
 
 #endif /* COAP_MODULE_H */

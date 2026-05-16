@@ -77,8 +77,7 @@ build/nrf52840/dongle/obj/coap_module.o: utility/coap_module.c \
  ../../../../../os/net/app-layer/coap/coap-blocking-api.h \
  ../../../../../os/net/app-layer/coap/coap-request-state.h \
  ../../../../../os/net/ipv6/uiplib.h utility/device_conf.h \
- ../../../../../os/sys/log.h ../../../../../os/sys/log-conf.h \
- ../../../../../os/sys/node-id.h ../../../../../os/net/ipv6/uip-ds6.h \
+ ../../../../../os/net/ipv6/uip-ds6.h \
  ../../../../../os/net/ipv6/multicast/uip-mcast6.h \
  ../../../../../os/net/ipv6/multicast/uip-mcast6-engines.h \
  ../../../../../os/net/ipv6/multicast/uip-mcast6-route.h \
@@ -92,7 +91,9 @@ build/nrf52840/dongle/obj/coap_module.o: utility/coap_module.c \
  ../../../../../os/net/nbr-table.h ../../../../../os/net/netstack.h \
  ../../../../../os/net/mac/mac.h ../../../../../os/dev/radio.h \
  ../../../../../os/net/mac/framer/framer.h \
- ../../../../../os/net/ipv6/uip-ds6-route.h ../../../../../os/lib/list.h
+ ../../../../../os/net/ipv6/uip-ds6-route.h ../../../../../os/lib/list.h \
+ ../../../../../os/sys/log.h ../../../../../os/sys/log-conf.h \
+ ../../../../../os/sys/node-id.h
 
 ../../../../../os/net/app-layer/coap/module-macros.h:
 
@@ -276,12 +277,6 @@ project-conf.h:
 
 utility/device_conf.h:
 
-../../../../../os/sys/log.h:
-
-../../../../../os/sys/log-conf.h:
-
-../../../../../os/sys/node-id.h:
-
 ../../../../../os/net/ipv6/uip-ds6.h:
 
 ../../../../../os/net/ipv6/multicast/uip-mcast6.h:
@@ -319,3 +314,9 @@ utility/device_conf.h:
 ../../../../../os/net/ipv6/uip-ds6-route.h:
 
 ../../../../../os/lib/list.h:
+
+../../../../../os/sys/log.h:
+
+../../../../../os/sys/log-conf.h:
+
+../../../../../os/sys/node-id.h:

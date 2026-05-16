@@ -1,40 +1,47 @@
 #include "coap_module.h"
-
 #include "device_conf.h"
-#include "sys/log.h"
-#include "sys/node-id.h"
-#include <string.h>
+
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uiplib.h"
+#include <string.h>
+#include "sys/log.h"
+#include "sys/node-id.h"
 
+// CoAP Log Module
 #define LOG_MODULE "CoAP Module"
 #define LOG_LEVEL LOG_LEVEL_APP
 
+// CoAP Endpoints and Message
 coap_endpoint_t server_ep;
 coap_endpoint_t sensor_ep;
 coap_endpoint_t multicast_ep;
 coap_message_t request[1];
 
+// Payload and sensor state tracking
 static char coap_payload[256];
 char paired_sensor_ip_str[UIPLIB_IPV6_MAX_STR_LEN] = "";
 bool sensor_is_paired = false;
 
+// Process events for sensor state changes
 process_event_t event_sensor_paired;
 process_event_t event_sensor_unpaired;
 
+// External main process reference
 extern struct process smart_printer_process;
 
 #ifdef DEV_DONGLE
+// Hardcoded IPs for dongles testing environment
 static const char* known_dongle_ips[3] = {
     "fd00::f6ce:366a:718b:73f2",
     "fd00::f6ce:36fa:435f:f3d6",
     "fd00::f6ce:36cf:5367:3d5a"
 };
+// Current dongle index for IP rotation
 static uint8_t current_dongle_idx = 0;
 #endif
 
-// FIX: Dedicated function to send a direct reciprocal ping without rotating the IP list
-static void coap_module_send_direct_ping(coap_endpoint_t *target_ep) {
+// Dedicated function to send a direct reciprocal ping without rotating the IP list
+static void coap_module_send_direct_ping(coap_endpoint_t *target_ep){
     coap_init_message(request, COAP_TYPE_NON, COAP_POST, coap_get_mid());
     coap_set_header_uri_path(request, "sensor/discovery");
     
@@ -44,7 +51,7 @@ static void coap_module_send_direct_ping(coap_endpoint_t *target_ep) {
     coap_set_payload(request, (uint8_t *)coap_payload, strlen(coap_payload));
 
     coap_transaction_t *t = coap_new_transaction(request->mid, target_ep);
-    if(t) {
+    if(t){
         t->message_len = coap_serialize_message(request, t->message);
         coap_send_transaction(t);
     }
@@ -53,11 +60,13 @@ static void coap_module_send_direct_ping(coap_endpoint_t *target_ep) {
 /* ==================================================== */
 /* =              RESOURCE HANDLERS                   = */
 /* ==================================================== */
+// GET handler for the /health resource
 static void res_health_get_handler(coap_message_t *req, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
   device_state_t current = device_get_state();
   const char* msg = device_get_state_string(current);
   if(current == STATE_OFF) return;
 
+  // Reject if device is not online or printing
   if(current != STATE_ONLINE && current != STATE_PRINTING){
     coap_set_status_code(response, SERVICE_UNAVAILABLE_5_03);
     return;
@@ -67,16 +76,18 @@ static void res_health_get_handler(coap_message_t *req, coap_message_t *response
   coap_set_payload(response, (uint8_t *)msg, strlen(msg));
 }
 
+// POST handler for the /print resource (Handles Block-wise transfer)
 static void res_print_post_handler(coap_message_t *req, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
   uint32_t block_num = 0; uint8_t more = 0; uint16_t block_size = 0; uint32_t block_offset = 0;
   device_state_t current = device_get_state();
   
+  // Refuse incoming files if the node is not ONLINE
   if(current != STATE_ONLINE){
     coap_set_status_code(response, SERVICE_UNAVAILABLE_5_03);
     return;
   }
 
-  if(coap_get_header_block1(req, &block_num, &more, &block_size, &block_offset)) {
+  if(coap_get_header_block1(req, &block_num, &more, &block_size, &block_offset)){
     const uint8_t *payload_ptr = NULL;
     int len = coap_get_payload(req, &payload_ptr);
     device_add_stl_length(len);
@@ -97,6 +108,7 @@ static void res_print_post_handler(coap_message_t *req, coap_message_t *response
   }
 }
 
+// POST handler for the /printer/sensor_off resource
 static void res_sensor_off_post_handler(coap_message_t *req, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
   LOG_WARN("Sensor sent an OFF notification! Unpairing...\n");
   sensor_is_paired = false;
@@ -106,8 +118,9 @@ static void res_sensor_off_post_handler(coap_message_t *req, coap_message_t *res
   process_post(&smart_printer_process, event_sensor_unpaired, NULL);
 }
 
+// POST handler for the /printer/discovery resource
 static void res_printer_discovery_post_handler(coap_message_t *req, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
-  if(device_get_state() == STATE_OFF) {
+  if(device_get_state() == STATE_OFF){
       coap_set_status_code(response, SERVICE_UNAVAILABLE_5_03);
       return;
   }
@@ -122,7 +135,7 @@ static void res_printer_discovery_post_handler(coap_message_t *req, coap_message
       memcpy(new_ip, payload, cp_len);
       new_ip[cp_len] = '\0';
       
-      if(strncmp(new_ip, "unknown_ip", 10) == 0) {
+      if(strncmp(new_ip, "unknown_ip", 10) == 0){
           #ifdef DEV_COOJA
           uint16_t sensor_id = node_id + 1;
           uip_ipaddr_t sensor_ip;
@@ -135,7 +148,8 @@ static void res_printer_discovery_post_handler(coap_message_t *req, coap_message
       
       coap_set_status_code(response, CONTENT_2_05);
 
-      if(sensor_is_paired && strcmp(paired_sensor_ip_str, new_ip) == 0) {
+      // Return immediately if already paired with this sensor
+      if(sensor_is_paired && strcmp(paired_sensor_ip_str, new_ip) == 0){
           return;
       }
 
@@ -149,10 +163,11 @@ static void res_printer_discovery_post_handler(coap_message_t *req, coap_message
       LOG_INFO("Incoming pairing request accepted from Sensor IP: %s\n", paired_sensor_ip_str);
       process_post(&smart_printer_process, event_sensor_paired, NULL);
       
-      // FIX: Reply directly to the sensor bypassing the rotation logic
+      // Reply directly to the sensor bypassing the rotation logic
       coap_module_send_direct_ping(&sensor_ep);
       
-  } else {
+  } 
+  else{
       coap_set_status_code(response, BAD_REQUEST_4_00);
   }
 }
@@ -168,9 +183,10 @@ RESOURCE(res_printer_discovery, "title=\"Printer Discovery\";rt=\"Text\"", NULL,
 /* ==================================================== */
 /* =                MODULE FUNCTIONS                  = */
 /* ==================================================== */
+// Initialize the CoAP module and activate internal resources
 void coap_module_init(void){
   static bool initialized = false;
-  if(!initialized) {
+  if(!initialized){
       event_sensor_paired = process_alloc_event();
       event_sensor_unpaired = process_alloc_event();
       coap_activate_resource(&res_health, "health");
@@ -181,6 +197,7 @@ void coap_module_init(void){
   }
 }
 
+// Prepare a CoAP request for the cloud server. Returns the generated Message ID (MID)
 uint16_t coap_module_prepare_request(const char* message, coap_message_type_t type, uint8_t method, const char* uri_path){
   memset(coap_payload, 0, sizeof(coap_payload));
   if(message != NULL) strncpy(coap_payload, message, sizeof(coap_payload) - 1);
@@ -194,6 +211,7 @@ uint16_t coap_module_prepare_request(const char* message, coap_message_type_t ty
   return mid;
 }
 
+// Prepare a CoAP POST command for the paired sensor
 uint16_t coap_module_prepare_sensor_command(const char* command){
   uint16_t mid = coap_get_mid();
   coap_init_message(request, COAP_TYPE_CON, COAP_POST, mid);
@@ -207,15 +225,17 @@ uint16_t coap_module_prepare_sensor_command(const char* command){
   return mid;
 }
 
-void coap_module_send_sensor_command_non_blocking(const char* command) {
+// Send an asynchronous CoAP command to the paired sensor
+void coap_module_send_sensor_command_non_blocking(const char* command){
     uint16_t mid = coap_module_prepare_sensor_command(command);
     coap_transaction_t* transaction = coap_new_transaction(mid, &sensor_ep);
-    if(transaction) {
+    if(transaction){
         transaction->message_len = coap_serialize_message(request, transaction->message);
         coap_send_transaction(transaction);
     }
 }
 
+// Prepare an unpair request for the sensor
 uint16_t coap_module_prepare_unpair(void){
   uint16_t mid = coap_get_mid();
   coap_init_message(request, COAP_TYPE_NON, COAP_POST, mid);
@@ -223,7 +243,8 @@ uint16_t coap_module_prepare_unpair(void){
   return mid;
 }
 
-void coap_module_prepare_discovery(void) {
+// Prepare a discovery multicast or directed unicast message depending on the environment
+void coap_module_prepare_discovery(void){
   #ifdef DEV_COOJA
   uint16_t sensor_id = node_id + 1;
   uip_ipaddr_t sensor_ip;
@@ -242,7 +263,8 @@ void coap_module_prepare_discovery(void) {
   uint8_t attempts = 0;
   uip_ipaddr_t target_ip;
 
-  while(!valid_target_found && attempts < 3) {
+  // Try to find a valid target dongle IP to send discovery
+  while(!valid_target_found && attempts < 3){
       const char* candidate_ip = known_dongle_ips[current_dongle_idx];
       current_dongle_idx = (current_dongle_idx + 1) % 3; 
       attempts++;
@@ -250,7 +272,7 @@ void coap_module_prepare_discovery(void) {
       uip_ipaddr_t cand_ip_struct;
       uiplib_ipaddrconv(candidate_ip, &cand_ip_struct);
 
-      if(addr == NULL || !uip_ipaddr_cmp(&addr->ipaddr, &cand_ip_struct)) {
+      if(addr == NULL || !uip_ipaddr_cmp(&addr->ipaddr, &cand_ip_struct)){
           uip_ipaddr_copy(&target_ip, &cand_ip_struct);
           valid_target_found = true;
       }
@@ -273,10 +295,11 @@ void coap_module_prepare_discovery(void) {
   coap_set_payload(request, (uint8_t *)coap_payload, strlen(coap_payload));
 }
 
-void coap_module_send_discovery_async(void) {
+// Send a discovery request asynchronously
+void coap_module_send_discovery_async(void){
     coap_module_prepare_discovery(); 
     coap_transaction_t *t = coap_new_transaction(request->mid, &multicast_ep);
-    if(t) {
+    if(t){
         t->message_len = coap_serialize_message(request, t->message);
         coap_send_transaction(t);
     }
@@ -285,6 +308,7 @@ void coap_module_send_discovery_async(void) {
 /* ==================================================== */
 /* =             RESPONSE HANDLERS                    = */
 /* ==================================================== */
+// Callback handler for Cloud Registration response
 void registration_handler(coap_message_t* response){
   if(device_get_state() == STATE_OFF) return;
 
@@ -295,21 +319,24 @@ void registration_handler(coap_message_t* response){
   } 
 
   if(response->code == 65 || response->code == 67){ 
-      if(device_get_state() != STATE_PRINTING) {
+      if(device_get_state() != STATE_PRINTING){
           device_set_state(STATE_ONLINE);
       }
-  } else {
+  } 
+  else{
       LOG_ERR("Registration Failed with code: %d\n", response->code);
       device_set_state(STATE_OFFLINE);
   }
 }
 
+// Callback handler for End of Print response
 void print_finished_handler(coap_message_t* response){
   if(device_get_state() == STATE_OFF) return;
 
   if(response == NULL){
     LOG_ERR("No response from server\n");
-  } else if(response->code != 68){
+  } 
+  else if(response->code != 68){
       LOG_ERR("Memorization of the print failed with code: %d\n", response->code);
   }
 
@@ -317,10 +344,7 @@ void print_finished_handler(coap_message_t* response){
   device_set_state(STATE_ONLINE);
 }
 
-void discovery_handler(coap_message_t* response) {
-  // Not used natively as handler for Async
-}
-
-void sensor_command_handler(coap_message_t* response) {
+// Callback handler for Sensor Command response
+void sensor_command_handler(coap_message_t* response){
   if(response == NULL) LOG_WARN("Sensor did not acknowledge the command.\n");
 }

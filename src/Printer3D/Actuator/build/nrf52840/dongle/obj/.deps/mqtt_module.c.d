@@ -1,6 +1,6 @@
 build/nrf52840/dongle/obj/mqtt_module.o: utility/mqtt_module.c \
  ../../../../../os/net/app-layer/coap/module-macros.h \
- utility/mqtt_module.h ../../../../../os/contiki.h \
+ ../../../../../os/net/app-layer/mqtt/mqtt.h ../../../../../os/contiki.h \
  ../../../../../arch/platform/nrf52840/./contiki-conf.h project-conf.h \
  ../../../../../arch/platform/nrf52840/dongle/nrf52840-board-def.h \
  ../../../../../arch/cpu/nrf52840/lib/nrf52-sdk/components/boards/boards.h \
@@ -59,7 +59,6 @@ build/nrf52840/dongle/obj/mqtt_module.o: utility/mqtt_module.c \
  ../../../../../os/dev/watchdog.h \
  ../../../../../arch/cpu/nrf52840/./rtimer-arch.h \
  ../../../../../os/sys/pt.h ../../../../../os/sys/clock.h \
- utility/device_conf.h ../../../../../os/net/app-layer/mqtt/mqtt.h \
  ../../../../../os/contiki-net.h ../../../../../os/contiki.h \
  ../../../../../os/net/ipv6/tcpip.h ../../../../../os/net/ipv6/uip.h \
  ../../../../../os/net/ipv6/uipopt.h ../../../../../os/net/ipv6/uipbuf.h \
@@ -98,12 +97,13 @@ build/nrf52840/dongle/obj/mqtt_module.o: utility/mqtt_module.c \
  ../../../../../arch/cpu/nrf52840/lib/nrf52-sdk/modules/nrfx/hal/nrf_gpiote.h \
  ../../../../../arch/cpu/nrf52840/lib/nrf52-sdk/modules/nrfx/hal/nrf_gpio.h \
  ../../../../../os/net/ipv6/tcp-socket.h \
- ../../../../../os/net/ipv6/udp-socket.h ../../../../../os/sys/log.h \
+ ../../../../../os/net/ipv6/udp-socket.h utility/mqtt_module.h \
+ utility/device_conf.h ../../../../../os/sys/log.h \
  ../../../../../os/sys/log-conf.h
 
 ../../../../../os/net/app-layer/coap/module-macros.h:
 
-utility/mqtt_module.h:
+../../../../../os/net/app-layer/mqtt/mqtt.h:
 
 ../../../../../os/contiki.h:
 
@@ -241,10 +241,6 @@ project-conf.h:
 
 ../../../../../os/sys/clock.h:
 
-utility/device_conf.h:
-
-../../../../../os/net/app-layer/mqtt/mqtt.h:
-
 ../../../../../os/contiki-net.h:
 
 ../../../../../os/contiki.h:
@@ -354,6 +350,10 @@ utility/device_conf.h:
 ../../../../../os/net/ipv6/tcp-socket.h:
 
 ../../../../../os/net/ipv6/udp-socket.h:
+
+utility/mqtt_module.h:
+
+utility/device_conf.h:
 
 ../../../../../os/sys/log.h:
 

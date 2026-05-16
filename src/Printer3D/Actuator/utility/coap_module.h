@@ -50,7 +50,6 @@ void coap_module_send_discovery_async(void);
 /* Handlers exposed for BLOCKING_REQUEST usage */
 void registration_handler(coap_message_t* response);
 void print_finished_handler(coap_message_t* response);
-void discovery_handler(coap_message_t* response);
 void sensor_command_handler(coap_message_t* response);
 
 #endif /* COAP_MODULE_H */

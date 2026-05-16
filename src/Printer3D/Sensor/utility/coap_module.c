@@ -4,18 +4,23 @@
 #include "net/ipv6/uiplib.h"
 #include "sys/log.h"
 #include "sys/node-id.h"
+
 #include <stdlib.h>
 #include <string.h>
 
+// CoAP Log Module
 #define LOG_MODULE "CoAP Module"
 #define LOG_LEVEL LOG_LEVEL_APP
 
+// CoAP Endpoints and Message
 coap_endpoint_t printer_ep;
 coap_message_t request[1];
 bool is_paired = false;
 
+// Payload tracking
 static char coap_payload[256];
 
+// Process events for sensor state changes and sampling control
 process_event_t event_discovery_received;
 process_event_t event_start_sampling;
 process_event_t event_stop_sampling;
@@ -23,21 +28,24 @@ process_event_t event_pause_sampling;
 process_event_t event_continue_sampling;
 process_event_t event_unpaired;
 
+// External sensor state reference
 extern uint8_t get_sensor_state(void);
 #define SENSOR_STATE_OFF 0
 #define SENSOR_STATE_INIT 1
 
 #ifdef DEV_DONGLE
+// Hardcoded IPs for dongles testing environment
 static const char* known_dongle_ips[3] = {
     "fd00::f6ce:366a:718b:73f2",
     "fd00::f6ce:36fa:435f:f3d6",
     "fd00::f6ce:36cf:5367:3d5a"
 };
+// Current dongle index for IP rotation
 static uint8_t current_dongle_idx = 0;
 #endif
 
-// FIX: Dedicated function to send a direct reciprocal ping without rotating the IP list
-static void sensor_coap_send_direct_ping(coap_endpoint_t *target_ep) {
+// Dedicated function to send a direct reciprocal ping without rotating the IP list
+static void sensor_coap_send_direct_ping(coap_endpoint_t *target_ep){
     coap_init_message(request, COAP_TYPE_NON, COAP_POST, coap_get_mid());
     coap_set_header_uri_path(request, "printer/discovery");
     
@@ -47,7 +55,7 @@ static void sensor_coap_send_direct_ping(coap_endpoint_t *target_ep) {
     coap_set_payload(request, (uint8_t *)coap_payload, strlen(coap_payload));
 
     coap_transaction_t *t = coap_new_transaction(request->mid, target_ep);
-    if(t) {
+    if(t){
         t->message_len = coap_serialize_message(request, t->message);
         coap_send_transaction(t);
     }
@@ -56,8 +64,9 @@ static void sensor_coap_send_direct_ping(coap_endpoint_t *target_ep) {
 /* ==================================================== */
 /* =              RESOURCE HANDLERS                   = */
 /* ==================================================== */
-static void res_discovery_post_handler(coap_message_t *req, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    if(get_sensor_state() == SENSOR_STATE_OFF) {
+// POST handler for the /sensor/discovery resource
+static void res_discovery_post_handler(coap_message_t *req, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
+    if(get_sensor_state() == SENSOR_STATE_OFF){
         coap_set_status_code(response, SERVICE_UNAVAILABLE_5_03);
         return;
     }
@@ -65,14 +74,14 @@ static void res_discovery_post_handler(coap_message_t *req, coap_message_t *resp
     const uint8_t *payload = NULL;
     int len = coap_get_payload(req, &payload);
 
-    if(len > 0 && payload != NULL) {
+    if(len > 0 && payload != NULL){
         char new_ip[UIPLIB_IPV6_MAX_STR_LEN];
         memset(new_ip, 0, sizeof(new_ip));
         int cp_len = len < sizeof(new_ip) - 1 ? len : sizeof(new_ip) - 1;
         memcpy(new_ip, payload, cp_len);
         new_ip[cp_len] = '\0';
 
-        if(strncmp(new_ip, "unknown_ip", 10) == 0) {
+        if(strncmp(new_ip, "unknown_ip", 10) == 0){
             #ifdef DEV_COOJA
             uint16_t printer_id = node_id - 1;
             if (printer_id == 0) printer_id = 1;
@@ -86,7 +95,8 @@ static void res_discovery_post_handler(coap_message_t *req, coap_message_t *resp
 
         coap_set_status_code(response, CONTENT_2_05);
 
-        if(is_paired) {
+        // Return immediately if already paired
+        if(is_paired){
              return;
         }
 
@@ -97,16 +107,18 @@ static void res_discovery_post_handler(coap_message_t *req, coap_message_t *resp
         is_paired = true;
         process_post(PROCESS_BROADCAST, event_discovery_received, NULL);
         
-        // FIX: Reply directly to the actuator bypassing the rotation logic
+        // Reply directly to the actuator bypassing the rotation logic
         sensor_coap_send_direct_ping(&printer_ep);
 
-    } else {
+    } 
+    else{
         coap_set_status_code(response, BAD_REQUEST_4_00);
     }
 }
 
-static void res_print_post_handler(coap_message_t *req, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    if(get_sensor_state() == SENSOR_STATE_OFF || !is_paired) {
+// POST handler for the /sensor/print resource
+static void res_print_post_handler(coap_message_t *req, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
+    if(get_sensor_state() == SENSOR_STATE_OFF || !is_paired){
         coap_set_status_code(response, SERVICE_UNAVAILABLE_5_03);
         LOG_WARN("Print command rejected: Sensor not ready.\n");
         return;
@@ -115,38 +127,44 @@ static void res_print_post_handler(coap_message_t *req, coap_message_t *response
     const uint8_t *payload = NULL;
     int len = coap_get_payload(req, &payload);
 
-    if(len > 0 && payload != NULL) {
+    if(len > 0 && payload != NULL){
         char command[16];
         memset(command, 0, sizeof(command));
         int cp_len = len < sizeof(command) - 1 ? len : sizeof(command) - 1;
         memcpy(command, payload, cp_len);
         command[cp_len] = '\0';
 
-        if(strcmp(command, "START") == 0) {
+        if(strcmp(command, "START") == 0){
             LOG_INFO("Start signal received. Sampling begins indefinitely until told otherwise.\n");
             process_post(PROCESS_BROADCAST, event_start_sampling, NULL);
             coap_set_status_code(response, CHANGED_2_04);
-        } else if(strcmp(command, "STOP") == 0) {
+        } 
+        else if(strcmp(command, "STOP") == 0){
             LOG_INFO("Stop signal received from printer.\n");
             process_post(PROCESS_BROADCAST, event_stop_sampling, NULL);
             coap_set_status_code(response, CHANGED_2_04);
-        } else if(strcmp(command, "PAUSE") == 0) {
+        } 
+        else if(strcmp(command, "PAUSE") == 0){
             LOG_INFO("Pause signal received.\n");
             process_post(PROCESS_BROADCAST, event_pause_sampling, NULL);
             coap_set_status_code(response, CHANGED_2_04);
-        } else if(strcmp(command, "CONT") == 0) {
+        } 
+        else if(strcmp(command, "CONT") == 0){
             process_post(PROCESS_BROADCAST, event_continue_sampling, NULL);
             coap_set_status_code(response, CHANGED_2_04);
-        } else {
+        } 
+        else{
             LOG_WARN("Unknown print command received: %s\n", command);
             coap_set_status_code(response, BAD_REQUEST_4_00);
         }
-    } else {
+    } 
+    else{
         coap_set_status_code(response, BAD_REQUEST_4_00);
     }
 }
 
-static void res_unpair_post_handler(coap_message_t *req, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+// POST handler for the /sensor/unpair resource
+static void res_unpair_post_handler(coap_message_t *req, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
     LOG_WARN("Unpair signal received from printer!\n");
     coap_set_status_code(response, CHANGED_2_04);
     process_post(PROCESS_BROADCAST, event_unpaired, NULL);
@@ -162,9 +180,10 @@ RESOURCE(res_unpair_control, "title=\"Unpair Sensor\";rt=\"Control\"", NULL, res
 /* ==================================================== */
 /* =                MODULE FUNCTIONS                  = */
 /* ==================================================== */
-void sensor_coap_init(void) {
+// Initialize the CoAP module and allocate process events
+void sensor_coap_init(void){
     static bool initialized = false;
-    if(!initialized) {
+    if(!initialized){
         event_discovery_received = process_alloc_event();
         event_start_sampling = process_alloc_event();
         event_stop_sampling = process_alloc_event();
@@ -179,7 +198,8 @@ void sensor_coap_init(void) {
     }
 }
 
-void sensor_coap_prepare_discovery(void) {
+// Prepare a discovery multicast or directed unicast message depending on the environment
+void sensor_coap_prepare_discovery(void){
     #ifdef DEV_COOJA
     uint16_t printer_id = node_id - 1;
     if (printer_id == 0) printer_id = 1; 
@@ -200,7 +220,8 @@ void sensor_coap_prepare_discovery(void) {
     uint8_t attempts = 0;
     uip_ipaddr_t target_ip;
 
-    while(!valid_target_found && attempts < 3) {
+    // Try to find a valid target dongle IP to send discovery
+    while(!valid_target_found && attempts < 3){
         const char* candidate_ip = known_dongle_ips[current_dongle_idx];
         current_dongle_idx = (current_dongle_idx + 1) % 3; 
         attempts++;
@@ -208,7 +229,7 @@ void sensor_coap_prepare_discovery(void) {
         uip_ipaddr_t cand_ip_struct;
         uiplib_ipaddrconv(candidate_ip, &cand_ip_struct);
 
-        if(addr == NULL || !uip_ipaddr_cmp(&addr->ipaddr, &cand_ip_struct)) {
+        if(addr == NULL || !uip_ipaddr_cmp(&addr->ipaddr, &cand_ip_struct)){
             uip_ipaddr_copy(&target_ip, &cand_ip_struct);
             valid_target_found = true;
         }
@@ -232,20 +253,18 @@ void sensor_coap_prepare_discovery(void) {
     coap_set_payload(request, (uint8_t *)coap_payload, strlen(coap_payload));
 }
 
-void sensor_coap_send_discovery_async(void) {
+// Send a discovery request asynchronously
+void sensor_coap_send_discovery_async(void){
     sensor_coap_prepare_discovery(); 
     coap_transaction_t *t = coap_new_transaction(request->mid, &printer_ep);
-    if(t) {
+    if(t){
         t->message_len = coap_serialize_message(request, t->message);
         coap_send_transaction(t);
     }
 }
 
-void discovery_response_handler(coap_message_t* response) {
-    // Left empty, handled natively via resources
-}
-
-void sensor_coap_send_off_signal(void) {
+// Send an OFF signal to the paired printer
+void sensor_coap_send_off_signal(void){
     if(!is_paired) return;
     
     static coap_message_t msg[1];
@@ -253,7 +272,7 @@ void sensor_coap_send_off_signal(void) {
     coap_set_header_uri_path(msg, "printer/sensor_off");
     
     coap_transaction_t* trans = coap_new_transaction(msg->mid, &printer_ep);
-    if(trans) {
+    if(trans){
         trans->message_len = coap_serialize_message(msg, trans->message);
         coap_send_transaction(trans);
     }
