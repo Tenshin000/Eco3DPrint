@@ -15,15 +15,40 @@ coap_endpoint_t sensor_ep;
 coap_endpoint_t multicast_ep;
 coap_message_t request[1];
 
-static char coap_payload[128];
+static char coap_payload[256];
 char paired_sensor_ip_str[UIPLIB_IPV6_MAX_STR_LEN] = "";
 bool sensor_is_paired = false;
 
 process_event_t event_sensor_paired;
 process_event_t event_sensor_unpaired;
 
-// External reference to the main process to handle async events
 extern struct process smart_printer_process;
+
+#ifdef DEV_DONGLE
+static const char* known_dongle_ips[3] = {
+    "fd00::f6ce:366a:718b:73f2",
+    "fd00::f6ce:36fa:435f:f3d6",
+    "fd00::f6ce:36cf:5367:3d5a"
+};
+static uint8_t current_dongle_idx = 0;
+#endif
+
+// FIX: Dedicated function to send a direct reciprocal ping without rotating the IP list
+static void coap_module_send_direct_ping(coap_endpoint_t *target_ep) {
+    coap_init_message(request, COAP_TYPE_NON, COAP_POST, coap_get_mid());
+    coap_set_header_uri_path(request, "sensor/discovery");
+    
+    strncpy(coap_payload, "unknown_ip", sizeof(coap_payload));
+    uip_ds6_addr_t *my_addr = uip_ds6_get_global(ADDR_PREFERRED);
+    if(my_addr != NULL) uiplib_ipaddr_snprint(coap_payload, sizeof(coap_payload), &my_addr->ipaddr);
+    coap_set_payload(request, (uint8_t *)coap_payload, strlen(coap_payload));
+
+    coap_transaction_t *t = coap_new_transaction(request->mid, target_ep);
+    if(t) {
+        t->message_len = coap_serialize_message(request, t->message);
+        coap_send_transaction(t);
+    }
+}
 
 /* ==================================================== */
 /* =              RESOURCE HANDLERS                   = */
@@ -78,7 +103,6 @@ static void res_sensor_off_post_handler(coap_message_t *req, coap_message_t *res
   memset(paired_sensor_ip_str, 0, sizeof(paired_sensor_ip_str));
   coap_set_status_code(response, CHANGED_2_04);
   
-  // Fix: Direct targeted event post to update the Cloud asynchronously
   process_post(&smart_printer_process, event_sensor_unpaired, NULL);
 }
 
@@ -98,23 +122,20 @@ static void res_printer_discovery_post_handler(coap_message_t *req, coap_message
       memcpy(new_ip, payload, cp_len);
       new_ip[cp_len] = '\0';
       
-      #ifdef DEV_COOJA
       if(strncmp(new_ip, "unknown_ip", 10) == 0) {
+          #ifdef DEV_COOJA
           uint16_t sensor_id = node_id + 1;
           uip_ipaddr_t sensor_ip;
           uip_ip6addr(&sensor_ip, 0xfd00, 0, 0, 0, 0x0200 + sensor_id, sensor_id, sensor_id, sensor_id);
           uiplib_ipaddr_snprint(new_ip, sizeof(new_ip), &sensor_ip);
+          #elif defined(DEV_DONGLE)
+          uiplib_ipaddr_snprint(new_ip, sizeof(new_ip), &req->src_ep->ipaddr);
+          #endif
       }
-      #endif
       
-      strncpy(coap_payload, "unknown_ip", sizeof(coap_payload));
-      uip_ds6_addr_t *addr = uip_ds6_get_global(ADDR_PREFERRED);
-      if(addr != NULL) uiplib_ipaddr_snprint(coap_payload, sizeof(coap_payload), &addr->ipaddr);
+      coap_set_status_code(response, CONTENT_2_05);
 
-      // Duplicate Pairing Protection Filter
       if(sensor_is_paired && strcmp(paired_sensor_ip_str, new_ip) == 0) {
-          coap_set_status_code(response, CONTENT_2_05);
-          coap_set_payload(response, (uint8_t *)coap_payload, strlen(coap_payload));
           return;
       }
 
@@ -122,15 +143,15 @@ static void res_printer_discovery_post_handler(coap_message_t *req, coap_message
       strcpy(paired_sensor_ip_str, new_ip);
       
       coap_endpoint_copy(&sensor_ep, req->src_ep);
+      sensor_ep.port = UIP_HTONS(COAP_DEFAULT_PORT);
       sensor_is_paired = true;
       
-      coap_set_status_code(response, CONTENT_2_05);
-      coap_set_payload(response, (uint8_t *)coap_payload, strlen(coap_payload));
-      
       LOG_INFO("Incoming pairing request accepted from Sensor IP: %s\n", paired_sensor_ip_str);
-      
-      // Fix: Trigger the main process to handle the on-the-fly pairing and Cloud update
       process_post(&smart_printer_process, event_sensor_paired, NULL);
+      
+      // FIX: Reply directly to the sensor bypassing the rotation logic
+      coap_module_send_direct_ping(&sensor_ep);
+      
   } else {
       coap_set_status_code(response, BAD_REQUEST_4_00);
   }
@@ -148,12 +169,16 @@ RESOURCE(res_printer_discovery, "title=\"Printer Discovery\";rt=\"Text\"", NULL,
 /* =                MODULE FUNCTIONS                  = */
 /* ==================================================== */
 void coap_module_init(void){
-  event_sensor_paired = process_alloc_event();
-  event_sensor_unpaired = process_alloc_event();
-  coap_activate_resource(&res_health, "health");
-  coap_activate_resource(&res_print, "print");
-  coap_activate_resource(&res_sensor_off, "printer/sensor_off");
-  coap_activate_resource(&res_printer_discovery, "printer/discovery");
+  static bool initialized = false;
+  if(!initialized) {
+      event_sensor_paired = process_alloc_event();
+      event_sensor_unpaired = process_alloc_event();
+      coap_activate_resource(&res_health, "health");
+      coap_activate_resource(&res_print, "print");
+      coap_activate_resource(&res_sensor_off, "printer/sensor_off");
+      coap_activate_resource(&res_printer_discovery, "printer/discovery");
+      initialized = true;
+  }
 }
 
 uint16_t coap_module_prepare_request(const char* message, coap_message_type_t type, uint8_t method, const char* uri_path){
@@ -208,18 +233,53 @@ void coap_module_prepare_discovery(void) {
   multicast_ep.port = UIP_HTONS(COAP_DEFAULT_PORT);
   multicast_ep.secure = 0;
   
-  coap_init_message(request, COAP_TYPE_CON, COAP_POST, coap_get_mid());
-  coap_set_header_uri_path(request, "sensor/discovery");
+  #elif defined(DEV_DONGLE)
+  char my_ip_str[UIPLIB_IPV6_MAX_STR_LEN] = "unknown_ip";
+  uip_ds6_addr_t *addr = uip_ds6_get_global(ADDR_PREFERRED);
+  if(addr != NULL) uiplib_ipaddr_snprint(my_ip_str, sizeof(my_ip_str), &addr->ipaddr);
+
+  bool valid_target_found = false;
+  uint8_t attempts = 0;
+  uip_ipaddr_t target_ip;
+
+  while(!valid_target_found && attempts < 3) {
+      const char* candidate_ip = known_dongle_ips[current_dongle_idx];
+      current_dongle_idx = (current_dongle_idx + 1) % 3; 
+      attempts++;
+
+      uip_ipaddr_t cand_ip_struct;
+      uiplib_ipaddrconv(candidate_ip, &cand_ip_struct);
+
+      if(addr == NULL || !uip_ipaddr_cmp(&addr->ipaddr, &cand_ip_struct)) {
+          uip_ipaddr_copy(&target_ip, &cand_ip_struct);
+          valid_target_found = true;
+      }
+  }
+
+  memset(&multicast_ep, 0, sizeof(multicast_ep));
+  uip_ipaddr_copy(&multicast_ep.ipaddr, &target_ip);
+  multicast_ep.port = UIP_HTONS(COAP_DEFAULT_PORT);
+  multicast_ep.secure = 0;
   #else
   coap_endpoint_parse("coap://[ff02::1]", 16, &multicast_ep); 
-  coap_init_message(request, COAP_TYPE_NON, COAP_POST, coap_get_mid());
-  coap_set_header_uri_path(request, "sensor/discovery");
   #endif
   
+  coap_init_message(request, COAP_TYPE_NON, COAP_POST, coap_get_mid());
+  coap_set_header_uri_path(request, "sensor/discovery");
+  
   strncpy(coap_payload, "unknown_ip", sizeof(coap_payload));
-  uip_ds6_addr_t *addr = uip_ds6_get_global(ADDR_PREFERRED);
-  if(addr != NULL) uiplib_ipaddr_snprint(coap_payload, sizeof(coap_payload), &addr->ipaddr);
+  uip_ds6_addr_t *my_addr = uip_ds6_get_global(ADDR_PREFERRED);
+  if(my_addr != NULL) uiplib_ipaddr_snprint(coap_payload, sizeof(coap_payload), &my_addr->ipaddr);
   coap_set_payload(request, (uint8_t *)coap_payload, strlen(coap_payload));
+}
+
+void coap_module_send_discovery_async(void) {
+    coap_module_prepare_discovery(); 
+    coap_transaction_t *t = coap_new_transaction(request->mid, &multicast_ep);
+    if(t) {
+        t->message_len = coap_serialize_message(request, t->message);
+        coap_send_transaction(t);
+    }
 }
 
 /* ==================================================== */
@@ -235,7 +295,6 @@ void registration_handler(coap_message_t* response){
   } 
 
   if(response->code == 65 || response->code == 67){ 
-      // FIX: Don't forcefully override the state if a print is currently active!
       if(device_get_state() != STATE_PRINTING) {
           device_set_state(STATE_ONLINE);
       }
@@ -259,47 +318,7 @@ void print_finished_handler(coap_message_t* response){
 }
 
 void discovery_handler(coap_message_t* response) {
-  if(response == NULL) {
-      LOG_WARN("Discovery timeout. No sensor paired.\n");
-      return;
-  }
-  
-  if(response->code != CONTENT_2_05) {
-      LOG_WARN("Sensor rejected discovery (not in INITIALIZATION state).\n");
-      return;
-  }
-
-  coap_endpoint_copy(&sensor_ep, response->src_ep);
-  sensor_is_paired = true;
-
-  const uint8_t *payload = NULL;
-  int len = coap_get_payload(response, &payload);
-  
-  memset(paired_sensor_ip_str, 0, sizeof(paired_sensor_ip_str));
-
-  if(len > 0 && payload != NULL){
-      char new_ip[UIPLIB_IPV6_MAX_STR_LEN];
-      memset(new_ip, 0, sizeof(new_ip));
-      int cp_len = len < sizeof(new_ip) - 1 ? len : sizeof(new_ip) - 1;
-      memcpy(new_ip, payload, cp_len);
-      new_ip[cp_len] = '\0';
-      
-      #ifdef DEV_COOJA
-      if(strncmp(new_ip, "unknown_ip", 10) == 0) {
-          uint16_t sensor_id = node_id + 1;
-          uip_ipaddr_t sensor_ip;
-          uip_ip6addr(&sensor_ip, 0xfd00, 0, 0, 0, 0x0200 + sensor_id, sensor_id, sensor_id, sensor_id);
-          uiplib_ipaddr_snprint(new_ip, sizeof(new_ip), &sensor_ip);
-      }
-      #endif
-      
-      strcpy(paired_sensor_ip_str, new_ip);
-      
-      LOG_INFO("Successfully paired with Sensor IP: %s\n", paired_sensor_ip_str);
-      
-      // Fix: Direct targeted event post to register the sensor in the Cloud
-      process_post(&smart_printer_process, event_sensor_paired, NULL);
-  }
+  // Not used natively as handler for Async
 }
 
 void sensor_command_handler(coap_message_t* response) {

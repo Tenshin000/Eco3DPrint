@@ -44,6 +44,9 @@ uint16_t coap_module_prepare_unpair(void);
 /* Sensor Pairing Functions */
 void coap_module_prepare_discovery(void);
 
+/* FIX: Exposed Async Discovery Function to avoid blocking delays */
+void coap_module_send_discovery_async(void);
+
 /* Handlers exposed for BLOCKING_REQUEST usage */
 void registration_handler(coap_message_t* response);
 void print_finished_handler(coap_message_t* response);

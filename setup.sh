@@ -161,16 +161,28 @@ flash_border_router(){
     gnome-terminal --wait -- bash -c "cd ./${SRC_DIR}/Gateway && make TARGET=nrf52840 BOARD=dongle PORT=${port} border-router.dfu-upload; echo 'Flash complete. Press any key to close.'; read -n 1 -s"
 }
 
-flash_device(){
+flash_actuator(){
     local port=${1:-/dev/ttyACM1}
     echo "Flashing Device/Node on ${port}..."
-    gnome-terminal --wait -- bash -c "cd ./${SRC_DIR}/Printer3D && make TARGET=nrf52840 BOARD=dongle PORT=${port} device.dfu-upload; echo 'Flash complete. Press any key to close.'; read -n 1 -s"
+    gnome-terminal --wait -- bash -c "cd ./${SRC_DIR}/Printer3D/Actuator && make TARGET=nrf52840 BOARD=dongle PORT=${port} device.dfu-upload; echo 'Flash complete. Press any key to close.'; read -n 1 -s"
 }
 
-login_node(){
+flash_sensor(){
+    local port=${1:-/dev/ttyACM2}
+    echo "Flashing Device/Node on ${port}..."
+    gnome-terminal --wait -- bash -c "cd ./${SRC_DIR}/Printer3D/Sensor && make TARGET=nrf52840 BOARD=dongle PORT=${port} sensors_main.dfu-upload; echo 'Flash complete. Press any key to close.'; read -n 1 -s"
+}
+
+login_actuator(){
     local port=${1:-/dev/ttyACM1}
-    echo "Opening serial monitor for Device/Node on ${port}..."
-    gnome-terminal -- bash -c "cd ./${SRC_DIR}/Printer3D && make login TARGET=nrf52840 BOARD=dongle PORT=${port}; exec bash"
+    echo "Opening serial monitor for Actuator/Node on ${port}..."
+    gnome-terminal -- bash -c "cd ./${SRC_DIR}/Printer3D/Actuator && make login TARGET=nrf52840 BOARD=dongle PORT=${port}; exec bash"
+}
+
+login_sensor(){
+    local port=${1:-/dev/ttyACM2}
+    echo "Opening serial monitor for Sensor/Node on ${port}..."
+    gnome-terminal -- bash -c "cd ./${SRC_DIR}/Printer3D/Sensor && make login TARGET=nrf52840 BOARD=dongle PORT=${port}; exec bash"
 }
 
 build_border_router(){
@@ -216,7 +228,7 @@ start_hardware_sim(){
     echo
     if [[ "$answer_node" =~ ^[Yy]$ ]]; then
         echo "-> Please ensure the Device/Node dongle is pulsing RED."
-        flash_device "/dev/ttyACM1"
+        flash_actuator "/dev/ttyACM1"
     fi
     
     echo "Do you want to flash the Device/Node Dongle on /dev/ttyACM2 first? (y/n)"
@@ -224,7 +236,7 @@ start_hardware_sim(){
     echo
     if [[ "$answer_node" =~ ^[Yy]$ ]]; then
         echo "-> Please ensure the Device/Node dongle is pulsing RED."
-        flash_device "/dev/ttyACM2"
+        flash_sensor "/dev/ttyACM2"
     fi
 
     echo "--------------------------------------------------------------------"
@@ -234,11 +246,11 @@ start_hardware_sim(){
     
     echo "Press any key to open the serial monitor (login) for the Node (/dev/ttyACM1)..."
     read -n 1 -s
-    login_node "/dev/ttyACM1"
+    login_actuator "/dev/ttyACM1"
     
     echo "Press any key to open the serial monitor (login) for the Node (/dev/ttyACM1)..."
     read -n 1 -s
-    login_node "/dev/ttyACM1"
+    login_sensor "/dev/ttyACM2"
     
     echo "Press any key to start the Mosquitto MQTT server..."
     read -n 1 -s
@@ -284,11 +296,17 @@ case $1 in
     -flash-br)
         flash_border_router "$2"
         ;;
-    -flash-node)
-        flash_device "$2"
+    -flash-actuator)
+        flash_actuator "$2"
         ;;
-    -login-node)
-        login_node "$2"
+    -flash-sensor)
+        flash_sensor "$2"
+        ;;
+    -login-actuator)
+        login_actuator "$2"
+        ;;
+    -login-sensor)
+        login_sensor "$2"
         ;;
     -br)
         build_border_router "$2" "$3"
@@ -336,11 +354,17 @@ case $1 in
     echo "  -flash-br [port]"
     echo "      Flash the Border Router code into the nRF52840 Dongle (default: /dev/ttyACM0)."
     echo
-    echo "  -flash-node [port]"
-    echo "      Flash the Device (Node) code into the nRF52840 Dongle (default: /dev/ttyACM1)."
+    echo "  -flash-actuator [port]"
+    echo "      Flash the Actuator (Device Node) code into the nRF52840 Dongle (default: /dev/ttyACM1)."
     echo
-    echo "  -login-node [port]"
-    echo "      Open the serial monitor (login) for the Node (default: /dev/ttyACM1)."
+    echo "  -flash-sensor [port]"
+    echo "      Flash the Sensor (Sensor Node) code into the nRF52840 Dongle (default: /dev/ttyACM2)."
+    echo
+    echo "  -login-actuator [port]"
+    echo "      Open the serial monitor (login) for the Actuator Node (default: /dev/ttyACM1)."
+    echo
+    echo "  -login-sensor [port]"
+    echo "      Open the serial monitor (login) for the Sensor Node (default: /dev/ttyACM2)."
     echo
     echo "--------------------------------------------------------------------"
     echo "                        SIMULATION COMMANDS"

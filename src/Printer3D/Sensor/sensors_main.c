@@ -247,7 +247,6 @@ PROCESS_THREAD(setup_process, ev, data) {
 
     PROCESS_BEGIN();
     
-    // FIX: Allocate the custom event just once
     event_start_smart_sensor = process_alloc_event();
 
     LOG_INFO("Smart Sensor SETUP process starting...\n");
@@ -267,7 +266,6 @@ PROCESS_THREAD(setup_process, ev, data) {
     while(1) {
         PROCESS_YIELD();
 
-        // FIX: Replicated device.c boot logic
         if(ev == button_hal_press_event) {
             if(!smart_sensor_active) {
                 smart_sensor_active = true;
@@ -279,7 +277,6 @@ PROCESS_THREAD(setup_process, ev, data) {
             }
         }
 
-        // FIX: Logging consecutive button hold duration each second
         if(ev == button_hal_periodic_event && btn && data) {
             button_hal_button_t *b = (button_hal_button_t *)data;
             if(b == btn) {
@@ -287,14 +284,12 @@ PROCESS_THREAD(setup_process, ev, data) {
             }
         }
 
-        // FIX: Graceful cleanup upon PROCESS_EXIT() from the main thread
         if(ev == PROCESS_EVENT_EXITED) {
             struct process *exited = (struct process *)data;
             if(exited == &smart_sensor_process) {
                 LOG_WARN("Smart Sensor thread exited\n");
                 smart_sensor_active = false;
                 
-                // Deep memory wipe of the static variables
                 is_paired = false;
                 target_batch_size = 5;
                 samples_sent_in_batch = 0;
@@ -343,22 +338,19 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
     sensor_coap_init();
     sensor_mqtt_init(&smart_sensor_process, device_name);
     
-    // Note: Button is already initialized in setup_process
     set_sensor_state(SENSOR_STATE_OFF);
 
     while(1){
         PROCESS_WAIT_EVENT();
 
-        /* --- SENSOR BOOT SEQUENCE --- */
         if (ev == event_start_smart_sensor) {
             set_sensor_state(SENSOR_STATE_INIT);
             LOG_INFO("Attempting initial pairing with Printer...\n");
-            sensor_coap_prepare_discovery();
-            COAP_BLOCKING_REQUEST(&printer_ep, request, discovery_response_handler);
+            // FIX: Fire and forget async discovery
+            sensor_coap_send_discovery_async();
             etimer_set(&pairing_timer, 5 * CLOCK_SECOND);
         }
 
-        /* --- SENSOR PAIRING & UNPAIRING EVENTS --- */
         if(ev == event_discovery_received) {
             is_paired = true;
             health_fail_count = 0;
@@ -374,9 +366,7 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
             etimer_stop(&sampling_timer);
             set_sensor_state(SENSOR_STATE_INIT);
             
-            // Auto-Discovery Healing: Restart pairing pings immediately
-            sensor_coap_prepare_discovery();
-            COAP_BLOCKING_REQUEST(&printer_ep, request, discovery_response_handler);
+            sensor_coap_send_discovery_async();
             etimer_set(&pairing_timer, 5 * CLOCK_SECOND);
         }
 
@@ -386,19 +376,14 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
                 is_paired = false;
                 set_sensor_state(SENSOR_STATE_SLEEP);
                 
-                // Retry much faster (10s instead of 30s)
                 etimer_set(&pairing_timer, 10 * CLOCK_SECOND);
             } else if (current_state == SENSOR_STATE_SLEEP && !is_paired) {
-                LOG_INFO("Unpaired: Retrying printer pairing...\n");
-                sensor_coap_prepare_discovery();
-                COAP_BLOCKING_REQUEST(&printer_ep, request, discovery_response_handler);
-                
-                // Retry connection every 10s until printer is up
+                // FIX: Continuous Async Scanning
+                sensor_coap_send_discovery_async();
                 etimer_set(&pairing_timer, 10 * CLOCK_SECOND);
             }
         }
 
-        /* --- SENSOR ML BATCH SYNC EVENTS --- */
         if(ev == event_start_sampling) {
             samples_sent_in_batch = 0;
             target_batch_size = 5; 
@@ -423,19 +408,15 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
             set_sensor_state(SENSOR_STATE_SLEEP);
         }
 
-        /* --- CONSTANT MQTT CONNECTION LOGIC --- */
         if(ev == event_mqtt_retry || (ev == PROCESS_EVENT_TIMER && data == &mqtt_retry_timer)){
             if(!sensor_mqtt_is_connected() && current_state != SENSOR_STATE_OFF){
                 sensor_mqtt_connect();
             }
-            // Loop the timer continuously unless the device is OFF
             if(current_state != SENSOR_STATE_OFF) {
                 etimer_set(&mqtt_retry_timer, 10 * CLOCK_SECOND);
             }
         }
 
-        /* --- BUTTON HARD RESET LOGIC --- */
-        // FIX: The process is killed here to ensure total clean state.
         if(ev == button_hal_periodic_event && data) {
             button_hal_button_t *b = (button_hal_button_t *)data;
             if(b->press_duration_seconds >= 5 && current_state != SENSOR_STATE_OFF){
@@ -447,15 +428,11 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
                 
                 sensor_mqtt_disconnect();
                 
-                // Kill the background health check process safely
                 process_exit(&health_check_process);
-                
-                // Kill this process itself, allowing setup_process to clean up BSS variables
                 PROCESS_EXIT();
             }
         }
 
-        /* --- PERIODIC SAMPLING LOGIC --- */
         if(current_state == SENSOR_STATE_ACTIVE){
             if(ev == PROCESS_EVENT_TIMER && data == &sampling_timer){
                 accel_data_t plate = read_plate_acceleration();
@@ -511,11 +488,9 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
                     sensor_trigger_mqtt_retry(); 
                 }
 
-                // Increment and check batch size
                 samples_sent_in_batch++;
                 if(samples_sent_in_batch >= target_batch_size) {
                     LOG_INFO("Batch complete. Awaiting ML verdict... (Fallback timeout active)\n");
-                    // Anti-Deadlock mechanism
                     etimer_set(&sampling_timer, 10 * CLOCK_SECOND);
                 } else {
                     etimer_reset(&sampling_timer);
