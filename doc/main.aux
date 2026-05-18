@@ -29,8 +29,8 @@
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
 \newlabel{fig:Protocol-Stack}{{3.1}{8}{Personalized Protocol Stack of the App}{figure.caption.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2.2}Nodes}{8}{subsection.3.2.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3.2}{\ignorespaces 3D Printer with Dongle and Sensors}}{8}{figure.caption.4}\protected@file@percent }
-\newlabel{fig:Printer-3D}{{3.2}{8}{3D Printer with Dongle and Sensors}{figure.caption.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.2}{\ignorespaces 3D Printer with Sensors}}{8}{figure.caption.4}\protected@file@percent }
+\newlabel{fig:Printer-3D}{{3.2}{8}{3D Printer with Sensors}{figure.caption.4}{}}
 \citation{coapthon}
 \citation{paho}
 \citation{tkinter}
@@ -47,69 +47,80 @@
 \@writefile{toc}{\contentsline {chapter}{\numberline {4}Implementation}{12}{chapter.4}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{toc}{\contentsline {section}{\numberline {4.1}Printer Node}{12}{section.4.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces How the State Machine was supposed to work}}{12}{figure.caption.5}\protected@file@percent }
-\newlabel{fig:Correct-State-Machine}{{4.1}{12}{How the State Machine was supposed to work}{figure.caption.5}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces How the State Machine actually work in this project}}{13}{figure.caption.6}\protected@file@percent }
-\newlabel{fig:Actual-State-Machine}{{4.2}{13}{How the State Machine actually work in this project}{figure.caption.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces LED for all the states}}{14}{figure.caption.7}\protected@file@percent }
-\newlabel{fig:LED-STATE}{{4.3}{14}{LED for all the states}{figure.caption.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.1}Actuator Node}{12}{section.4.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces Actuator State Diagram}}{12}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:Actuator-State-Machine}{{4.1}{12}{Actuator State Diagram}{figure.caption.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces LED for all the states}}{14}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:LED-STATE}{{4.2}{14}{LED for all the states}{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}Sensor Node}{15}{section.4.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces Sensor State Diagram}}{15}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:Sensor-State-Machine}{{4.3}{15}{Sensor State Diagram}{figure.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces LED for all the states}}{16}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:SENSOR-LED-STATE}{{4.4}{16}{LED for all the states}{figure.caption.8}{}}
 \citation{joanna}
-\@writefile{toc}{\contentsline {section}{\numberline {4.2}Machine Learning Model}{15}{section.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.3}Backend Cloud Application}{16}{section.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.1}Core Executable}{16}{subsection.4.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.2}Database Structure}{16}{subsection.4.3.2}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {4.1}{\ignorespaces Node table}}{16}{table.caption.8}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {4.2}{\ignorespaces Print table}}{16}{table.caption.9}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {4.3}{\ignorespaces Measurement table}}{16}{table.caption.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.3}Data Persistence and Connection Pooling}{17}{subsection.4.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.4}CoAP Control Plane}{17}{subsection.4.3.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.5}MQTT Telemetry Plane}{17}{subsection.4.3.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.6}Node Monitoring}{17}{subsection.4.3.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.7}Job Orchestration and Binary Transfer}{17}{subsection.4.3.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.8}User Interface Bridging}{17}{subsection.4.3.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.4}Frontend User Application}{18}{section.4.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.1}GUI}{18}{subsection.4.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.2}State Routing}{18}{subsection.4.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.3}Printer Management Dashboard}{18}{subsection.4.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.4}Analytical Reporting Modules}{18}{subsection.4.4.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {5}Use Case}{19}{chapter.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}Machine Learning Model}{17}{section.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.4}Backend Cloud Application}{18}{section.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.1}Core Executable}{18}{subsection.4.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.2}Database Structure}{18}{subsection.4.4.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4.1}{\ignorespaces Node table}}{18}{table.caption.9}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4.2}{\ignorespaces Print table}}{18}{table.caption.10}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4.3}{\ignorespaces Measurement table}}{18}{table.caption.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.3}Data Persistence and Connection Pooling}{19}{subsection.4.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.4}CoAP Control Plane}{19}{subsection.4.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.5}MQTT Telemetry Plane}{19}{subsection.4.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.6}Actuator Monitoring}{19}{subsection.4.4.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.7}Job Orchestration and Binary Transfer}{19}{subsection.4.4.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.8}User Interface Bridging}{19}{subsection.4.4.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.5}Frontend User Application}{20}{section.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5.1}GUI}{20}{subsection.4.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5.2}State Routing}{20}{subsection.4.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5.3}Printer Management Dashboard}{20}{subsection.4.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5.4}Analytical Reporting Modules}{20}{subsection.4.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {5}Use Case}{21}{chapter.5}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{toc}{\contentsline {section}{\numberline {5.1}Overall Objective}{19}{section.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5.2}Energy Consumption Monitoring and Sustainability Analytics}{19}{section.5.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5.3}Predictive Maintenance and Automated Fault Detection}{19}{section.5.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5.4}Remote Fleet Orchestration and Job Dispatching}{20}{section.5.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5.5}Application Working}{20}{section.5.5}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {5.1}{\ignorespaces Starting Cooja}}{20}{figure.caption.11}\protected@file@percent }
-\newlabel{fig:Screenshot-1}{{5.1}{20}{Starting Cooja}{figure.caption.11}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.2}{\ignorespaces Click button and start the Mote}}{20}{figure.caption.12}\protected@file@percent }
-\newlabel{fig:Screenshot-2}{{5.2}{20}{Click button and start the Mote}{figure.caption.12}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces User Application Printer Screen}}{21}{figure.caption.13}\protected@file@percent }
-\newlabel{fig:Screenshot-3}{{5.3}{21}{User Application Printer Screen}{figure.caption.13}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces Upload STL}}{21}{figure.caption.14}\protected@file@percent }
-\newlabel{fig:Screenshot-4}{{5.4}{21}{Upload STL}{figure.caption.14}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.5}{\ignorespaces Send STL}}{21}{figure.caption.15}\protected@file@percent }
-\newlabel{fig:Screenshot-5}{{5.5}{21}{Send STL}{figure.caption.15}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.6}{\ignorespaces STL Transferred and Start Printing}}{22}{figure.caption.16}\protected@file@percent }
-\newlabel{fig:Screenshot-6}{{5.6}{22}{STL Transferred and Start Printing}{figure.caption.16}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.7}{\ignorespaces Printer 1 Online, Printer 2 Offline, Printer 3 Online, and Printer 4 Printing}}{22}{figure.caption.17}\protected@file@percent }
-\newlabel{fig:Screenshot-7}{{5.7}{22}{Printer 1 Online, Printer 2 Offline, Printer 3 Online, and Printer 4 Printing}{figure.caption.17}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.8}{\ignorespaces Printer Blocked by Machine Learning Model}}{22}{figure.caption.18}\protected@file@percent }
-\newlabel{fig:Screenshot-8}{{5.8}{22}{Printer Blocked by Machine Learning Model}{figure.caption.18}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.9}{\ignorespaces Succesfull Print}}{23}{figure.caption.19}\protected@file@percent }
-\newlabel{fig:Screenshot-9}{{5.9}{23}{Succesfull Print}{figure.caption.19}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.10}{\ignorespaces Daily Report}}{23}{figure.caption.20}\protected@file@percent }
-\newlabel{fig:Screenshot-10}{{5.10}{23}{Daily Report}{figure.caption.20}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.11}{\ignorespaces Weekly Report}}{23}{figure.caption.21}\protected@file@percent }
-\newlabel{fig:Screenshot-11}{{5.11}{23}{Weekly Report}{figure.caption.21}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.12}{\ignorespaces Monthly Report}}{24}{figure.caption.22}\protected@file@percent }
-\newlabel{fig:Screenshot-12}{{5.12}{24}{Monthly Report}{figure.caption.22}{}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {6}Conclusion}{25}{chapter.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.1}Overall Objective}{21}{section.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.2}Energy Consumption Monitoring and Sustainability Analytics}{21}{section.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.3}Predictive Maintenance and Automated Fault Detection}{21}{section.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.4}Remote Fleet Orchestration and Job Dispatching}{22}{section.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.5}Application Working (on Cooja)}{22}{section.5.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5.1}{\ignorespaces Starting setup.sh}}{22}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:Screenshot-1}{{5.1}{22}{Starting setup.sh}{figure.caption.12}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.2}{\ignorespaces Starting Cooja}}{22}{figure.caption.13}\protected@file@percent }
+\newlabel{fig:Screenshot-2}{{5.2}{22}{Starting Cooja}{figure.caption.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces Cooja Example with 2 Printers and 2 Sensors}}{23}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:Screenshot-3}{{5.3}{23}{Cooja Example with 2 Printers and 2 Sensors}{figure.caption.14}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces Start Cooja, Mosquitto, Server and User App}}{23}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:Screenshot-4}{{5.4}{23}{Start Cooja, Mosquitto, Server and User App}{figure.caption.15}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.5}{\ignorespaces User App}}{23}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:Screenshot-5}{{5.5}{23}{User App}{figure.caption.16}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.6}{\ignorespaces Click button and start the Mote}}{24}{figure.caption.17}\protected@file@percent }
+\newlabel{fig:Screenshot-6}{{5.6}{24}{Click button and start the Mote}{figure.caption.17}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.7}{\ignorespaces Printer 1 Online, Printer 2 Online, and Printer 3 Offline}}{24}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:Screenshot-7}{{5.7}{24}{Printer 1 Online, Printer 2 Online, and Printer 3 Offline}{figure.caption.18}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.8}{\ignorespaces Send STL 1}}{24}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:Screenshot-8}{{5.8}{24}{Send STL 1}{figure.caption.19}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.9}{\ignorespaces Send STL 2}}{25}{figure.caption.20}\protected@file@percent }
+\newlabel{fig:Screenshot-9}{{5.9}{25}{Send STL 2}{figure.caption.20}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.10}{\ignorespaces Send STL 3}}{25}{figure.caption.21}\protected@file@percent }
+\newlabel{fig:Screenshot-10}{{5.10}{25}{Send STL 3}{figure.caption.21}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.11}{\ignorespaces Printer 1 Printing, Printer 2 Online, and Printer 3 Offline}}{25}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:Screenshot-11}{{5.11}{25}{Printer 1 Printing, Printer 2 Online, and Printer 3 Offline}{figure.caption.22}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.12}{\ignorespaces Failed Print}}{26}{figure.caption.23}\protected@file@percent }
+\newlabel{fig:Screenshot-12}{{5.12}{26}{Failed Print}{figure.caption.23}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.13}{\ignorespaces Successful Print}}{26}{figure.caption.24}\protected@file@percent }
+\newlabel{fig:Screenshot-13}{{5.13}{26}{Successful Print}{figure.caption.24}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.14}{\ignorespaces Daily Report}}{26}{figure.caption.25}\protected@file@percent }
+\newlabel{fig:Screenshot-14}{{5.14}{26}{Daily Report}{figure.caption.25}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.15}{\ignorespaces Weekly Report}}{27}{figure.caption.26}\protected@file@percent }
+\newlabel{fig:Screenshot-15}{{5.15}{27}{Weekly Report}{figure.caption.26}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.16}{\ignorespaces Monthly Report}}{27}{figure.caption.27}\protected@file@percent }
+\newlabel{fig:Screenshot-16}{{5.16}{27}{Monthly Report}{figure.caption.27}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {6}Conclusion}{28}{chapter.6}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{toc}{\contentsline {section}{\numberline {6.1}Ending the Report}{25}{section.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6.2}Improvements for Future Works}{25}{section.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6.1}Ending the Report}{28}{section.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6.2}Improvements for Future Works}{28}{section.6.2}\protected@file@percent }
 \bibstyle{IEEEtran}
 \bibdata{chapters/bibliography}
 \bibcite{iot_power}{1}
@@ -119,4 +130,4 @@
 \bibcite{tkinter}{5}
 \bibcite{senml}{6}
 \bibcite{joanna}{7}
-\gdef \@abspage@last{28}
+\gdef \@abspage@last{31}

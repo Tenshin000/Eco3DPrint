@@ -21,28 +21,29 @@
 \contentsline {subsection}{\numberline {3.4.4}Hardware Interaction}{11}{subsection.3.4.4}%
 \contentsline {subsection}{\numberline {3.4.5}Data Encoding}{11}{subsection.3.4.5}%
 \contentsline {chapter}{\numberline {4}Implementation}{12}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Printer Node}{12}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Machine Learning Model}{15}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Backend Cloud Application}{16}{section.4.3}%
-\contentsline {subsection}{\numberline {4.3.1}Core Executable}{16}{subsection.4.3.1}%
-\contentsline {subsection}{\numberline {4.3.2}Database Structure}{16}{subsection.4.3.2}%
-\contentsline {subsection}{\numberline {4.3.3}Data Persistence and Connection Pooling}{17}{subsection.4.3.3}%
-\contentsline {subsection}{\numberline {4.3.4}CoAP Control Plane}{17}{subsection.4.3.4}%
-\contentsline {subsection}{\numberline {4.3.5}MQTT Telemetry Plane}{17}{subsection.4.3.5}%
-\contentsline {subsection}{\numberline {4.3.6}Node Monitoring}{17}{subsection.4.3.6}%
-\contentsline {subsection}{\numberline {4.3.7}Job Orchestration and Binary Transfer}{17}{subsection.4.3.7}%
-\contentsline {subsection}{\numberline {4.3.8}User Interface Bridging}{17}{subsection.4.3.8}%
-\contentsline {section}{\numberline {4.4}Frontend User Application}{18}{section.4.4}%
-\contentsline {subsection}{\numberline {4.4.1}GUI}{18}{subsection.4.4.1}%
-\contentsline {subsection}{\numberline {4.4.2}State Routing}{18}{subsection.4.4.2}%
-\contentsline {subsection}{\numberline {4.4.3}Printer Management Dashboard}{18}{subsection.4.4.3}%
-\contentsline {subsection}{\numberline {4.4.4}Analytical Reporting Modules}{18}{subsection.4.4.4}%
-\contentsline {chapter}{\numberline {5}Use Case}{19}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Overall Objective}{19}{section.5.1}%
-\contentsline {section}{\numberline {5.2}Energy Consumption Monitoring and Sustainability Analytics}{19}{section.5.2}%
-\contentsline {section}{\numberline {5.3}Predictive Maintenance and Automated Fault Detection}{19}{section.5.3}%
-\contentsline {section}{\numberline {5.4}Remote Fleet Orchestration and Job Dispatching}{20}{section.5.4}%
-\contentsline {section}{\numberline {5.5}Application Working}{20}{section.5.5}%
-\contentsline {chapter}{\numberline {6}Conclusion}{25}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Ending the Report}{25}{section.6.1}%
-\contentsline {section}{\numberline {6.2}Improvements for Future Works}{25}{section.6.2}%
+\contentsline {section}{\numberline {4.1}Actuator Node}{12}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Sensor Node}{15}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Machine Learning Model}{17}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Backend Cloud Application}{18}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Core Executable}{18}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Database Structure}{18}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Data Persistence and Connection Pooling}{19}{subsection.4.4.3}%
+\contentsline {subsection}{\numberline {4.4.4}CoAP Control Plane}{19}{subsection.4.4.4}%
+\contentsline {subsection}{\numberline {4.4.5}MQTT Telemetry Plane}{19}{subsection.4.4.5}%
+\contentsline {subsection}{\numberline {4.4.6}Actuator Monitoring}{19}{subsection.4.4.6}%
+\contentsline {subsection}{\numberline {4.4.7}Job Orchestration and Binary Transfer}{19}{subsection.4.4.7}%
+\contentsline {subsection}{\numberline {4.4.8}User Interface Bridging}{19}{subsection.4.4.8}%
+\contentsline {section}{\numberline {4.5}Frontend User Application}{20}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}GUI}{20}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}State Routing}{20}{subsection.4.5.2}%
+\contentsline {subsection}{\numberline {4.5.3}Printer Management Dashboard}{20}{subsection.4.5.3}%
+\contentsline {subsection}{\numberline {4.5.4}Analytical Reporting Modules}{20}{subsection.4.5.4}%
+\contentsline {chapter}{\numberline {5}Use Case}{21}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Overall Objective}{21}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Energy Consumption Monitoring and Sustainability Analytics}{21}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Predictive Maintenance and Automated Fault Detection}{21}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Remote Fleet Orchestration and Job Dispatching}{22}{section.5.4}%
+\contentsline {section}{\numberline {5.5}Application Working (on Cooja)}{22}{section.5.5}%
+\contentsline {chapter}{\numberline {6}Conclusion}{28}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Ending the Report}{28}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Improvements for Future Works}{28}{section.6.2}%

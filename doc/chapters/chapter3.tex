@@ -2,7 +2,7 @@
 \section{Ecosystem}
 The system is composed of an \textbf{IoT Network} and a \textbf{Cloud Application}. 
 
-The \textit{IoT Network} consists of a \textbf{Border Router} and a set of \textbf{Printers}, each connected to a \textbf{Dongle} and a set of \textbf{sensors}.
+The \textit{IoT Network} consists of a \textbf{Border Router} and a set of \textbf{3D Printers}, each connected to a set of \textbf{Sensors}.
 
 The \textit{Cloud Application} serves as the central orchestration hub of the \textbf{\textit{Eco3DPrint} ecosystem}, coordinating communication between the distributed hardware nodes and the \textbf{User App interface}. 
 
@@ -22,18 +22,22 @@ The system utilizes \textbf{JSON} (JavaScript Object Notation) as the primary da
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.8\textwidth]{img/Protocol_Stack.png}
+	\includegraphics[width=0.7\textwidth]{img/Protocol_Stack.png}
 	\caption{Personalized Protocol Stack of the App}
 	\label{fig:Protocol-Stack}
 \end{figure}
 
 \subsection{Nodes}
-The IoT Network consists of a variable number of Printer nodes connected to the Network with a nRF52840 Dongle. These nodes serve as the physical interface of the system, integrating sensors that collect real-time vibration and voltage data, alongside the Printer as an actuator. By running an embedded Machine Learning model, the nodes autonomously stop print jobs when anomalies are detected, improving energy efficiency without external intervention. The border router acts as the critical gateway of the architecture, enabling the translation of traffic between the low-power wireless network and the standard IPv6 infrastructure. This component allows the devices to communicate seamlessly with the Cloud Application. 
+The architecture of the IoT Network is divided into two dedicated node types that operate as a coordinated local pair: \textit{Actuator Nodes} and \textit{Sensor Nodes}:
+\begin{itemize}
+	\item \textbf{Actuator Nodes (Smart Printers):} These nodes execute the primary 3D Printer state machine, managing initialization, network synchronization, and simulated printing operations. Acting as CoAP servers, they receive administrative traffic and ingest large STL models using block-wise transfers. Each node hosts a localized Machine Learning inference engine that subscribes to paired sensor telemetry, extracts statistical features from incoming data, and autonomously halts the printing process when consecutive anomalies are detected to reduce resource and energy waste.
+	\item \textbf{Sensor Nodes (Smart Sensors):} These nodes isolate telemetry acquisition from mechanical control processes by operating under a separate state machine. They simulate physical telemetry streams (including acceleration, filament tension, and power consumption) using Gaussian-based models representing both normal and faulty behavior. Telemetry is encoded as SenML-compliant JSON and transmitted over MQTT. To conserve constrained radio resources, transmissions are batched in groups of five messages, after which sampling pauses until a CoAP CONT or STOP command is received from the paired printer. 
+\end{itemize}
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.4444\textwidth]{img/Printer3D.png}
-	\caption{3D Printer with Dongle and Sensors}
+	\includegraphics[width=0.385\textwidth]{img/Printer3D.png}
+	\caption{3D Printer with Sensors}
 	\label{fig:Printer-3D}
 \end{figure}
 
@@ -68,28 +72,28 @@ The \textbf{Frontend Application} (\textbf{User App}) is a desktop-based graphic
 	\textbf{Smart Homes and Buildings:} enabling real-time control and energy efficiency in residential or commercial environments.
 \end{quote}
 
-I choose "\textit{Smart Homes and Buildings}" as a domain for my project. I have enabled a \textbf{real-time monitoring application} where I monitor the status of the printers, create a list of STLs to print in real time and monitor the energy consumption of the printers. All of this is \textbf{designed to monitor energy efficiency}, supported by a \textbf{Machine Learning model} that proactively halts faulty prints before they occur. This system is primarily intended for \textbf{commercial environments} where multiple 3D printers operate simultaneously, such as print farms or production labs, where efficiency, reliability, and cost control are critical. However, it is equally applicable in advanced home setups with multiple 3D printers, offering the same benefits of centralized monitoring, energy optimization, and failure prevention on a smaller scale. 
+I choose "\textit{Smart Homes and Buildings}" as a domain for my project. I have enabled a \textbf{real-time monitoring application} where I monitor the status of the printers, create a list of STLs to print in real time and monitor the energy consumption of the printers. All of this is \textbf{designed to monitor energy efficiency}, supported by a \textbf{Machine Learning model} that proactively halts faulty prints before they occur. This system is primarily intended for \textbf{commercial environments} where multiple 3D Printers operate simultaneously, such as print farms or production labs, where efficiency, reliability, and cost control are critical. However, it is equally applicable in advanced home setups with multiple 3D Printers, offering the same benefits of centralized monitoring, energy optimization, and failure prevention on a smaller scale. 
 
 \subsection{Application Protocol}
-The architecture utilizes \textbf{CoAP} as the primary mechanism for the \textbf{Eco3DPrint} application. It is used for for control-plane operations, including node registration, health monitoring, and file transfers. 
+The architecture implements a hybrid application layer utilizing both \textbf{CoAP} and \textbf{MQTT} to establish a clear distinction between the control and telemetry planes across the cloud ecosystem and the decoupled edge nodes. 
 
 \medspace
 
-CoAP was selected over MQTT for these specific reasons:
+\textbf{CoAP} serves as the primary mechanism for all control-plane operations, spanning both cloud-to-device and device-to-device interactions. In this architecture, CoAP was selected over MQTT for discrete control tasks due to the following specific reasons:
 \begin{itemize}
-	\item \textbf{RESTful Interaction for Registration and Health:} Unlike the publish-subscribe model of MQTT, CoAP is a request-response protocol that operates over UDP. This eliminates the need for the device to maintain a persistent, energy-intensive connection just to signal availability, significantly improving energy efficiency during idle periods; 
-	\item \textbf{File Transfering:} CoAP is simply better at sending larger objects like files than MQTT; 
-	\item \textbf{Reduced Protocol Overhead:} Because CoAP does not require the overhead of the TCP three-way handshake for every interaction, it reduces the total number of radio transmissions needed for occasional tasks like registration. Fewer transmissions directly translate to lower power consumption, extending the battery life of the monitoring dongles. 
+	\item \textbf{RESTful Interaction for Cloud Management:} Unlike the publish-subscribe model of MQTT, CoAP is a request-response protocol operating over lightweight UDP. This allows the Actuator node to execute initial cloud registration and status reporting without maintaining a persistent, energy-intensive connection during long idle periods, significantly improving fleet energy efficiency;
+	\item \textbf{Reliable Block-Wise File Transfer:} CoAP inherently supports Block-wise transfers (Block1). This mechanism is uniquely optimized for sending large binary assets like STL models from the cloud backend to resource-constrained edge nodes one fragment at a time, preventing RAM exhaustion;
+	\item \textbf{Reduced Protocol Overhead and Local Pacing:} By eliminating the heavy overhead of the TCP three-way handshake, CoAP minimizes radio transmissions for occasional administrative tasks. Crucially, this efficiency is extended to the local network: the decoupled Actuator and Sensor nodes utilize local CoAP resources for asynchronous pairing discovery and for a strict, synchronous ``Ping-Pong'' control loop, where the Actuator sends low-overhead commands (\texttt{START}, \texttt{CONT}, \texttt{STOP}) to dynamically pace or halt the sensor's sampling states based on ML inference cycles.
 \end{itemize}
 
-While CoAP is well suited for discrete control tasks, \textbf{MQTT} is used exclusively to stream high-frequency sensor data during the active printing phase. Since this phase already represents peak power consumption for the printer, the additional energy overhead of MQTT is relatively negligible. To further optimize resource usage, a 10-second timer is implemented: if no new print job is received, the MQTT connection is automatically closed, minimizing the node's power footprint once peak activity ends.
+In contrast, \textbf{MQTT} is utilized exclusively to manage the high-frequency telemetry plane during active printing phases, operating as a distributed publish-subscribe link between the edge components. Because the active printing phase already represents peak power consumption for the hardware, the additional connection-oriented TCP overhead of MQTT is relatively negligible compared to the physical operation of the machines. 
 
-\medspace
+\newpage
 
-Furthermore a \textbf{Publish–Subscribe model is more efficient for this telemetry plane than a Request–Response approach}. Once connected, it streams large volumes of JSON data with minimal overhead, avoiding per-message acknowledgment costs. 
+Furthermore, a \textbf{Publish–Subscribe model is more efficient for this telemetry plane than a Request–Response approach}. The Sensor node functions as a dedicated publisher, streaming serialized multi-axis acceleration, tension, and voltage profiles to an IP-specific topic (\texttt{<sensor\_ip>/print/measurements}). The Actuator node (the printer) acts as a local subscriber, continuously ingesting this JSON telemetry stream directly from the broker to feed its localized sliding-window Machine Learning model. Once a print job concludes or is autonomously aborted due to consecutive anomalies, the nodes immediately suspend their MQTT activities.
 
 \subsection{Edge Intelligence and Autonomous Decision-Making}
-The system runs a \textbf{Machine Learning model} directly on constrained nRF52840 nodes, enabling real-time, autonomous responses to local anomalies without relying on the cloud. A C-based implementation performs on-device feature extraction (mean, standard deviation, and peak-to-peak across multiple axes) reducing bandwidth usage and ensuring the printer can be stopped even during temporary connectivity loss. 
+The system executes a localized \textbf{Machine Learning model} directly on the constrained \textbf{Actuator node}, enabling real-time anomaly detection without cloud dependence. In this decoupled architecture, the \textbf{Sensor node} handles high-frequency telemetry acquisition and streams raw metrics over the local network. The Actuator processes these streams locally through a C-based edge pipeline that extracts 35 statistical features from sliding data windows, significantly reducing bandwidth usage. This design also allows the Actuator to autonomously halt printing operations and issue direct CoAP shutdown commands to the Sensor node. 
 
 \subsection{Hardware Interaction}
 The project strictly adheres to the mandatory button and LED interaction requirements. 

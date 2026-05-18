@@ -1,60 +1,110 @@
 \chapter{Implementation}
-\section{Printer Node}
-The code related to the IoT devices has been placed inside the subfolder \textit{Eco3DPrint/src/Printer3D}.
+\section{Actuator Node}
+The code related to the IoT devices has been placed inside the subfolder \textit{Eco3DPrint/src/Printer3D/Actuator}.
 
 \medspace
 
-The physical edge node (nRF52840 Dongle) acts as an autonomous computing hub, collecting data directly from the physical environment (accelerometers, tension and power monitors). The firmware is built on \textbf{Contiki-NG} and is modularly structured to separate core logic from network and sensor peripherals.  
+The physical edge node (nRF52840 Dongle) acts as an autonomous computing hub representing the Actuator component of the decoupled architecture. Rather than interacting directly with physical hardware pins or hosting localized data-collection loops, the Actuator functions as a centralized control and inference point that ingests high-frequency operational telemetry streamed by a paired remote Sensor node over an active network link. The firmware is built on \textbf{Contiki-NG} and is modularly structured to separate the localized state transitions from underlying network and analytical peripherals.  
 
 \medspace
 
 The \texttt{device.c} houses the main Contiki-NG process (\textit{PROCESS\_THREAD}) and manages the primary control loop through a strict state machine, transitioning between \texttt{STATE\_OFF}, \texttt{STATE\_INITIALIZATION}, \texttt{STATE\_ONLINE}, \texttt{STATE\_PRINTING}, and \texttt{STATE\_OFFLINE} to govern node behavior and optimize energy usage. 
 
-The state machine was supposed to work like this:
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.77\textwidth]{img/Correct_State_Diagram_IoT_Device.png}
-	\caption{How the State Machine was supposed to work}
-	\label{fig:Correct-State-Machine}
-\end{figure}
-
-\newpage
-
 For the purposes of this project, we don't care if the 3D Printer can take prints locally, so the state machine works like this:
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.9\textwidth]{img/Actual_State_Diagram_IoT_Device.png}
-	\caption{How the State Machine actually work in this project}
-	\label{fig:Actual-State-Machine}
+	\includegraphics[width=0.86\textwidth]{img/Actuator_State_Diagram.png}
+	\caption{Actuator State Diagram}
+	\label{fig:Actuator-State-Machine}
 \end{figure}
 
-The node starts in \texttt{STATE\_OFF} and moves to \texttt{STATE\_INITIALIZATION} after a button press, triggering a CoAP registration. If registration fails, it enters \texttt{STATE\_OFFLINE} and retries periodically until successful, then transitions to \texttt{STATE\_ONLINE}. In this state, it listens for CoAP transfers and, upon receiving a complete STL file, moves to \texttt{STATE\_PRINTING}. During printing, it performs sensor sampling, MQTT telemetry, and ML inference. It returns to \texttt{STATE\_ONLINE} when printing completes or anomalies abort the process. A long button press (\textbf{5+ seconds}) from any active state forces a safe disconnect and resets the system to \texttt{STATE\_OFF}.
+\newpage
+
+The node starts in \texttt{STATE\_OFF} and moves to \texttt{STATE\_INITIALIZATION} after a physical button press, triggering local pairing routines alongside a primary cloud registration. Upon initialization, the Actuator utilizes an asynchronous CoAP discovery process to identify a nearby Sensor node over the link layer. \textbf{Sensor discovery is statically configured}: the actuator is preconfigured with the IP address of its paired sensor and does not perform dynamic discovery or proximity-based sensor selection. If cloud registration fails, it enters \texttt{STATE\_OFFLINE} and retries periodically via a dedicated timer loop until a valid acknowledgment is received, subsequently transitioning to \texttt{STATE\_ONLINE}. In this state, the Actuator listens for incoming CoAP server traffic and, upon receiving a complete STL file via application-layer block-wise transfers, dynamically calculates a simulated printing duration and transitions into \texttt{STATE\_PRINTING}. 
+
+During active printing, the node executes real-time MQTT telemetry subscription handling and embedded machine learning inference routines. It returns to \texttt{STATE\_ONLINE} when a print job finishes successfully or when consecutive neural network anomalies force an early abort. A long button press (\textbf{5+ seconds}) from any active state forces a safe disconnect, transmitting a termination signal to the cloud, unpairing the linked sensor, and resetting the entire device to \texttt{STATE\_OFF}.
 
 \medspace
 
-During active prints, the process handles data acquisition by utilizing a 1-second timer to sample multi-axis acceleration, tension, and power, \textbf{buffering these readings into a 5-sample sliding window with 1 common sample between windows}. For edge AI and inference, the system extracts 35 statistical features (mean, standard deviation, minimun, maximum, and peak-to-peak values) from this window, normalizes the data, and executes the local neural network via the \texttt{print\_prediction\_predict()} function. If the model predicts a failure for three consecutive cycles, the node performs autonomous fault handling by instantly aborting the print process and triggering a physical RED LED warning that requires a manual reset. Concurrently, valid real-time measurements are fed into a telemetry pipeline, where they are serialized into SenML-compliant JSON strings using standard \texttt{snprintf} functions and continuously published to the backend over MQTT. 
+During active prints, data acquisition is entirely network-driven rather than hardware-timer-bound. The Actuator concurrently listens for incoming messages on its subscribed telemetry channel (\texttt{<sensor\_ip>/print/measurements}), using a custom string-parsing utility (\texttt{extract\_json\_value}) to decode SenML JSON frames containing acceleration, tension, and power values transmitted by the remote sensor. These values are stored inside an internal matrix structure (\texttt{sensor\_buffer[8][5]}), building an overlapping data window. 
 
-\medspace
+For edge AI and inference, as soon as a window of 5 sequential samples is completed, the processing pipeline calculates 35 statistical features (computing the mean, standard deviation, minimum, maximum, and peak-to-peak metrics across the variables). The features are then standardized using auto-generated pre-calculated constants (\texttt{SCALER\_MEANS} and \texttt{SCALER\_SCALES}) and evaluated by the embedded neural network via the \texttt{print\_prediction\_predict()} function. 
 
-Once printing is complete or interrupted by the ML model, the operator can send the result by pressing the button. You can also hold it for 2–4 seconds to modify it. A completed print sends a failure, while a blocked print resumes. This design gives operators time to clean the printer and provides a simple, intuitive way to report outcomes. 
+If the model predicts a failure for three consecutive cycles, the Actuator executes autonomous fault handling: it immediately aborts the print process, terminates local execution timers, pushes a direct CoAP \texttt{"STOP"} payload to suspend the Sensor node's active sampling threads, and flashes a physical RED LED warning. If the machine learning verification succeeds, the Actuator executes a sliding-window operation, moving the last sample to the first position of the buffer to retain 1 common overlapping reading between windows, and transmits an asynchronous CoAP \texttt{"CONT"} command to prompt the Sensor for the next batch.
+
+Once printing is complete or interrupted by an anomaly detection, the Actuator stays in a verification lock (\texttt{waiting\_for\_confirmation = true}). To report final operational outcomes to the cloud backend, the system implements a multi-duration button interaction mechanism on the board:
+\begin{itemize}
+	\item \textbf{Short Press ($\mathbf{< 2}$ seconds):} Confirms the currently recorded print state, triggering a blocking CoAP POST request to the \texttt{/print/finished} endpoint to transmit total aggregated energy consumption and state details to the cloud backend before reverting to \texttt{STATE\_ONLINE};
+	\item \textbf{Medium Press (2--4 seconds):} Functions as a manual supervisor override. If a print job was aborted due to an ML false positive, a 2--4 second hold clears the error logs, restores the remaining print time, establishes a safe resubscription path to the MQTT broker, and transmits a CoAP \texttt{"START"} payload to wake the Sensor node back into active sampling. Conversely, if a job finished normally but suffered unpredicted physical defects, a 2--4 second hold overrides the successful verdict to report a failure instead.
+\end{itemize}
 
 \newpage
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.8\textwidth]{img/led.png}
+	\includegraphics[width=0.8\textwidth]{img/Actuator_Led.png}
 	\caption{LED for all the states}
 	\label{fig:LED-STATE}
 \end{figure}
 
-To keep the main application loop clean, peripheral functions are isolated:
+To keep the main application loop clean, peripheral functionalities are isolated across dedicated compilation modules:
 
 \begin{itemize}
-	\item \texttt{sensors.c}: Simulates hardware data collection (for example: ADXL345, PZEM-004T, ZMPT101B), utilizing Gaussian distributions to generate realistic operational data and error-state anomalies;
-	\item \texttt{coap\_module.c}: Manages the UDP control plane, handling the initial node registration with the cloud and responding to ongoing /health status pings;
-	\item \texttt{mqtt\_module.c}: Manages the TCP telemetry plane, handling the connection state to the broker and executing retry hooks if the connection drops;
-	\item \texttt{print\_prediction.h}: Contains the compiled structural arrays of the neural network, including layer configurations, weights, and biases;
-	\item \texttt{scaler\_params.h}: Stores the pre-calculated scaler means and scaling factors required to standardize live sensor inputs before inference.
+	\item \texttt{device.c}: Manages the global Contiki-NG processes, the primary state machine logic, network-driven buffer aggregation, statistical feature extraction routines, and manual user override flows;
+	\item \texttt{coap\_module.c}: Orchestrates the UDP control plane, processing local asynchronous discovery pairing hooks with the Sensor (\texttt{printer/discovery}), handling local sensor pacing commands (\texttt{"START"}, \texttt{"CONT"}, \texttt{"STOP"}), and managing cloud resource registration handshakes;
+	\item \texttt{mqtt\_module.c}: Governs the connection state with the TCP MQTT broker and handles dynamic subscriptions to the specific sensor's topic feed during active prints;
+	\item \texttt{print\_prediction.h}: Contains the compiled structural arrays of the multi-layer neural network, providing embedded classification functionality via emlearn configurations;
+	\item \texttt{scaler\_params.h}: Stores the pre-calculated scaling averages and dispersion factors required to standardize live metrics prior to neural network inference execution.
+\end{itemize}
+
+\newpage
+
+\section{Sensor Node}
+The code related to the IoT devices has been placed inside the subfolder \textit{Eco3DPrint/src/Printer3D/Sensor}.
+
+\medspace
+
+The physical edge node (nRF52840 Dongle) acts as a digital sensory twin representing the data acquisition component of the decoupled architecture. Rather than executing mechanical control logic, the Sensor functions as a dedicated telemetry publisher that mathematically simulates physical environments and streams high-frequency operational data to the paired Actuator node over an active network link. The firmware is built on \textbf{Contiki-NG} and is modularly structured to separate the localized state transitions and simulation math from the underlying network protocols.  
+
+\medspace
+
+The \texttt{sensors\_main.c} houses the main Contiki-NG processes (\textit{PROCESS\_THREAD}), managing both the primary control loop and a parallel health-checking routine. It governs node behavior through a strict state machine, transitioning between \texttt{STATE\_OFF}, \texttt{STATE\_INIT}, \texttt{STATE\_SLEEP}, and \texttt{STATE\_ACTIVE} to optimize bandwidth and energy usage. 
+
+\medspace
+
+For the purposes of this project, the sensor state machine works like this:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{img/Sensor_State_Diagram.png}
+	\caption{Sensor State Diagram}
+	\label{fig:Sensor-State-Machine}
+\end{figure}
+
+The node starts in \texttt{STATE\_OFF} and moves to \texttt{STATE\_INIT} after a physical button press, triggering the network initialization and pairing phase. Upon initialization, the Sensor utilizes an asynchronous CoAP discovery process to locate an Actuator over the local network. To function robustly within a simulated Dongle environment, the discovery routine iteratively pings a hardcoded list of known Dongle IPs (\texttt{known\_dongle\_ips}) until a valid pairing acknowledgment is received. Once successfully paired, the device transitions to \texttt{STATE\_SLEEP}, where it idles efficiently while awaiting a print command. 
+
+When the Actuator initiates a print job, it sends a CoAP \texttt{"START"} command to the Sensor, triggering the transition into \texttt{STATE\_ACTIVE}. During active sampling, a 1-second timer triggers the mathematical simulation of the physical environment, generating multi-axis plate and extruder accelerations, voltage tension, and power consumption. The simulation uses bounded Gaussian distributions to mimic realistic data profiles. To test the ML model, the firmware incorporates a stochastic probability roll (\texttt{get\_uniform\_probability}) that occasionally forces a natural transition from \texttt{PRINTER\_STATE\_NORMAL} into \texttt{PRINTER\_STATE\_ERROR}, instantly altering the standard deviation and means of the generated telemetry to simulate a mechanical failure. 
+
+\medspace
+
+Because constrained radio resources must be managed carefully during active telemetry, data transmission is strictly paced by the Actuator using a "\textbf{Ping-Pong}" batching mechanism. The Sensor serializes its simulated data into SenML-compliant JSON strings and publishes them via MQTT to \texttt{<sensor\_ip>/print/measurements}. Once exactly 5 samples (the \texttt{target\_batch\_size}) are published, the Sensor pauses its sampling timer and waits. It will only resume sampling if it receives a CoAP \texttt{"CONT"} command from the Actuator indicating a successful ML verdict, or it will revert to \texttt{STATE\_SLEEP} if a \texttt{"STOP"} command is received.
+
+To guarantee system resilience across the decoupled architecture, the firmware runs an independent \texttt{health\_check\_process} protothread. Every 60 seconds, it sends a CoAP ping to the Actuator's \texttt{/health} endpoint. If the Actuator fails to respond three consecutive times, the Sensor assumes the Actuator has died or disconnected, safely breaks the pairing, and restarts its discovery phase.
+
+Similar to the Actuator, a long button press (\textbf{5+ seconds}) from any active state forces a hard reset. This kills the parallel processes, stops active timers, transmits a direct CoAP \texttt{"OFF"} signal to decouple from the Actuator, and completely resets the device back to \texttt{STATE\_OFF}. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{img/Sensor_Led.png}
+	\caption{LED for all the states}
+	\label{fig:SENSOR-LED-STATE}
+\end{figure}
+
+To keep the main application loop clean, peripheral functionalities are isolated across dedicated compilation modules:
+\begin{itemize}
+	\item \texttt{sensors\_main.c}: Manages the global Contiki-NG processes, the primary state machine logic, the health-checking routine, mathematical environment simulation, JSON payload serialization, and the batching synchronization timers;
+	\item \texttt{coap\_module.c}: Orchestrates the UDP control plane, managing the iterative asynchronous discovery process across known IPs, receiving external pacing commands (\texttt{"START"}, \texttt{"CONT"}, \texttt{"STOP"}) from the paired Actuator, and transmitting unpair warnings;
+	\item \texttt{mqtt\_module.c}: Governs the connection state with the TCP MQTT broker, formatting client credentials, and pushing high-frequency QoS 1 telemetry publications during the active state.
 \end{itemize}
 
 \newpage
@@ -84,7 +134,7 @@ The best model among all Random Forests, Extra Trees and the Deep Neural Network
 
 \section{Backend Cloud Application}
 \subsection{Core Executable}
-The code related to the backend of the Cloud App has been placed inside the subfolder \linebreak \textit{Eco3DPrint/src/CloudApp/backend}. The core executable (\texttt{server.py}) acts as the entry point, spawning dedicated threads for each major subsystem to ensure non-blocking operations. A centralized graceful shutdown mechanism binds to \textit{OS-level signals} (\texttt{SIGINT}) to safely terminate network event loops, disconnect database pools, and update physical node states to \texttt{OFFLINE} before exiting.
+The code related to the backend of the Cloud App has been placed inside the subfolder \linebreak \textit{Eco3DPrint/src/CloudApp/backend}. The core executable (\texttt{server.py}) acts as the entry point, spawning dedicated threads for each major subsystem to ensure non-blocking operations. A centralized graceful shutdown mechanism binds to \textit{OS-level signals} (\texttt{SIGINT}) to safely terminate network event loops, disconnect database pools, and update physical Actuator states to \texttt{OFFLINE} before exiting. It comunicates with the Frontend and the Actuators.
 
 \subsection{Database Structure}
 The system stores data in a relational MySQL database, \texttt{Eco3DPrintDB}, organized into three tables. The schema separates device metadata, print-job records, and high-frequency telemetry while preserving referential integrity through primary and foreign keys.
@@ -101,6 +151,7 @@ The system stores data in a relational MySQL database, \texttt{Eco3DPrintDB}, or
 		name & VARCHAR(255) & NOT NULL \\
 		type & VARCHAR(255) & NOT NULL \\
 		utilization & VARCHAR(255) & NOT NULL \\
+		sensor\_ip & VARCHAR(255) & NOT NULL \\
 		status & VARCHAR(255) & NOT NULL \\
 		\bottomrule
 	\end{tabular}
@@ -158,16 +209,16 @@ Data storage is handled by a custom Database Access Layer (\texttt{Database.py})
 Low-frequency control events and system state transitions are handled by an IPv6-enabled CoAP Server (\texttt{CoAPServer.py}). The server exposes several distinct resource endpoints. The \textbf{/registration} endpoint (\texttt{NodeRegistration.py}) processes initial handshakes from connecting hardware, storing their metadata. The \textbf{/signal/off} endpoint (\texttt{OFFSignal.py}) receives hardware interrupts, immediately updating the system to reflect a disconnected state. Finally, the \textbf{/print/finished} endpoint (\texttt{PrintFinished.py}) processes end-of-print notifications, logging total energy consumption and updating the job queue. 
 
 \subsection{MQTT Telemetry Plane}
-High-frequency sensory data is managed by a background MQTT subscriber (\texttt{MQTTHandler.py}). This component continuously ingests telemetry streams published on the \textbf{/print/measurements} topic. It natively parses the incoming JSON payloads containing multi-axis vibration and voltage data, mapping these metrics directly into the database for long-term analytical storage and for future improvement of the Machine Learning model. 
+High-frequency telemetry is handled by a background MQTT subscriber (\texttt{MQTTHandler.py}) listening on \textbf{\texttt{+/print/measurements}}, using the \texttt{'+'} wildcard to receive data from any Sensor IPv6 address. For each message, the Sensor IP is extracted from the topic, the SenML payload is parsed, and the active \texttt{print\_id} linked to the paired Actuator is resolved via database lookup. The resulting metrics (acceleration, tension, power consumption) are stored in the \texttt{Measurement} table using parameterized \texttt{INSERT IGNORE} queries, ensuring association with the correct print job for analytics and Machine Learning use.
 
-\subsection{Node Monitoring}
-To maintain a real-time ledger of network health, an autonomous watchdog module (\texttt{NodeMonitor.py}) continuously tracks active devices. It operates on a scheduled interval, dispatching CoAP \textbf{/health} ping requests to nodes currently marked as active or printing. If a node fails to respond after a predefined number of retries, the monitor dynamically transitions its state to offline within the database and instantly broadcasts this state change across the system via an internal event emitter. 
+\subsection{Actuator Monitoring}
+An autonomous watchdog module (\texttt{NodeMonitor.py}) maintains a real-time network ledger by periodically sending CoAP \textbf{/health} pings to active or printing Actuator nodes. Failed responses after retries trigger an automatic state update to offline in the database and immediate system-wide propagation via an event emitter. 
 
 \subsection{Job Orchestration and Binary Transfer}
-The queueing and dispatching of 3D models is controlled by the print orchestration module (\texttt{PrintManager.py}). When a node becomes available, this component retrieves the next pending job. To overcome the memory and transmission constraints of the edge devices, it utilizes \textbf{CoAP block-wise transfer} to partition large binary \textbf{STL files} into sequential chunks, ensuring reliable, acknowledged delivery without overloading the target node's memory buffers. 
+The queueing and dispatching of 3D models is controlled by the print orchestration module (\texttt{PrintManager.py}). When a node becomes available, this component retrieves the next pending job. To overcome the memory and transmission constraints of the edge devices, it utilizes \textbf{CoAP block-wise transfer} to partition large binary \textbf{STL files} into sequential chunks, ensuring reliable, acknowledged delivery without overloading the target Actuator node's memory buffers. 
 
 \subsection{User Interface Bridging}
-An asynchronous full-duplex connection, handled by a dedicated module (\texttt{Socket.py}), links the cloud layer to the UI. Running on its own asyncio loop, it streams live node updates to the dashboard and processes analytical requests, returning aggregated daily, weekly, and monthly energy reports. 
+An asynchronous full-duplex connection, handled by a dedicated module (\texttt{Socket.py}), links the cloud layer to the UI. Running on its own asyncio loop, it streams live actuator node updates to the dashboard and processes analytical requests, returning aggregated reports. 
 
 \newpage  
 
@@ -181,7 +232,7 @@ It ensures stability by handling OS signals and performing a graceful shutdown, 
 To maintain a highly responsive interface without GUI freezing, the system decouples network I/O from the main rendering thread. It spawns a dedicated background daemon thread running an \texttt{asyncio} event loop that maintains a persistent, \textbf{full-duplex Web Socket} connection to the backend. Incoming JSON telemetry and status updates are buffered into a thread-safe queue. The primary tkinter loop continuously polls this queue, parses the payloads, and utilizes an intelligent routing mechanism to distribute the data to the correct screen module based on the message's defined type.
 
 \subsection{Printer Management Dashboard}
-The primary operational view (\texttt{Printers.py}) dynamically generates a responsive grid of interactive cards representing the physical 3D Printer nodes. To provide immediate situational awareness, the module applies dynamic color-filtering overlays to the printer icons, visually distinguishing their current operational states (green for \textit{ONLINE}, red for \textit{OFFLINE}, yellow for \textit{PRINTING}). Operators can interact with these nodes through modal dialogs, which display detailed node metadata and provide the control interfaces necessary to query the backend for available STL models and dispatch them to the edge devices. 
+The primary operational view (\texttt{Printers.py}) dynamically generates a responsive grid of interactive cards representing the physical 3D Printer  (Actuator) nodes. To provide immediate situational awareness, the module applies dynamic color-filtering overlays to the printer icons, visually distinguishing their current operational states (green for \textit{ONLINE}, red for \textit{OFFLINE}, yellow for \textit{PRINTING}). Operators can interact with these actuators through modal dialogs, which display detailed printer metadata and provide the control interfaces necessary to query the backend for available STL models and dispatch them to the edge devices. 
 
 \subsection{Analytical Reporting Modules}
 Historical telemetry and operational metrics are encapsulated within three distinct reporting modules (\texttt{DailyReport.py}, \texttt{WeeklyReport.py}, and \texttt{MonthlyReport.py}).
