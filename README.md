@@ -184,7 +184,7 @@ The `device.c` houses the main Contiki-NG process (*PROCESS_THREAD*) and manages
 For the purposes of this project, we don’t care if the 3D Printer can take prints locally, so the state machine works like this:
 
 <figure id="fig:Actuator-State-Machine" data-latex-placement="H">
-<img src="img/Actuator_State_Diagram.png" style="width:90.0%" />
+<img src="doc/img/Actuator_State_Diagram.png" style="width:90.0%" />
 <figcaption>Actuator State Diagram</figcaption>
 </figure>
 
@@ -205,7 +205,7 @@ Once printing is complete or interrupted by an anomaly detection, the Actuator s
 - **Medium Press (2–4 seconds):** Functions as a manual supervisor override. If a print job was aborted due to an ML false positive, a 2–4 second hold clears the error logs, restores the remaining print time, establishes a safe resubscription path to the MQTT broker, and transmits a CoAP `"START"` payload to wake the Sensor node back into active sampling. Conversely, if a job finished normally but suffered unpredicted physical defects, a 2–4 second hold overrides the successful verdict to report a failure instead.
 
 <figure id="fig:LED-STATE" data-latex-placement="H">
-<img src="img/Actuator_Led.png" style="width:80.0%" />
+<img src="doc/img/Actuator_Led.png" style="width:80.0%" />
 <figcaption>LED for all the states</figcaption>
 </figure>
 
@@ -226,7 +226,7 @@ The `sensors_main.c` houses the main Contiki-NG processes (*PROCESS_THREAD*), ma
 For the purposes of this project, the sensor state machine works like this:
 
 <figure id="fig:Sensor-State-Machine" data-latex-placement="H">
-<img src="img/Sensor_State_Diagram.png" style="width:90.0%" />
+<img src="doc/img/Sensor_State_Diagram.png" style="width:90.0%" />
 <figcaption>Sensor State Diagram</figcaption>
 </figure>
 
@@ -241,7 +241,7 @@ To guarantee system resilience across the decoupled architecture, the firmware r
 Similar to the Actuator, a long button press (**5+ seconds**) from any active state forces a hard reset. This kills the parallel processes, stops active timers, transmits a direct CoAP `"OFF"` signal to decouple from the Actuator, and completely resets the device back to `STATE_OFF`.
 
 <figure id="fig:SENSOR-LED-STATE" data-latex-placement="H">
-<img src="img/Sensor_Led.png" style="width:80.0%" />
+<img src="doc/img/Sensor_Led.png" style="width:80.0%" />
 <figcaption>LED for all the states</figcaption>
 </figure>
 
