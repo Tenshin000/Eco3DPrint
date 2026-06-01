@@ -10,7 +10,9 @@
 ## Initial Recommendation
 The ***main*** branch contains a containerized setup that allows the project to be run locally. The ***cooja*** branch, instead, includes the version of the project designed to run on the Virtual Machine provided during the Internet of Things course.
 
-*If you are not enrolled in the course or prefer to run the project in a containerized environment, refer to the main branch. Otherwise, if you are a student at the University of Pisa looking for reference material or inspiration, the cooja branch may be useful.*
+*If you are not enrolled in the course or prefer to run the project in a containerized environment, refer to the main branch. Otherwise, if you are a student at the University of Pisa looking for reference material or inspiration, the cooja branch may be useful.* 
+
+This phase focuses on running the project locally using a containerized environment via the main branch. It relies heavily on Docker and Visual Studio Code devcontainers, requiring specific prerequisites like Windows Subsystem for Linux (WSL) and an X-Server (XLaunch) to handle graphical interfaces. There's no decoupling logic (requested by the professor), but it's closer to my initial intention. Therefore, this isn't the version that was committed. If you want the committed version, check out the other branch (*cooja*).
 
 ## Prerequisites
 Prerequisites (Windows):
@@ -281,7 +283,7 @@ Following the data extraction, the Python Notebook `ML_Model.ipynb` documents th
 
 To build the predictive models, the notebook evaluates traditional ensemble methods alongside deep learning. It implements **Random Forest** and **Extra Trees**, utilizing `GridSearchCV` and `GroupKFold` for rigorous hyperparameter tuning and cross-validation across the different Time Series groups. A **Deep Neural Network** is implemented using `TensorFlow` and `Keras`. The architecture incorporates regularizers to prevent overfitting and utilizes callbacks like `EarlyStopping` and `ReduceLROnPlateau` to dynamically optimize the learning rate and halt training when performance plateaus. Finally, the trained Neural Network is converted into a highly optimized C header file (`print_prediction.h`) using the emlearn library, enabling direct deployment on the constrained IoT edge device.
 
-The best model among all Random Forests, Extra Trees and the Deep Neural Networks turns out to be one of the latter: **the Deep Neural Network with 1-second step**. This final model achieves high predictive Accuracy ( ≈ 85%) for fault detection. However, the test set was used more as a validation set as indicated in the professor’s Notebooks even if it is not technically the correct practice.
+The best model among all Random Forests, Extra Trees and the Deep Neural Networks turns out to be one of the latter: **the Deep Neural Network with 4-second step**. This final model achieves high predictive Accuracy ( ≈ 85%) for fault detection. However, the test set was used more as a validation set as indicated in the professor’s Notebooks even if it is not technically the correct practice.
 
 ### Backend Cloud Application
 #### Core Executable
