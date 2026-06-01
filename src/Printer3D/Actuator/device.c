@@ -126,7 +126,6 @@ static void set_state(device_state_t new_state){
   leds_off(LEDS_ALL);
   if(current_state == STATE_INITIALIZATION) leds_on(LEDS_NUM_TO_MASK(LEDS_YELLOW));
   else if(current_state == STATE_ONLINE) leds_on(PLATFORM_LED_GREEN);
-  else if(current_state == STATE_PRINTING && !sensor_is_paired) leds_on(LEDS_NUM_TO_MASK(LEDS_YELLOW) | PLATFORM_LED_GREEN);
   
   if(current_state == STATE_OFF){
     mqtt_module_disconnect();
@@ -318,9 +317,6 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             sample_count = 0;
             error_count = 0;
             etimer_stop(&subscribe_timer);
-            
-            leds_off(LEDS_ALL);
-            leds_on(LEDS_NUM_TO_MASK(LEDS_YELLOW) | PLATFORM_LED_GREEN);
         }
     }
     
@@ -355,8 +351,8 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             has_active_subscription = false; 
             etimer_set(&subscribe_timer, 1 * CLOCK_SECOND);
             
-            leds_off(LEDS_ALL);
-            leds_on(LEDS_NUM_TO_MASK(LEDS_YELLOW));
+            // leds_off(LEDS_ALL);
+            // leds_on(LEDS_NUM_TO_MASK(LEDS_YELLOW));
         }
     }
 
@@ -374,7 +370,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
             } 
             else{
                 coap_module_send_discovery_async();
-                etimer_set(&sensor_pairing_timer, 3 * CLOCK_SECOND);
+                etimer_set(&sensor_pairing_timer, 4 * CLOCK_SECOND);
             }
         }
     }
@@ -472,7 +468,7 @@ PROCESS_THREAD(smart_printer_process, ev, data){
                 LOG_INFO("Attempting initial pairing with Sensor...\n");
                 coap_module_send_discovery_async();
                 sensor_discovery_attempted = true;
-                etimer_set(&sensor_pairing_timer, 3 * CLOCK_SECOND);
+                etimer_set(&sensor_pairing_timer, 4 * CLOCK_SECOND);
             } 
             else{
                 coap_module_prepare_request(registration_msg, COAP_TYPE_CON, COAP_POST, REG_URI_PATH);
@@ -554,8 +550,8 @@ PROCESS_THREAD(smart_printer_process, ev, data){
                 sensor_buffer[6][sample_count] = tension; sensor_buffer[7][sample_count] = power;
                 
                 sample_count++;
-
-                leds_off(LEDS_NUM_TO_MASK(LEDS_YELLOW));
+                if(!waiting_for_confirmation)
+                    leds_off(LEDS_NUM_TO_MASK(LEDS_YELLOW));
                 // ML INFERENCE BATCH - Ping-Pong Coordination (Exactly 5 samples per batch)
                 if(sample_count >= 5){
                     LOG_INFO("ML Batch full. Running Inference...\n");
@@ -663,9 +659,6 @@ PROCESS_THREAD(smart_printer_process, ev, data){
                                 has_active_subscription = false; 
                                 etimer_set(&subscribe_timer, 1 * CLOCK_SECOND);
                             } 
-                            else{
-                                leds_on(LEDS_NUM_TO_MASK(LEDS_YELLOW) | PLATFORM_LED_GREEN);
-                            }
                         }
                         else if(strcmp(print_result, "FINISHED") == 0){
                             waiting_for_confirmation = false;

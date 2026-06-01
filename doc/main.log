@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.10.9)  18 MAY 2026 18:53
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.10.9)  1 JUN 2026 18:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -888,6 +888,33 @@ Package pdftex.def Info: img/Actuator_State_Diagram.png  used on input line 16.
 [12
 
  <./img/Actuator_State_Diagram.png>]
+Overfull \hbox (2.33879pt too wide) in paragraph at lines 23--24
+\OT1/cmr/m/n/10.95 state and ac-tively trans-mits asyn-chronous CoAP \OT1/cmtt/
+m/n/10.95 POST \OT1/cmr/m/n/10.95 re-quests to the \OT1/cmtt/m/n/10.95 printer/
+discovery \OT1/cmr/m/n/10.95 end-point.
+ []
+
+
+Overfull \hbox (6.96634pt too wide) in paragraph at lines 23--24
+\OT1/cmr/m/n/10.95 en-ters \OT1/cmtt/m/n/10.95 STATE[]-OFFLINE \OT1/cmr/m/n/10.
+95 and re-tries pe-ri-od-i-cally via a ded-i-cated timer loop un-til a valid ac
+-knowl-edg-ment
+ []
+
+
+Overfull \hbox (3.13106pt too wide) in paragraph at lines 23--24
+\OT1/cmr/m/n/10.95 in-com-ing CoAP server traf-fic and, upon re-ceiv-ing a com-
+plete STL file via application-layer block-wise
+ []
+
+
+Overfull \hbox (2.25293pt too wide) in paragraph at lines 23--24
+\OT1/cmr/m/n/10.95 trans-fers, dy-nam-i-cally cal-cu-lates a sim-u-lated print-
+ing du-ra-tion and tran-si-tions into \OT1/cmtt/m/n/10.95 STATE[]-PRINTING\OT1/
+cmr/m/n/10.95 . 
+ []
+
+
 Overfull \hbox (12.89429pt too wide) in paragraph at lines 29--30
 []\OT1/cmr/m/n/10.95 During ac-tive prints, data ac-qui-si-tion is en-tirely ne
 twork-driven rather than hardware-timer-bound.
@@ -906,10 +933,10 @@ ter-nal ma-trix struc-ture (\OT1/cmtt/m/n/10.95 sensor[]-buffer[8][5]\OT1/cmr/m
 <img/Actuator_Led.png, id=341, 494.84875pt x 351.3125pt>
 File: img/Actuator_Led.png Graphic file (type png)
 <use img/Actuator_Led.png>
-Package pdftex.def Info: img/Actuator_Led.png  used on input line 45.
+Package pdftex.def Info: img/Actuator_Led.png  used on input line 43.
 (pdftex.def)             Requested size: 375.80544pt x 266.79655pt.
 
-Overfull \hbox (35.93614pt too wide) in paragraph at lines 53--54
+Overfull \hbox (35.93614pt too wide) in paragraph at lines 51--52
 []\OT1/cmtt/m/n/10.95 device.c\OT1/cmr/m/n/10.95 : Man-ages the global Contiki-
 NG pro-cesses, the pri-mary state ma-chine logic, network-driven
  []
@@ -917,7 +944,7 @@ NG pro-cesses, the pri-mary state ma-chine logic, network-driven
 
 
 [14 <./img/Actuator_Led.png>]
-Overfull \hbox (36.7657pt too wide) in paragraph at lines 63--64
+Overfull \hbox (36.7657pt too wide) in paragraph at lines 61--62
 \OT1/cmr/m/n/10.95 The code re-lated to the IoT de-vices has been placed in-sid
 e the sub-folder \OT1/cmr/m/it/10.95 Eco3DPrint/src/Printer3D/Sensor\OT1/cmr/m/
 n/10.95 . 
@@ -926,18 +953,25 @@ n/10.95 .
 <img/Sensor_State_Diagram.png, id=348, 647.41875pt x 283.0575pt>
 File: img/Sensor_State_Diagram.png Graphic file (type png)
 <use img/Sensor_State_Diagram.png>
-Package pdftex.def Info: img/Sensor_State_Diagram.png  used on input line 79.
+Package pdftex.def Info: img/Sensor_State_Diagram.png  used on input line 76.
 (pdftex.def)             Requested size: 422.77664pt x 184.84468pt.
 
-Overfull \hbox (1.05504pt too wide) in paragraph at lines 84--85
+Overfull \hbox (1.05504pt too wide) in paragraph at lines 81--82
 \OT1/cmr/m/n/10.95 the net-work ini-tial-iza-tion and pair-ing phase. Upon ini-
 tial-iza-tion, the Sen-sor uti-lizes an asyn-chronous
  []
 
 
+Overfull \hbox (3.46944pt too wide) in paragraph at lines 81--82
+\OT1/cmr/m/n/10.95 CoAP POST mes-sages to all en-tries within a hard-coded list
+ of known tar-get IPs (\OT1/cmtt/m/n/10.95 known[]-dongle[]-ips\OT1/cmr/m/n/10.
+95 ),
+ []
+
+
 
 [15 <./img/Sensor_State_Diagram.png>]
-Overfull \hbox (10.43047pt too wide) in paragraph at lines 92--93
+Overfull \hbox (10.43047pt too wide) in paragraph at lines 87--88
 []\OT1/cmr/m/n/10.95 To guar-an-tee sys-tem re-silience across the de-cou-pled 
 ar-chi-tec-ture, the firmware runs an in-de-pen-dent
  []
@@ -945,32 +979,32 @@ ar-chi-tec-ture, the firmware runs an in-de-pen-dent
 <img/Sensor_Led.png, id=355, 491.8375pt x 190.7125pt>
 File: img/Sensor_Led.png Graphic file (type png)
 <use img/Sensor_Led.png>
-Package pdftex.def Info: img/Sensor_Led.png  used on input line 98.
+Package pdftex.def Info: img/Sensor_Led.png  used on input line 93.
 (pdftex.def)             Requested size: 375.80544pt x 145.72578pt.
 
 
 [16 <./img/Sensor_Led.png>]
-Overfull \hbox (20.95895pt too wide) in paragraph at lines 117--119
+Overfull \hbox (20.95895pt too wide) in paragraph at lines 112--114
 []\OT1/cmr/m/n/10.95 The \OT1/cmr/bx/n/10.95 Ma-chine Learn-ing model \OT1/cmr/
 m/n/10.95 for the IoT de-vice orig-i-nates from the \OT1/cmr/bx/n/10.95 Joanna-
 3D-Printing-Data
  []
 
 
-Overfull \hbox (9.91989pt too wide) in paragraph at lines 124--125
+Overfull \hbox (9.91989pt too wide) in paragraph at lines 119--120
 \OT1/cmr/m/n/10.95 note-book also em-ploys \OT1/cmtt/m/n/10.95 compute[]-class[
 ]-weight \OT1/cmr/m/n/10.95 to han-dle class im-bal-ances be-tween the suc-cess
 -ful
  []
 
 
-Overfull \hbox (4.56213pt too wide) in paragraph at lines 127--128
+Overfull \hbox (4.56213pt too wide) in paragraph at lines 122--123
 \OT1/cmr/m/n/10.95 ar-chi-tec-ture in-cor-po-rates reg-u-lar-iz-ers to pre-vent
  over-fit-ting and uti-lizes call-backs like \OT1/cmtt/m/n/10.95 EarlyStopping
  []
 
 
-Overfull \hbox (13.80865pt too wide) in paragraph at lines 127--128
+Overfull \hbox (13.80865pt too wide) in paragraph at lines 122--123
 \OT1/cmr/m/n/10.95 and \OT1/cmtt/m/n/10.95 ReduceLROnPlateau \OT1/cmr/m/n/10.95
  to dy-nam-i-cally op-ti-mize the learn-ing rate and halt train-ing when per-fo
 r-mance
@@ -981,37 +1015,37 @@ r-mance
 [17]
 
 [18]
-Overfull \hbox (3.2121pt too wide) in paragraph at lines 209--210
+Overfull \hbox (3.2121pt too wide) in paragraph at lines 204--205
 \OT1/cmr/m/n/10.95 Server (\OT1/cmtt/m/n/10.95 CoAPServer.py\OT1/cmr/m/n/10.95 
 ). The server ex-poses sev-eral dis-tinct re-source end-points. The \OT1/cmr/bx
 /n/10.95 /reg-is-tra-tion
  []
 
 
-Overfull \hbox (11.92159pt too wide) in paragraph at lines 209--210
+Overfull \hbox (11.92159pt too wide) in paragraph at lines 204--205
 \OT1/cmr/m/n/10.95 their meta-data. The \OT1/cmr/bx/n/10.95 /sig-nal/off \OT1/c
 mr/m/n/10.95 end-point (\OT1/cmtt/m/n/10.95 OFFSignal.py\OT1/cmr/m/n/10.95 ) re
 -ceives hard-ware in-ter-rupts, im-me-di-ately
  []
 
 
-Overfull \hbox (59.48534pt too wide) in paragraph at lines 209--210
+Overfull \hbox (59.48534pt too wide) in paragraph at lines 204--205
 \OT1/cmr/m/n/10.95 up-dat-ing the sys-tem to re-flect a dis-con-nected state. F
 i-nally, the \OT1/cmr/bx/n/10.95 /print-/fin-ished \OT1/cmr/m/n/10.95 end-point
  (\OT1/cmtt/m/n/10.95 PrintFinished.py\OT1/cmr/m/n/10.95 )
  []
 
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <10.95> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 212.
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 207.
 
-Overfull \hbox (1.97552pt too wide) in paragraph at lines 212--213
+Overfull \hbox (1.97552pt too wide) in paragraph at lines 207--208
 \OT1/cmr/m/n/10.95 High-frequency teleme-try is han-dled by a back-ground MQTT 
 sub-scriber (\OT1/cmtt/m/n/10.95 MQTTHandler.py\OT1/cmr/m/n/10.95 ) lis-ten-ing
 
  []
 
 
-Overfull \hbox (53.47086pt too wide) in paragraph at lines 218--219
+Overfull \hbox (53.47086pt too wide) in paragraph at lines 213--214
 \OT1/cmr/m/n/10.95 The queue-ing and dis-patch-ing of 3D mod-els is con-trolled
  by the print or-ches-tra-tion mod-ule (\OT1/cmtt/m/n/10.95 PrintManager.py\OT1
 /cmr/m/n/10.95 ).
@@ -1020,19 +1054,19 @@ Overfull \hbox (53.47086pt too wide) in paragraph at lines 218--219
 
 
 [19]
-Overfull \hbox (22.93475pt too wide) in paragraph at lines 235--236
+Overfull \hbox (22.93475pt too wide) in paragraph at lines 230--231
 \OT1/cmr/m/n/10.95 aware-ness, the mod-ule ap-plies dy-namic color-filtering ov
 er-lays to the printer icons, vi-su-ally dis-tin-guish-ing
  []
 
 
-Overfull \hbox (4.98898pt too wide) in paragraph at lines 238--239
+Overfull \hbox (4.98898pt too wide) in paragraph at lines 233--234
 \OT1/cmr/m/n/10.95 Historical teleme-try and op-er-a-tional met-rics are en-cap
 -su-lated within three dis-tinct re-port-ing mod-ules
  []
 
 
-Overfull \hbox (4.07649pt too wide) in paragraph at lines 241--242
+Overfull \hbox (4.07649pt too wide) in paragraph at lines 236--237
 \OT1/cmr/m/n/10.95 scrol-lable tab-u-lar for-mats uti-liz-ing ttk.Treeview wid-
 gets, sep-a-rat-ing suc-cess-fully uti-lized en-ergy
  []
@@ -1208,7 +1242,7 @@ Here is how much of TeX's memory you used:
  39168 multiletter control sequences out of 15000+600000
  569048 words of font info for 73 fonts, out of 8000000 for 9000
  1142 hyphenation exceptions out of 8191
- 75i,9n,117p,1051b,591s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,9n,117p,1298b,591s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/tex
 live/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2024
 /texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb><c:/texlive/2024/texmf-dis
@@ -1222,7 +1256,7 @@ nts/cm/cmr12.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr
 -dist/fonts/type1/public/amsfonts/cm/cmti10.pfb><c:/texlive/2024/texmf-dist/fon
 ts/type1/public/amsfonts/cm/cmtt10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/
 public/cm-super/sfrm1095.pfb>
-Output written on main.pdf (31 pages, 5131503 bytes).
+Output written on main.pdf (31 pages, 5132105 bytes).
 PDF statistics:
  575 PDF objects out of 1000 (max. 8388607)
  464 compressed objects within 5 object streams

@@ -43,7 +43,6 @@
 /* ==================================================== */ 
 /* =            SENSOR SIMULATION STRUCTURES          = */ 
 /* ==================================================== */ 
-
 // Structure to hold 3-axis accelerometer data
 typedef struct {
     float x;
@@ -68,7 +67,6 @@ typedef enum {
 /* ==================================================== */ 
 /* =                  CONFIGURATION                   = */ 
 /* ==================================================== */ 
-
 // Simulated environment variables
 static printer_state_t simulated_printer_state = PRINTER_STATE_NORMAL; 
 static float current_power_draw_watts = 150.0; 
@@ -96,7 +94,6 @@ process_event_t event_start_smart_sensor;
 /* ==================================================== */
 /* =             SENSOR HARDWARE SIMULATION           = */
 /* ==================================================== */
-
 // Generate a normally distributed random float
 static float get_gaussian_float(float mean, float std_dev){
     float u1 = (float)random_rand() / RANDOM_RAND_MAX;
@@ -391,7 +388,7 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
             set_sensor_state(SENSOR_STATE_INIT);
             LOG_INFO("Attempting initial pairing with Printer...\n");
             sensor_coap_send_discovery_async();
-            etimer_set(&pairing_timer, 5 * CLOCK_SECOND);
+            etimer_set(&pairing_timer, 4 * CLOCK_SECOND);
         }
 
         // Handle successful pairing
@@ -415,7 +412,7 @@ PROCESS_THREAD(smart_sensor_process, ev, data){
             etimer_set(&pairing_timer, 5 * CLOCK_SECOND);
         }
 
-        // Handle sampling control signals (START, PAUSE, STOP)
+        // Handle sampling control signals (START, CONT, STOP)
         if(ev == event_start_sampling){
             samples_sent_in_batch = 0;
             target_batch_size = 5; 

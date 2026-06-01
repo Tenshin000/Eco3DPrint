@@ -46,14 +46,13 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data
       uint8_t *chunk_ptr = msg->payload_chunk;
       uint16_t chunk_len = msg->payload_chunk_length;
       
-      if (in_pub_offset + chunk_len < 1024){
+      if(in_pub_offset + chunk_len < 1024){
           memcpy(incoming_buffer + in_pub_offset, chunk_ptr, chunk_len);
           in_pub_offset += chunk_len;
           incoming_buffer[in_pub_offset] = '\0';
           
           // Check for the end of the JSON array (closed square bracket)
-          if (in_pub_offset > 10 && incoming_buffer[in_pub_offset - 1] == ']'){
-              
+          if(in_pub_offset > 10 && incoming_buffer[in_pub_offset - 1] == ']'){
               // Send the pointer to the pristine string
               process_post(app_process, event_mqtt_incoming, incoming_buffer);
               in_pub_offset = 0; 
@@ -101,14 +100,14 @@ void mqtt_module_init(struct process *main_proc, const char* device_name){
 
 // Attempt connection to the MQTT broker
 void mqtt_module_connect(void){
+  // Inputs: Connection Pointer, Broker IP, Broker Port, Keep Alive Interval (seconds), Clean Session Flag
   mqtt_connect(&conn, MQTT_BROKER_IP, MQTT_BROKER_PORT, 60 * 3, MQTT_CLEAN_SESSION_ON);
 }
 
 // Disconnect from the MQTT broker safely
 void mqtt_module_disconnect(void){
-  if(mqtt_connected){
+  if(mqtt_connected)
     mqtt_disconnect(&conn);
-  }
 }
 
 // Check if the client is currently connected to the broker

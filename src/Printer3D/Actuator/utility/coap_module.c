@@ -37,7 +37,7 @@ static const char* known_dongle_ips[3] = {
     "fd00::f6ce:36cf:5367:3d5a"
 };
 // Current dongle index for IP rotation
-static uint8_t current_dongle_idx = 0;
+//static uint8_t current_dongle_idx = 0;
 #endif
 
 // Dedicated function to send a direct reciprocal ping without rotating the IP list
@@ -254,37 +254,16 @@ void coap_module_prepare_discovery(void){
   multicast_ep.port = UIP_HTONS(COAP_DEFAULT_PORT);
   multicast_ep.secure = 0;
   
-  #elif defined(DEV_DONGLE)
-  char my_ip_str[UIPLIB_IPV6_MAX_STR_LEN] = "unknown_ip";
-  uip_ds6_addr_t *addr = uip_ds6_get_global(ADDR_PREFERRED);
-  if(addr != NULL) uiplib_ipaddr_snprint(my_ip_str, sizeof(my_ip_str), &addr->ipaddr);
-
-  bool valid_target_found = false;
-  uint8_t attempts = 0;
-  uip_ipaddr_t target_ip;
-
-  // Try to find a valid target dongle IP to send discovery
-  while(!valid_target_found && attempts < 3){
-      const char* candidate_ip = known_dongle_ips[current_dongle_idx];
-      current_dongle_idx = (current_dongle_idx + 1) % 3; 
-      attempts++;
-
-      uip_ipaddr_t cand_ip_struct;
-      uiplib_ipaddrconv(candidate_ip, &cand_ip_struct);
-
-      if(addr == NULL || !uip_ipaddr_cmp(&addr->ipaddr, &cand_ip_struct)){
-          uip_ipaddr_copy(&target_ip, &cand_ip_struct);
-          valid_target_found = true;
-      }
-  }
-
-  memset(&multicast_ep, 0, sizeof(multicast_ep));
-  uip_ipaddr_copy(&multicast_ep.ipaddr, &target_ip);
-  multicast_ep.port = UIP_HTONS(COAP_DEFAULT_PORT);
-  multicast_ep.secure = 0;
+  coap_init_message(request, COAP_TYPE_NON, COAP_POST, coap_get_mid());
+  coap_set_header_uri_path(request, "sensor/discovery");
+  
+  strncpy(coap_payload, "unknown_ip", sizeof(coap_payload));
+  uip_ds6_addr_t *my_addr = uip_ds6_get_global(ADDR_PREFERRED);
+  if(my_addr != NULL) uiplib_ipaddr_snprint(coap_payload, sizeof(coap_payload), &my_addr->ipaddr);
+  coap_set_payload(request, (uint8_t *)coap_payload, strlen(coap_payload));
+  
   #else
   coap_endpoint_parse("coap://[ff02::1]", 16, &multicast_ep); 
-  #endif
   
   coap_init_message(request, COAP_TYPE_NON, COAP_POST, coap_get_mid());
   coap_set_header_uri_path(request, "sensor/discovery");
@@ -293,16 +272,62 @@ void coap_module_prepare_discovery(void){
   uip_ds6_addr_t *my_addr = uip_ds6_get_global(ADDR_PREFERRED);
   if(my_addr != NULL) uiplib_ipaddr_snprint(coap_payload, sizeof(coap_payload), &my_addr->ipaddr);
   coap_set_payload(request, (uint8_t *)coap_payload, strlen(coap_payload));
+  #endif
 }
 
 // Send a discovery request asynchronously
 void coap_module_send_discovery_async(void){
+  #ifdef DEV_COOJA
+    // Keep the original simulated behavior intact
     coap_module_prepare_discovery(); 
     coap_transaction_t *t = coap_new_transaction(request->mid, &multicast_ep);
     if(t){
         t->message_len = coap_serialize_message(request, t->message);
         coap_send_transaction(t);
     }
+  #elif defined(DEV_DONGLE)
+    // Fire a burst of discovery packets to all known dongle IPs simultaneously
+    uip_ds6_addr_t *addr = uip_ds6_get_global(ADDR_PREFERRED);
+    
+    for(uint8_t i = 0; i < 3; i++) {
+        uip_ipaddr_t cand_ip_struct;
+        uiplib_ipaddrconv(known_dongle_ips[i], &cand_ip_struct);
+
+        // Skip own IP address to prevent a self-pinging loop
+        if(addr != NULL && uip_ipaddr_cmp(&addr->ipaddr, &cand_ip_struct)){
+            continue;
+        }
+
+        // Configure the target endpoint for the current iteration
+        memset(&multicast_ep, 0, sizeof(multicast_ep));
+        uip_ipaddr_copy(&multicast_ep.ipaddr, &cand_ip_struct);
+        multicast_ep.port = UIP_HTONS(COAP_DEFAULT_PORT);
+        multicast_ep.secure = 0;
+
+        // Initialize a fresh CoAP message for each target
+        coap_init_message(request, COAP_TYPE_NON, COAP_POST, coap_get_mid());
+        coap_set_header_uri_path(request, "sensor/discovery");
+        
+        // Embed own IP into the payload
+        strncpy(coap_payload, "unknown_ip", sizeof(coap_payload));
+        if(addr != NULL) uiplib_ipaddr_snprint(coap_payload, sizeof(coap_payload), &addr->ipaddr);
+        coap_set_payload(request, (uint8_t *)coap_payload, strlen(coap_payload));
+
+        // Transmit the transaction immediately
+        coap_transaction_t *t = coap_new_transaction(request->mid, &multicast_ep);
+        if(t){
+            t->message_len = coap_serialize_message(request, t->message);
+            coap_send_transaction(t);
+        }
+    }
+  #else
+    coap_module_prepare_discovery(); 
+    coap_transaction_t *t = coap_new_transaction(request->mid, &multicast_ep);
+    if(t){
+        t->message_len = coap_serialize_message(request, t->message);
+        coap_send_transaction(t);
+    }
+  #endif
 }
 
 /* ==================================================== */
