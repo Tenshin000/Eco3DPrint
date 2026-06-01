@@ -1,6 +1,6 @@
 build/cooja/obj/mqtt_module.o: utility/mqtt_module.c \
  ../../../../../os/net/app-layer/coap/module-macros.h \
- utility/mqtt_module.h ../../../../../os/contiki.h \
+ ../../../../../os/net/app-layer/mqtt/mqtt.h ../../../../../os/contiki.h \
  ../../../../../arch/platform/cooja/./contiki-conf.h project-conf.h \
  ../../../../../os/contiki-default-conf.h ../../../../../os/sys/process.h \
  ../../../../../os/sys/pt.h ../../../../../os/sys/lc.h \
@@ -14,7 +14,6 @@ build/cooja/obj/mqtt_module.o: utility/mqtt_module.c \
  ../../../../../arch/platform/cooja/./lib/simEnvChange.h \
  ../../../../../arch/platform/cooja/./sys/cooja_mt.h \
  ../../../../../os/sys/pt.h ../../../../../os/sys/clock.h \
- utility/device_conf.h ../../../../../os/net/app-layer/mqtt/mqtt.h \
  ../../../../../os/contiki-net.h ../../../../../os/contiki.h \
  ../../../../../os/net/ipv6/tcpip.h ../../../../../os/net/ipv6/uip.h \
  ../../../../../os/net/ipv6/uipopt.h ../../../../../os/net/ipv6/uipbuf.h \
@@ -52,10 +51,11 @@ build/cooja/obj/mqtt_module.o: utility/mqtt_module.c \
  ../../../../../os/dev/gpio-hal.h \
  ../../../../../arch/platform/cooja/./dev/gpio-hal-arch.h \
  ../../../../../os/net/ipv6/tcp-socket.h \
- ../../../../../os/net/ipv6/udp-socket.h ../../../../../os/sys/log.h \
+ ../../../../../os/net/ipv6/udp-socket.h utility/mqtt_module.h \
+ utility/device_conf.h ../../../../../os/sys/log.h \
  ../../../../../os/sys/log-conf.h
 ../../../../../os/net/app-layer/coap/module-macros.h:
-utility/mqtt_module.h:
+../../../../../os/net/app-layer/mqtt/mqtt.h:
 ../../../../../os/contiki.h:
 ../../../../../arch/platform/cooja/./contiki-conf.h:
 project-conf.h:
@@ -79,8 +79,6 @@ project-conf.h:
 ../../../../../arch/platform/cooja/./sys/cooja_mt.h:
 ../../../../../os/sys/pt.h:
 ../../../../../os/sys/clock.h:
-utility/device_conf.h:
-../../../../../os/net/app-layer/mqtt/mqtt.h:
 ../../../../../os/contiki-net.h:
 ../../../../../os/contiki.h:
 ../../../../../os/net/ipv6/tcpip.h:
@@ -134,5 +132,7 @@ utility/device_conf.h:
 ../../../../../arch/platform/cooja/./dev/gpio-hal-arch.h:
 ../../../../../os/net/ipv6/tcp-socket.h:
 ../../../../../os/net/ipv6/udp-socket.h:
+utility/mqtt_module.h:
+utility/device_conf.h:
 ../../../../../os/sys/log.h:
 ../../../../../os/sys/log-conf.h:

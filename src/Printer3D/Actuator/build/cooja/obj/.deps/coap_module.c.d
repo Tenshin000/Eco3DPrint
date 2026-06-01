@@ -32,8 +32,7 @@ build/cooja/obj/coap_module.o: utility/coap_module.c \
  ../../../../../os/net/app-layer/coap/coap-blocking-api.h \
  ../../../../../os/net/app-layer/coap/coap-request-state.h \
  ../../../../../os/net/ipv6/uiplib.h utility/device_conf.h \
- ../../../../../os/sys/log.h ../../../../../os/sys/log-conf.h \
- ../../../../../os/sys/node-id.h ../../../../../os/net/ipv6/uip-ds6.h \
+ ../../../../../os/net/ipv6/uip-ds6.h \
  ../../../../../os/net/ipv6/multicast/uip-mcast6.h \
  ../../../../../os/net/ipv6/multicast/uip-mcast6-engines.h \
  ../../../../../os/net/ipv6/multicast/uip-mcast6-route.h \
@@ -49,7 +48,9 @@ build/cooja/obj/coap_module.o: utility/coap_module.c \
  ../../../../../os/net/mac/framer/framer.h \
  ../../../../../os/net/ipv6/uip-packetqueue.h \
  ../../../../../os/sys/ctimer.h \
- ../../../../../os/net/ipv6/uip-ds6-route.h ../../../../../os/lib/list.h
+ ../../../../../os/net/ipv6/uip-ds6-route.h ../../../../../os/lib/list.h \
+ ../../../../../os/sys/log.h ../../../../../os/sys/log-conf.h \
+ ../../../../../os/sys/node-id.h
 ../../../../../os/net/app-layer/coap/module-macros.h:
 utility/coap_module.h:
 ../../../../../os/contiki.h:
@@ -96,9 +97,6 @@ project-conf.h:
 ../../../../../os/net/app-layer/coap/coap-request-state.h:
 ../../../../../os/net/ipv6/uiplib.h:
 utility/device_conf.h:
-../../../../../os/sys/log.h:
-../../../../../os/sys/log-conf.h:
-../../../../../os/sys/node-id.h:
 ../../../../../os/net/ipv6/uip-ds6.h:
 ../../../../../os/net/ipv6/multicast/uip-mcast6.h:
 ../../../../../os/net/ipv6/multicast/uip-mcast6-engines.h:
@@ -120,3 +118,6 @@ utility/device_conf.h:
 ../../../../../os/sys/ctimer.h:
 ../../../../../os/net/ipv6/uip-ds6-route.h:
 ../../../../../os/lib/list.h:
+../../../../../os/sys/log.h:
+../../../../../os/sys/log-conf.h:
+../../../../../os/sys/node-id.h:

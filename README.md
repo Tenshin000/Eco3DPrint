@@ -10,7 +10,9 @@
 ## Initial Recommendation
 The ***cooja*** branch contains the version of the project designed to run on the Virtual Machine provided during the Internet of Things course. The ***main*** branch, instead, includes a containerized setup that allows the project to be run locally. 
 
-*If you are a student at the University of Pisa looking for reference material or inspiration, the cooja branch may be useful. Otherwise, if you are not enrolled in the course or prefer to run the project in a containerized environment, refer to the main branch.*
+*If you are a student at the University of Pisa looking for reference material or inspiration, the cooja branch may be useful. Otherwise, if you are not enrolled in the course or prefer to run the project in a containerized environment, refer to the main branch.* 
+
+This phase focuses on running the project inside the Cooja Network Simulator on a Virtual Machine, specifically using the cooja branch. The decoupling logic requested by the professor was applied here and consequently this was the project delivered.
 
 ## Installation
 Put the Eco3DPrint folder project in /home/"user"/contiki-ng/examples (for the students of Unipi /home/iot_ubuntu_intel/contiki-ng/examples). Then open the terminal and type:
